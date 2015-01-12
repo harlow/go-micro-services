@@ -5,7 +5,7 @@ leverage [Protocol Buffers][3] for inter-service tcp communications.
 
 ![auth_service_flow](https://cloud.githubusercontent.com/assets/739782/5699710/2ffb37e4-99e3-11e4-9fec-4c0dd52a98c3.png)
 
-Service1 accepts HTTP requests on port `8080` and then dials a tcp connection
+Service1 accepts HTTP requests on port `8000` and then dials a tcp connection
 on `127.0.0.1:1984` to authenticate the token with the AuthService.
 
 ### Installation
