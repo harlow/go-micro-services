@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"./../protobufs/user"
-
 	"code.google.com/p/goprotobuf/proto"
 	_ "github.com/lib/pq"
 )
