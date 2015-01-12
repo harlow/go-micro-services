@@ -1,7 +1,7 @@
-# HTTP in the front, Protobufs in the rear.
+# HTTP up front, Protobufs in the rear.
 
-An example of Golang micro-services that accept HTTP requests and then
-leverage [Protocol Buffers][3] for inter-service tcp communications.
+An experiment with Golang micro-services that accept external HTTP requests and then
+leverage [Protocol Buffers][3] for inter-service tcp communication.
 
 ![auth_service_flow](https://cloud.githubusercontent.com/assets/739782/5699710/2ffb37e4-99e3-11e4-9fec-4c0dd52a98c3.png)
 
