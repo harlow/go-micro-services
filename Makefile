@@ -1,2 +1,2 @@
 all:
-		protoc --go_out=. protobufs/user/user.proto
+	protoc --go_out=. protobufs/user/user.proto
