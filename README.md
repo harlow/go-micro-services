@@ -25,9 +25,9 @@ Use [goose][1] to run the database migrations:
 
     goose up
 
-Add a user to the database with an `auth_token`.
-
 ### Run the Application
+
+Add a new user to the database with `auth_token=VALID_TOKEN`.
 
 Use [foreman][2] to bring up the services:
 
