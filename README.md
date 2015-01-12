@@ -14,7 +14,7 @@ Clone the repository:
 
     git clone git@github.com:harlow/go-micro-services.git
 
-Create a `.env` file with a database URL for the Auth Application:
+Create a `.env` file with a database and service details:
 
     AUTH_SERVICE_ADDRESS=127.0.0.1
     AUTH_SERVICE_PORT=1984
