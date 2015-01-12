@@ -24,15 +24,20 @@ func (t *UserService) Auth(req *user.AuthRequest, resp *user.AuthResponse) error
 	var firstName string
 	var lastName string
 	var email string
+
 	err = db.
 		QueryRow("SELECT id, first_name, last_name, email FROM users WHERE auth_token=$1", authToken).
 		Scan(&id, &firstName, &lastName, &email)
 
 	switch {
 	case err == sql.ErrNoRows:
-		log.Println("No user with that token.")
+		log.Println("auth_service: sign in failure, unknown token.")
+		resp.Valid = proto.Bool(false)
+	case err != nil:
+		log.Printf("auth_service: sign in error, %v.\n", err)
 		resp.Valid = proto.Bool(false)
 	default:
+		log.Println("auth_service: sign in succes.")
 		resp.Valid = proto.Bool(true)
 		resp.User = &user.User{
 			Id:        proto.Int32(id),
@@ -46,6 +51,6 @@ func (t *UserService) Auth(req *user.AuthRequest, resp *user.AuthResponse) error
 }
 
 func main() {
-	log.Println("running")
-	user.ListenAndServeUserService("tcp", ":1984", new(UserService))
+	log.Println("auth_service: running")
+	user.ListenAndServeUserService("tcp", ":"+os.Getenv("AUTH_SERVICE_PORT"), new(UserService))
 }

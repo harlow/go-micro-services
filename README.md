@@ -16,7 +16,10 @@ Clone the repository:
 
 Create a `.env` file with a database URL for the Auth Application:
 
+    AUTH_SERVICE_ADDRESS=127.0.0.1
+    AUTH_SERVICE_PORT=1984
     DATABASE_URL=postgres://localhost/auth_service_development?sslmode=disable
+    SERVICE1_PORT=8000
 
 Use [goose][1] to run the database migrations:
 

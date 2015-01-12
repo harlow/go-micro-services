@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"./../protobufs/user"
@@ -13,12 +14,16 @@ import (
 	"github.com/justinas/alice"
 )
 
+func authServiceUrl() string {
+	return os.Getenv("AUTH_SERVICE_ADDRESS") + ":" + os.Getenv("AUTH_SERVICE_PORT")
+}
+
 type Authenticator struct{}
 
 func (a Authenticator) Valid(token string) bool {
-	stub, client, err := user.DialUserService("tcp", "127.0.0.1:1984")
+	stub, client, err := user.DialUserService("tcp", authServiceUrl())
 	if err != nil {
-		log.Fatal(`user.DialUserService("tcp", "127.0.0.1:1984"):`, err)
+		log.Fatal(`user.DialUserService error:`, err)
 	}
 	defer client.Close()
 	var req user.AuthRequest
@@ -44,8 +49,9 @@ func appHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	log.Println("service1: running")
 	app := http.HandlerFunc(appHandler)
-	err := http.ListenAndServe(":8000", alice.New(authHandler, timeoutHandler).Then(app))
+	err := http.ListenAndServe(":"+os.Getenv("SERVICE1_PORT"), alice.New(authHandler, timeoutHandler).Then(app))
 	if err != nil {
 		fmt.Printf("http.ListenAndServe error: %v\n", err)
 	}
