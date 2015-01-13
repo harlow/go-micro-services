@@ -61,8 +61,10 @@ func appHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	app := http.HandlerFunc(appHandler)
-	err := http.ListenAndServe(":"+os.Getenv("SERVICE1_PORT"), alice.New(authHandler, timeoutHandler).Then(app))
-
+	err := http.ListenAndServe(
+		":"+os.Getenv("WEB_SERVICE_PORT"),
+		alice.New(authHandler, timeoutHandler).Then(app),
+	)
 	if err != nil {
 		fmt.Printf("http.ListenAndServe error: %v\n", err)
 	}

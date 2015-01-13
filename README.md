@@ -5,8 +5,8 @@ leverage [Protocol Buffers][3] for inter-service tcp communication.
 
 ![auth_service_flow](https://cloud.githubusercontent.com/assets/739782/5699710/2ffb37e4-99e3-11e4-9fec-4c0dd52a98c3.png)
 
-Service1 accepts HTTP requests on port `8000` and then dials a tcp connection
-on `127.0.0.1:1984` to authenticate the token with the AuthService.
+The Web Service accepts HTTP requests on port `8000` and then dials a tcp connection
+to port `1984` and authenticates the token with the Auth Service.
 
 ### Installation
 
@@ -16,10 +16,9 @@ Clone the repository:
 
 Create a `.env` file with a database and service details:
 
-    AUTH_SERVICE_ADDRESS=127.0.0.1
     AUTH_SERVICE_PORT=1984
     DATABASE_URL=postgres://localhost/auth_service_development?sslmode=disable
-    SERVICE1_PORT=8000
+    WEB_SERVICE_PORT=8000
 
 Use [goose][1] to run the database migrations:
 
