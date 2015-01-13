@@ -2,6 +2,7 @@ package shared
 
 import (
 	"encoding/base64"
+	"errors"
 	"net/http"
 	"strings"
 )
@@ -25,9 +26,12 @@ type tokenAuth struct {
 }
 
 // Satisfies the http.Handler interface for tokenAuth.
+// Write and unauthorized message and returns if user has not successfully authenticated.
 func (a tokenAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	token, err := a.getToken(r.Header.Get("Authorization"))
+
 	// Check that the token is valid
-	if a.authenticate(r) == false {
+	if err != nil || a.valdator.Valid(token) == false {
 		w.Header().Set("WWW-Authenticate", `Basic realm="Application"`)
 		http.Error(w, http.StatusText(401), 401)
 		return
@@ -37,17 +41,15 @@ func (a tokenAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.http.ServeHTTP(w, r)
 }
 
-// authenticate retrieves and then validates the token provided in the request header.
-// Returns 'false' if the user has not successfully authenticated.
-func (b *tokenAuth) authenticate(r *http.Request) bool {
+// getToken retrieves the Authorization token.
+func (a tokenAuth) getToken(auth string) (string, error) {
 	const basicScheme string = "Basic "
 	const bearerScheme string = "Bearer "
 	var token string
 
 	// Confirm the request is sending Basic Authentication credentials.
-	auth := r.Header.Get("Authorization")
 	if !strings.HasPrefix(auth, basicScheme) && !strings.HasPrefix(auth, bearerScheme) {
-		return false
+		return "", errors.New("auth: Type not supported")
 	}
 
 	// Get the token from the request header
@@ -55,7 +57,7 @@ func (b *tokenAuth) authenticate(r *http.Request) bool {
 	if strings.HasPrefix(auth, basicScheme) {
 		str, err := base64.StdEncoding.DecodeString(auth[len(basicScheme):])
 		if err != nil {
-			return false
+			return "", errors.New("auth: Base64 encoding issue")
 		}
 		creds := strings.Split(string(str), ":")
 		token = creds[0]
@@ -63,6 +65,6 @@ func (b *tokenAuth) authenticate(r *http.Request) bool {
 		token = auth[len(bearerScheme):]
 	}
 
-	// Return result from validator
-	return b.valdator.Valid(token)
+	// Return token
+	return token, nil
 }
