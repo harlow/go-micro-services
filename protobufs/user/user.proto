@@ -10,8 +10,8 @@ message AuthRequest {
 
 message AuthResponse {
   optional string requestID = 1;
-  optional bool success = 3;
-  optional User user = 4;
+  optional bool valid = 2;
+  optional User user = 3;
 }
 
 message User {

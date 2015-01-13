@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"./../middlewares"
+	"./../shared"
 
 	"github.com/justinas/alice"
 	"github.com/nu7hatch/gouuid"
@@ -24,17 +24,17 @@ func appHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	rID, err := uuid.NewV4()
-
+	requestID, err := uuid.NewV4()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	authHandler := middlewares.TokenAuth(rID.String(), serviceID)
+	validator := shared.TokenValidator{serviceID, requestID.String()}
+	authHandler := shared.TokenAuth(validator)
 	app := http.HandlerFunc(appHandler)
 	chain := alice.New(authHandler, timeoutHandler).Then(app)
-	err = http.ListenAndServe(":"+os.Getenv("WEB_SERVICE_PORT"), chain)
 
+	err = http.ListenAndServe(":"+os.Getenv("WEB_SERVICE_PORT"), chain)
 	if err != nil {
 		fmt.Printf("http.ListenAndServe error: %v\n", err)
 	}

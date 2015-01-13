@@ -34,10 +34,10 @@ func (t *AuthHandler) Auth(req *user.AuthRequest, resp *user.AuthResponse) error
 	switch {
 	case err == sql.ErrNoRows:
 		log.Printf("%s caller:%s status:failed\n", requestID, callerID)
-		resp.Success = proto.Bool(false)
+		resp.Valid = proto.Bool(false)
 	case err != nil:
 		log.Printf("%s caller:%s status:error  %v\n", requestID, callerID, err)
-		resp.Success = proto.Bool(false)
+		resp.Valid = proto.Bool(false)
 	default:
 		log.Printf("%s caller:%s status:success user_id:%d\n", requestID, callerID, id)
 		resp.User = &user.User{
@@ -47,7 +47,7 @@ func (t *AuthHandler) Auth(req *user.AuthRequest, resp *user.AuthResponse) error
 			Id:        proto.Int32(id),
 			LastName:  proto.String(lastName),
 		}
-		resp.Success = proto.Bool(true)
+		resp.Valid = proto.Bool(true)
 	}
 	return nil
 }

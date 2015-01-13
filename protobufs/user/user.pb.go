@@ -63,8 +63,8 @@ func (m *AuthRequest) GetAuthToken() string {
 
 type AuthResponse struct {
 	RequestID        *string `protobuf:"bytes,1,opt,name=requestID" json:"requestID,omitempty"`
-	Success          *bool   `protobuf:"varint,3,opt,name=success" json:"success,omitempty"`
-	User             *User   `protobuf:"bytes,4,opt,name=user" json:"user,omitempty"`
+	Valid            *bool   `protobuf:"varint,2,opt,name=valid" json:"valid,omitempty"`
+	User             *User   `protobuf:"bytes,3,opt,name=user" json:"user,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -79,9 +79,9 @@ func (m *AuthResponse) GetRequestID() string {
 	return ""
 }
 
-func (m *AuthResponse) GetSuccess() bool {
-	if m != nil && m.Success != nil {
-		return *m.Success
+func (m *AuthResponse) GetValid() bool {
+	if m != nil && m.Valid != nil {
+		return *m.Valid
 	}
 	return false
 }
