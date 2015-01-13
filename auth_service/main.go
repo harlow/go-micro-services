@@ -6,9 +6,12 @@ import (
 	"os"
 
 	"./../protobufs/user"
+
 	"code.google.com/p/goprotobuf/proto"
 	_ "github.com/lib/pq"
 )
+
+const serviceID = "auth_service"
 
 type AuthHandler int
 
@@ -25,7 +28,7 @@ func (t *AuthHandler) Auth(req *user.AuthRequest, resp *user.AuthResponse) error
 	selectStmt := "SELECT id, first_name, last_name, email FROM users WHERE auth_token=$1"
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Printf("%s caller:%s status:error %v\n", requestID, callerID, err)
+		log.Printf("%s %s.status.error caller_id=%s %v\n", requestID, serviceID, callerID, err)
 	}
 
 	defer db.Close()
@@ -33,13 +36,13 @@ func (t *AuthHandler) Auth(req *user.AuthRequest, resp *user.AuthResponse) error
 
 	switch {
 	case err == sql.ErrNoRows:
-		log.Printf("%s caller:%s status:failed\n", requestID, callerID)
+		log.Printf("%s %s.status.failed caller_id=%s\n", requestID, serviceID, callerID)
 		resp.Valid = proto.Bool(false)
 	case err != nil:
-		log.Printf("%s caller:%s status:error  %v\n", requestID, callerID, err)
+		log.Printf("%s %s.status.error  %v\n", requestID, serviceID, callerID, err)
 		resp.Valid = proto.Bool(false)
 	default:
-		log.Printf("%s caller:%s status:success user_id:%d\n", requestID, callerID, id)
+		log.Printf("%s %s.status.success caller_id=%s user_id=%d\n", requestID, serviceID, callerID, id)
 		resp.User = &user.User{
 			AuthToken: proto.String(authToken),
 			Email:     proto.String(email),
