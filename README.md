@@ -3,7 +3,7 @@
 An experiment with Golang micro-services that accept external HTTP requests and then
 leverage [Protocol Buffers][3] for inter-service tcp communication.
 
-![auth_service](https://cloud.githubusercontent.com/assets/739782/5716132/5774f4fa-9a9b-11e4-9b4c-f797ae105530.png)
+![auth_service](https://cloud.githubusercontent.com/assets/739782/5716158/ecc8b7ee-9a9b-11e4-8821-e48d5fdc5838.png)
 
 The Web Service accepts HTTP requests on port `8000` and then dials a tcp connection
 to port `1984` and authenticates the token with the Auth Service.
