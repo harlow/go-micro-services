@@ -30,7 +30,9 @@ var _ = proto.Marshal
 var _ = math.Inf
 
 type AuthRequest struct {
-	Token            *string `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
+	RequestID        *string `protobuf:"bytes,1,opt,name=requestID" json:"requestID,omitempty"`
+	CallerID         *string `protobuf:"bytes,2,opt,name=callerID" json:"callerID,omitempty"`
+	AuthToken        *string `protobuf:"bytes,3,opt,name=authToken" json:"authToken,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -38,26 +40,48 @@ func (m *AuthRequest) Reset()         { *m = AuthRequest{} }
 func (m *AuthRequest) String() string { return proto.CompactTextString(m) }
 func (*AuthRequest) ProtoMessage()    {}
 
-func (m *AuthRequest) GetToken() string {
-	if m != nil && m.Token != nil {
-		return *m.Token
+func (m *AuthRequest) GetRequestID() string {
+	if m != nil && m.RequestID != nil {
+		return *m.RequestID
+	}
+	return ""
+}
+
+func (m *AuthRequest) GetCallerID() string {
+	if m != nil && m.CallerID != nil {
+		return *m.CallerID
+	}
+	return ""
+}
+
+func (m *AuthRequest) GetAuthToken() string {
+	if m != nil && m.AuthToken != nil {
+		return *m.AuthToken
 	}
 	return ""
 }
 
 type AuthResponse struct {
-	Valid            *bool  `protobuf:"varint,1,opt,name=valid" json:"valid,omitempty"`
-	User             *User  `protobuf:"bytes,2,opt,name=user" json:"user,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
+	RequestID        *string `protobuf:"bytes,1,opt,name=requestID" json:"requestID,omitempty"`
+	Success          *bool   `protobuf:"varint,3,opt,name=success" json:"success,omitempty"`
+	User             *User   `protobuf:"bytes,4,opt,name=user" json:"user,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
 }
 
 func (m *AuthResponse) Reset()         { *m = AuthResponse{} }
 func (m *AuthResponse) String() string { return proto.CompactTextString(m) }
 func (*AuthResponse) ProtoMessage()    {}
 
-func (m *AuthResponse) GetValid() bool {
-	if m != nil && m.Valid != nil {
-		return *m.Valid
+func (m *AuthResponse) GetRequestID() string {
+	if m != nil && m.RequestID != nil {
+		return *m.RequestID
+	}
+	return ""
+}
+
+func (m *AuthResponse) GetSuccess() bool {
+	if m != nil && m.Success != nil {
+		return *m.Success
 	}
 	return false
 }
@@ -71,10 +95,10 @@ func (m *AuthResponse) GetUser() *User {
 
 type User struct {
 	Id               *int32  `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
-	FirstName        *string `protobuf:"bytes,2,opt,name=first_name" json:"first_name,omitempty"`
-	LastName         *string `protobuf:"bytes,3,opt,name=last_name" json:"last_name,omitempty"`
+	FirstName        *string `protobuf:"bytes,2,opt,name=firstName" json:"firstName,omitempty"`
+	LastName         *string `protobuf:"bytes,3,opt,name=lastName" json:"lastName,omitempty"`
 	Email            *string `protobuf:"bytes,4,opt,name=email" json:"email,omitempty"`
-	AuthToken        *string `protobuf:"bytes,5,opt,name=auth_token" json:"auth_token,omitempty"`
+	AuthToken        *string `protobuf:"bytes,5,opt,name=authToken" json:"authToken,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 

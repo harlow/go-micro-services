@@ -10,47 +10,52 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type UserService int
+type AuthHandler int
 
-func (t *UserService) Auth(req *user.AuthRequest, resp *user.AuthResponse) error {
-	authToken := *req.Token
+func (t *AuthHandler) Auth(req *user.AuthRequest, resp *user.AuthResponse) error {
+	requestID := req.GetRequestID()
+	callerID := req.GetCallerID()
+	authToken := req.GetAuthToken()
+
+	var email string
+	var firstName string
+	var id int32
+	var lastName string
+
+	selectStmt := "SELECT id, first_name, last_name, email FROM users WHERE auth_token=$1"
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("%s caller:%s status:error %v\n", requestID, callerID, err)
 	}
 
 	defer db.Close()
-	var id int32
-	var firstName string
-	var lastName string
-	var email string
-
-	err = db.
-		QueryRow("SELECT id, first_name, last_name, email FROM users WHERE auth_token=$1", authToken).
-		Scan(&id, &firstName, &lastName, &email)
+	err = db.QueryRow(selectStmt, *req.AuthToken).Scan(&id, &firstName, &lastName, &email)
 
 	switch {
 	case err == sql.ErrNoRows:
-		log.Println("auth_service: sign in failure, unknown token.")
-		resp.Valid = proto.Bool(false)
+		log.Printf("%s caller:%s status:failed\n", requestID, callerID)
+		resp.Success = proto.Bool(false)
 	case err != nil:
-		log.Printf("auth_service: sign in error, %v.\n", err)
-		resp.Valid = proto.Bool(false)
+		log.Printf("%s caller:%s status:error  %v\n", requestID, callerID, err)
+		resp.Success = proto.Bool(false)
 	default:
-		log.Println("auth_service: sign in succes.")
-		resp.Valid = proto.Bool(true)
+		log.Printf("%s caller:%s status:success user_id:%d\n", requestID, callerID, id)
 		resp.User = &user.User{
-			Id:        proto.Int32(id),
-			FirstName: proto.String(firstName),
-			LastName:  proto.String(lastName),
-			Email:     proto.String(email),
 			AuthToken: proto.String(authToken),
+			Email:     proto.String(email),
+			FirstName: proto.String(firstName),
+			Id:        proto.Int32(id),
+			LastName:  proto.String(lastName),
 		}
+		resp.Success = proto.Bool(true)
 	}
 	return nil
 }
 
 func main() {
-	log.Println("auth_service: running")
-	user.ListenAndServeUserService("tcp", ":"+os.Getenv("AUTH_SERVICE_PORT"), new(UserService))
+	user.ListenAndServeUserService(
+		"tcp",
+		":"+os.Getenv("AUTH_SERVICE_PORT"),
+		new(AuthHandler),
+	)
 }

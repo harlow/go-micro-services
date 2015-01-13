@@ -12,27 +12,38 @@ import (
 	"code.google.com/p/goprotobuf/proto"
 	"github.com/harlow/go-auth-middleware"
 	"github.com/justinas/alice"
+	"github.com/nu7hatch/gouuid"
 )
 
-func authServiceUrl() string {
-	return os.Getenv("AUTH_SERVICE_ADDRESS") + ":" + os.Getenv("AUTH_SERVICE_PORT")
-}
+var serviceID = "service1"
 
 type Authenticator struct{}
 
 func (a Authenticator) Valid(token string) bool {
-	stub, client, err := user.DialUserService("tcp", authServiceUrl())
+	requestID, err := uuid.NewV4()
 	if err != nil {
-		log.Fatal(`user.DialUserService error:`, err)
+		log.Fatal(err)
 	}
+
+	req := user.AuthRequest{
+		AuthToken: proto.String(token),
+		CallerID:  proto.String(serviceID),
+		RequestID: proto.String(requestID.String()),
+	}
+	resp := user.AuthResponse{}
+	stub, client, err := user.DialUserService("tcp", ":"+os.Getenv("AUTH_SERVICE_PORT"))
+	if err != nil {
+		log.Fatalf("%s user.DialUserService error:", requestID.String(), err)
+	}
+
 	defer client.Close()
-	var req user.AuthRequest
-	var resp user.AuthResponse
-	req.Token = proto.String(token)
+	log.Printf("%s rpc:auth_service status:begin\n", requestID.String())
 	if err = stub.Auth(&req, &resp); err != nil {
-		log.Fatal("stub.User error:", err)
+		log.Printf("%s rpc:auth_service:error %v\n", requestID.String(), err)
 	}
-	return resp.GetValid()
+	log.Printf("%s rpc:auth_service status:complete success:%v\n", requestID.String(), resp.GetSuccess())
+
+	return resp.GetSuccess()
 }
 
 func authHandler(h http.Handler) http.Handler {
@@ -49,9 +60,9 @@ func appHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	log.Println("service1: running")
 	app := http.HandlerFunc(appHandler)
 	err := http.ListenAndServe(":"+os.Getenv("SERVICE1_PORT"), alice.New(authHandler, timeoutHandler).Then(app))
+
 	if err != nil {
 		fmt.Printf("http.ListenAndServe error: %v\n", err)
 	}

@@ -3,20 +3,23 @@ package user;
 option cc_generic_services = true;
 
 message AuthRequest {
-  optional string token = 1;
+  optional string requestID = 1;
+  optional string callerID = 2;
+  optional string authToken = 3;
 }
 
 message AuthResponse {
-  optional bool valid = 1;
-  optional User user = 2;
+  optional string requestID = 1;
+  optional bool success = 3;
+  optional User user = 4;
 }
 
 message User {
   optional int32 id = 1;
-  optional string first_name = 2;
-  optional string last_name = 3;
+  optional string firstName = 2;
+  optional string lastName = 3;
   optional string email = 4;
-  optional string auth_token = 5;
+  optional string authToken = 5;
 }
 
 service UserService {
