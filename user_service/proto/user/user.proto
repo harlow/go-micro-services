@@ -1,6 +1,4 @@
-package user;
-
-option cc_generic_services = true;
+package service.user_service.user;
 
 message AuthRequest {
   optional string requestID = 1;
@@ -20,8 +18,4 @@ message User {
   optional string lastName = 3;
   optional string email = 4;
   optional string authToken = 5;
-}
-
-service UserService {
-  rpc auth (AuthRequest) returns (AuthResponse);
 }

@@ -3,10 +3,12 @@
 An experiment with Golang micro-services that accept external HTTP requests and then
 leverage [Protocol Buffers][3] for inter-service tcp communication.
 
-![auth_service](https://cloud.githubusercontent.com/assets/739782/5716158/ecc8b7ee-9a9b-11e4-8821-e48d5fdc5838.png)
+![likes_sequence](https://cloud.githubusercontent.com/assets/739782/6634233/3046c1ec-c912-11e4-96cd-84cf359aa6dc.png)
 
-The Web Service accepts HTTP requests on port `8000` and then dials a tcp connection
-to port `1984` and authenticates the token with the Auth Service.
+The API Service accepts HTTP requests on port `8080` and then dials a tcp connection
+to the User Service and authenticates the token with the Auth Service.
+
+The applications use Consul for service discovery.
 
 ### Installation
 
@@ -14,22 +16,42 @@ Clone the repository:
 
     git clone git@github.com:harlow/go-micro-services.git
 
-Create a `.env` file with a database and service details:
+### Prerequisites
 
-    AUTH_SERVICE_PORT=1984
-    DATABASE_URL=postgres://localhost/auth_service_development?sslmode=disable
-    WEB_SERVICE_PORT=8000
+Consul is used for the discovery mechanism.
+
+#### Install Consul
+
+    https://www.consul.io/intro/getting-started/install.html
+
+#### Run Consul
+
+    consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul
+
+### Set up Auth Service
+
+Create a Postgres database for test and development environments:
+
+    CREATE DATABASE auth_service_development;
+    CREATE DATABASE auth_service_test;
 
 Use [goose][1] to run the database migrations:
 
+    cd auth_service
+    go get bitbucket.org/liamstask/goose/cmd/goose
     goose up
-
-### Run the Application
 
 Add a new user to the database with `auth_token=VALID_TOKEN`.
 
-Use [foreman][2] to bring up the services:
+Create a `.env` file with the database url:
 
+    DATABASE_URL=postgres://localhost/auth_service_development?sslmode=disable
+
+### Run each of the services
+
+Use [foreman][2] to bring up the user service:
+
+    cd user_service
     foreman start
 
 Curl the service with a valid auth token:
