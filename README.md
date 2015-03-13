@@ -47,21 +47,24 @@ Create a `.env` file with the database url:
 
     DATABASE_URL=postgres://localhost/auth_service_development?sslmode=disable
 
-### Run each of the services
+### Boot each of the services
 
 Use [foreman][2] to bring up the user service:
+
+    cd www
+    foreman start
 
     cd user_service
     foreman start
 
 Curl the service with a valid auth token:
 
-    $ curl http://localhost:8000 -H "Authorization: Bearer VALID_TOKEN"
+    $ curl http://localhost:8080 -H "Authorization: Bearer VALID_TOKEN"
     Hello world!
 
 Curl the service with an invalid auth token:
 
-    $ curl http://localhost:8000 -H "Authorization: Bearer INVALID_TOKEN"
+    $ curl http://localhost:8080 -H "Authorization: Bearer INVALID_TOKEN"
     Unauthorized
 
 ### Protocol Buffers

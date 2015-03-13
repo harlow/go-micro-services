@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"os"
 
-	user "./../proto/user"
 	"code.google.com/p/goprotobuf/proto"
 	"github.com/asim/go-micro/server"
-	log "github.com/golang/glog"
-	_ "github.com/lib/pq"
 	"golang.org/x/net/context"
+	_ "github.com/lib/pq"
+	log "github.com/golang/glog"
+	user "./../proto/user"
 )
 
 type Authentication struct{}
