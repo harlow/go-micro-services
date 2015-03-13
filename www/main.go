@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"os"
 
@@ -12,12 +12,11 @@ import (
 	"github.com/harlow/auth_token"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	token, err := auth_token.Parse(r.Header.Get("Authorization"))
+func lookupUserByToken(u *user.User, authHeader string) (error) {
+	token, err := auth_token.Parse(authHeader)
 
 	if err != nil {
-		http.Error(w, "Auth Token Required", http.StatusForbidden)
-		return
+		return err
 	}
 
 	req := client.NewRequest("service.user", "Authentication.Call", &user.AuthRequest{
@@ -27,19 +26,30 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	rsp := &user.AuthResponse{}
 
 	if err := client.Call(req, rsp); err != nil {
-		fmt.Println(err)
+		return err
+	}
+
+	if rsp.GetValid() == false {
+		return errors.New("Unauthorized")
+	}
+
+	u = rsp.User
+	return nil
+}
+
+func requestHandler(w http.ResponseWriter, r *http.Request) {
+	u := &user.User{}
+	err := lookupUserByToken(u, r.Header.Get("Authorization"))
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
 
-	if rsp.GetValid() == true {
-		w.Write([]byte("Hello world!"))
-	} else {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+	w.Write([]byte("Hello world!"))
 }
 
 func main() {
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/", requestHandler)
   http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }
