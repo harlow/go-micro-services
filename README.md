@@ -35,21 +35,24 @@ Create a Postgres database for test and development environments:
     CREATE DATABASE auth_service_development;
     CREATE DATABASE auth_service_test;
 
-Use [goose][1] to run the database migrations:
+Use [goose][1] to manage database migrations:
+
+    go get bitbucket.org/liamstask/goose/cmd/goose
+
+Run the migrations:
 
     cd auth_service
-    go get bitbucket.org/liamstask/goose/cmd/goose
     goose up
-
-Add a new user to the database with `auth_token=VALID_TOKEN`.
 
 Create a `.env` file with the database url:
 
     DATABASE_URL=postgres://localhost/auth_service_development?sslmode=disable
 
+Add a new user to the database with `auth_token=VALID_TOKEN`.
+
 ### Boot each of the services
 
-Use [foreman][2] to bring up the user service:
+Use [foreman][2] to bring up the www and user service:
 
     cd www
     foreman start
@@ -57,7 +60,7 @@ Use [foreman][2] to bring up the user service:
     cd user_service
     foreman start
 
-Curl the service with a valid auth token:
+Curl the WWW service with a valid auth token:
 
     $ curl http://localhost:8080 -H "Authorization: Bearer VALID_TOKEN"
     Hello world!
