@@ -15,8 +15,6 @@ import (
 type Authentication struct{}
 
 func (e *Authentication) Call(ctx context.Context, req *user.AuthRequest, rsp *user.AuthResponse) error {
-	log.Infof("Received Authentication.Call request")
-
 	requestID := req.GetRequestID()
 	callerID := req.GetCallerID()
 	authToken := req.GetAuthToken()

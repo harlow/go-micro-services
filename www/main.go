@@ -21,6 +21,7 @@ func lookupUserByToken(u *user.User, authHeader string) (error) {
 
 	req := client.NewRequest("service.user", "Authentication.Call", &user.AuthRequest{
 		AuthToken: proto.String(token),
+		CallerID: proto.String("www"),
 	})
 
 	rsp := &user.AuthResponse{}
