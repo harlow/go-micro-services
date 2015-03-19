@@ -1,7 +1,7 @@
-# HTTP up front, Protobufs in the rear.
+# HTTP up front, TCP in the rear.
 
 An experiment with Golang micro-services that accept external HTTP requests and then
-leverage [Protocol Buffers][3] for inter-service tcp communication.
+leverage TCP and [Protocol Buffers][3] for inter-service communication.
 
 ![likes_sequence](https://cloud.githubusercontent.com/assets/739782/6634233/3046c1ec-c912-11e4-96cd-84cf359aa6dc.png)
 
