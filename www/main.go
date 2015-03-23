@@ -1,56 +1,58 @@
 package main
 
 import (
-	"errors"
+	"log"
 	"net/http"
+	"net/rpc"
 	"os"
 
-	user "./../user_service/proto/user"
-
-	"github.com/asim/go-micro/client"
-	"github.com/golang/protobuf/proto"
 	"github.com/harlow/auth_token"
 )
 
-func lookupUserByToken(u *user.User, authHeader string) (error) {
-	token, err := auth_token.Parse(authHeader)
-
-	if err != nil {
-		return err
-	}
-
-	req := client.NewRequest("service.user", "Authentication.Call", &user.AuthRequest{
-		AuthToken: proto.String(token),
-		CallerID: proto.String("www"),
-	})
-
-	rsp := &user.AuthResponse{}
-
-	if err := client.Call(req, rsp); err != nil {
-		return err
-	}
-
-	if rsp.GetValid() == false {
-		return errors.New("Unauthorized")
-	}
-
-	u = rsp.User
-	return nil
+type AuthRequest struct {
+	Token string
 }
 
-func requestHandler(w http.ResponseWriter, r *http.Request) {
-	u := &user.User{}
-	err := lookupUserByToken(u, r.Header.Get("Authorization"))
+type User struct {
+	Email     string
+	FirstName string
+	ID        int32
+	LastName  string
+}
+
+func (u *User) FullName() string {
+	return u.FirstName + " " + u.LastName
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	token, err := auth_token.Parse(r.Header.Get("Authorization"))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
 
-	w.Write([]byte("Hello world!"))
+	url := os.Getenv("USER_SERVICE_URL")
+	client, err := rpc.DialHTTP("tcp", url)
+
+	if err != nil {
+		log.Fatal("dialing:", err)
+	}
+
+	args := &AuthRequest{Token: token}
+	user := &User{}
+
+	err = client.Call("UserService.Login", args, &user)
+
+	if err != nil {
+		log.Print("service error: ", err)
+		return
+	}
+
+	w.Write([]byte(user.FullName()))
 }
 
 func main() {
-	http.HandleFunc("/", requestHandler)
-  http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	http.HandleFunc("/", handler)
+	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }
