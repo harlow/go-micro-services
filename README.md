@@ -3,7 +3,7 @@
 An experiment with Golang micro-services that accept external HTTP requests and then
 leverage [RPC][3] for inter-service tcp communication.
 
-![like sequence](https://cloud.githubusercontent.com/assets/739782/6776256/b4fdd120-d0f9-11e4-8b7f-36472af3115e.png)
+![like_sequence_animated](https://cloud.githubusercontent.com/assets/739782/6776496/81a69638-d0fc-11e4-915a-c0b37108c641.gif)
 
 The API Service accepts HTTP requests on port `8000` and then dials a tcp connection
 to the User Service. When the user is verified another tcp request is sent to the Like Service.
