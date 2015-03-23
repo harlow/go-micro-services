@@ -36,12 +36,7 @@ func (u *UserService) Login(args *AuthRequest, reply *User) error {
 
 	defer db.Close()
 	stmt := "SELECT id, first_name, last_name, email FROM users WHERE auth_token=$1"
-	err = db.QueryRow(stmt, args.Token).Scan(
-		&reply.Email,
-		&reply.FirstName,
-		&reply.ID,
-		&reply.LastName,
-	)
+	err = db.QueryRow(stmt, args.Token).Scan(&reply.ID, &reply.FirstName, &reply.LastName, &reply.Email)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -58,8 +53,8 @@ func (u *UserService) Login(args *AuthRequest, reply *User) error {
 }
 
 func main() {
-	userService := new(UserService)
-	rpc.Register(userService)
+	srvc := new(UserService)
+	rpc.Register(srvc)
 	rpc.HandleHTTP()
 	l, e := net.Listen("tcp", ":"+os.Getenv("PORT"))
 
