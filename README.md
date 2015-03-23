@@ -6,9 +6,9 @@ leverage [RPC][3] for inter-service tcp communication.
 ![like sequence](https://cloud.githubusercontent.com/assets/739782/6776256/b4fdd120-d0f9-11e4-8b7f-36472af3115e.png)
 
 The API Service accepts HTTP requests on port `8000` and then dials a tcp connection
-to the User Service and authenticates the token with the Auth Service.
+to the User Service. When the user is verified another tcp request is sent to the Like Service.
 
-The applications use Consul for service discovery.
+[gob][3] is the default data encoding format for Golang RPC calls.
 
 ### Installation
 
@@ -69,3 +69,4 @@ Curl the service with an invalid auth token:
 [1]: https://bitbucket.org/liamstask/goose
 [2]: https://github.com/ddollar/foreman
 [3]: http://golang.org/pkg/net/rpc/
+[4]: http://golang.org/pkg/encoding/gob/
