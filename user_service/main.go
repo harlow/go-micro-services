@@ -13,7 +13,8 @@ import (
 )
 
 type AuthRequest struct {
-	Token string
+	Token     string
+	RequestID string
 }
 
 type User struct {
@@ -29,7 +30,8 @@ func (u *UserService) Login(args *AuthRequest, reply *User) error {
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 
 	if err != nil {
-		log.Errorf("Error: Database Connection %v\n", err)
+		log.Infof("Error: %v", err)
+		return errors.New(err.Error())
 	}
 
 	defer db.Close()
@@ -44,10 +46,10 @@ func (u *UserService) Login(args *AuthRequest, reply *User) error {
 	switch {
 	case err == sql.ErrNoRows:
 		log.Infof("User not found")
-		return errors.New("User not found")
+		return errors.New("Unknown User")
 	case err != nil:
 		log.Infof("Error: %v", err)
-		return errors.New("Other stuff gone wrong")
+		return errors.New(err.Error())
 	default:
 		log.Infof("Success!")
 	}
