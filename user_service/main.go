@@ -3,12 +3,12 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"net"
 	"net/http"
 	"net/rpc"
 	"os"
 
-	log "github.com/golang/glog"
 	_ "github.com/lib/pq"
 )
 
@@ -20,7 +20,7 @@ type AuthRequest struct {
 type User struct {
 	Email     string
 	FirstName string
-	ID        int32
+	ID        int
 	LastName  string
 }
 
@@ -30,7 +30,7 @@ func (u *UserService) Login(args *AuthRequest, reply *User) error {
 	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 
 	if err != nil {
-		log.Infof("Error: %v", err)
+		log.Printf("Error: %v\n", err)
 		return errors.New(err.Error())
 	}
 
@@ -40,13 +40,13 @@ func (u *UserService) Login(args *AuthRequest, reply *User) error {
 
 	switch {
 	case err == sql.ErrNoRows:
-		log.Infof("User not found")
+		log.Println("User not found")
 		return errors.New("Unknown User")
 	case err != nil:
-		log.Infof("Error: %v", err)
+		log.Printf("Error: %v\n", err)
 		return errors.New(err.Error())
 	default:
-		log.Infof("Success!")
+		log.Printf("Successful login for %v\n", reply.ID)
 	}
 
 	return nil
