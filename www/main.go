@@ -18,7 +18,7 @@ type LikeRequest struct {
 	UserID int
 }
 
-type LikeReply struct {
+type LikeResponse struct {
 	Count int
 }
 
@@ -70,7 +70,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	url := os.Getenv("LIKE_SERVICE_URL")
 	client, err := rpc.DialHTTP("tcp", url)
 	args := &LikeRequest{UserID: user.ID, PostID: 1234}
-	reply := &LikeReply{}
+	reply := &LikeResponse{}
 
 	if err != nil {
 		w.Write([]byte(err.Error()))

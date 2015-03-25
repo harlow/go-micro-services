@@ -23,7 +23,7 @@ type Reply struct {
 
 type LikeService int
 
-func (s *LikeService) Like(args *Args, reply *Reply) error {
+func (s LikeService) Like(args *Args, reply *Reply) error {
 	conn, err := redis.Dial("tcp", ":6379")
   defer conn.Close()
 
@@ -37,14 +37,14 @@ func (s *LikeService) Like(args *Args, reply *Reply) error {
 }
 
 func main() {
-	srvc := new(LikeService)
-	rpc.Register(srvc)
+	srv := new(LikeService)
+	rpc.Register(srv)
 	rpc.HandleHTTP()
-	l, e := net.Listen("tcp", ":"+os.Getenv("PORT"))
+	ln, err := net.Listen("tcp", ":"+os.Getenv("PORT"))
 
-	if e != nil {
-		log.Fatalf("net.Listen tcp :%v: %v", os.Getenv("PORT"), e)
+	if err != nil {
+		log.Fatalf("net.Listen tcp :%v: %v", os.Getenv("PORT"), err)
 	}
 
-	http.Serve(l, nil)
+	http.Serve(ln, nil)
 }

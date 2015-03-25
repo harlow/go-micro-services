@@ -53,14 +53,14 @@ func (u *UserService) Login(args *AuthRequest, reply *User) error {
 }
 
 func main() {
-	srvc := new(UserService)
-	rpc.Register(srvc)
+	srv := new(UserService)
+	rpc.Register(srv)
 	rpc.HandleHTTP()
-	l, e := net.Listen("tcp", ":"+os.Getenv("PORT"))
+	ln, err := net.Listen("tcp", ":"+os.Getenv("PORT"))
 
-	if e != nil {
-		log.Fatalf("net.Listen tcp :%v: %v", os.Getenv("PORT"), e)
+	if err != nil {
+		log.Fatalf("net.Listen tcp :%v: %v", os.Getenv("PORT"), err)
 	}
 
-	http.Serve(l, nil)
+	http.Serve(ln, nil)
 }
