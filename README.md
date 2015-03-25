@@ -16,15 +16,6 @@ Clone the repository:
 
     git clone git@github.com:harlow/go-micro-services.git
 
-### WWW Service
-
-Create a `.env` file with the port and user service url:
-
-    PORT=8000
-    USER_SERVICE_URL=localhost:1234
-
-### User Service
-
 Create a Postgres database for test and development environments:
 
     CREATE DATABASE auth_service_development;
@@ -34,36 +25,40 @@ Use [goose][1] to manage database migrations:
 
     go get bitbucket.org/liamstask/goose/cmd/goose
 
-Run the migrations:
+Run the user service migrations:
 
-    cd user_srevice
+    cd user_service
     goose up
-
-Create a `.env` file with the database url:
-
-    DATABASE_URL=postgres://localhost/auth_service_development?sslmode=disable
-    PORT=1234
 
 Add a new user to the database with `auth_token=VALID_TOKEN`.
 
-### Run the Services
+### Boot the Services
 
-Use [foreman][2] to bring up the www and user service:
+To make the demo as straigforward we'll use Foreman to bool all the services at once.
 
-    cd www
+Create a `.env` file in the project root:
+
+    API_PORT=8000
+    LIKE_SERVICE_PORT=5001
+    LIKE_SERVICE_URL=localhost:5001
+    USER_SERVICE_DATABASE_URL=postgres://localhost/auth_service_development?sslmode=disable
+    USER_SERVICE_PORT=5002
+    USER_SERVICE_URL=localhost:5002
+
+Use [foreman][2] to bring up the services:
+
     foreman start
 
-    cd user_service
-    foreman start
+_Note:_ Typically each application would be run as stand-alone service.
 
-Curl the WWW service with a valid auth token:
+Curl the API endpoint with a valid auth token:
 
-    $ curl http://localhost:8080 -H "Authorization: Bearer VALID_TOKEN"
+    $ curl http://localhost:8000 -H "Authorization: Bearer VALID_TOKEN"
     Hello world!
 
-Curl the service with an invalid auth token:
+Curl the endpoint with an invalid auth token:
 
-    $ curl http://localhost:8080 -H "Authorization: Bearer INVALID_TOKEN"
+    $ curl http://localhost:8000 -H "Authorization: Bearer INVALID_TOKEN"
     Unauthorized
 
 [1]: https://bitbucket.org/liamstask/goose

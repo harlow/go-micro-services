@@ -42,10 +42,10 @@ func main() {
 	srv := new(LikeService)
 	rpc.Register(srv)
 	rpc.HandleHTTP()
-	ln, err := net.Listen("tcp", ":"+os.Getenv("PORT"))
+	ln, err := net.Listen("tcp", ":"+os.Getenv("LIKE_SERVICE_PORT"))
 
 	if err != nil {
-		log.Fatalf("net.Listen tcp :%v: %v", os.Getenv("PORT"), err)
+		log.Fatalf("net.Listen tcp :%v: %v", os.Getenv("LIKE_SERVICE_PORT"), err)
 	}
 
 	http.Serve(ln, nil)
