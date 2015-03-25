@@ -48,12 +48,12 @@ type LikeResponse struct {
 }
 
 func logRequest(to string) {
-	log.Printf("[IN] %v → %v\n", ServiceName, to)
+	log.Printf("[REQ] %v → %v\n", ServiceName, to)
 }
 
 func logResponse(to string, start time.Time) {
 	elapsed := time.Since(start)
-	log.Printf("[OUT] %v → %v - %v\n", ServiceName, to, elapsed)
+	log.Printf("[REP] %v → %v - %v\n", ServiceName, to, elapsed)
 }
 
 func getUser(token string) (User, error) {
