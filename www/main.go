@@ -2,24 +2,27 @@ package main
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"net/rpc"
 	"os"
+	"time"
 
 	"github.com/harlow/auth_token"
 )
 
+const ServiceName = "com.go-micro-services.api.v1.like"
+
 type AuthRequest struct {
-	Token string
+	AuthToken string
+	From      string
+	RequestID string
 }
 
-type LikeRequest struct {
-	PostID int
-	UserID int
-}
-
-type LikeResponse struct {
-	Count int
+type AuthResponse struct {
+	From      string
+	RequestID string
+	User      User
 }
 
 type User struct {
@@ -33,26 +36,69 @@ func (u *User) FullName() string {
 	return u.FirstName + " " + u.LastName
 }
 
-func getUser(token string) (User, error) {
-	args := AuthRequest{Token: token}
-	user := &User{}
-	url := os.Getenv("USER_SERVICE_URL")
-	client, err := rpc.DialHTTP("tcp", url)
-
-	if err != nil {
-		return *user, errors.New(err.Error())
-	}
-
-	err = client.Call("UserService.Login", args, &user)
-
-	if err != nil {
-		return *user, errors.New(err.Error())
-	}
-
-	return *user, nil
+type LikeRequest struct {
+	From      string
+	PostID    int
+	RequestID string
+	UserID    int
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+type LikeResponse struct {
+	Count int
+}
+
+func logRequest(to string) {
+	log.Printf("[IN] %v → %v\n", ServiceName, to)
+}
+
+func logResponse(to string, start time.Time) {
+	elapsed := time.Since(start)
+	log.Printf("[OUT] %v → %v - %v\n", ServiceName, to, elapsed)
+}
+
+func getUser(token string) (User, error) {
+	logRequest("com.go-micro.services.user")
+	defer logResponse("com.go-micro.services.user", time.Now())
+
+	args := AuthRequest{AuthToken: token, From: ServiceName, RequestID: "11111111"}
+	reply := &AuthResponse{}
+	client, err := rpc.DialHTTP("tcp", os.Getenv("USER_SERVICE_URL"))
+
+	if err != nil {
+		return reply.User, errors.New(err.Error())
+	}
+
+	err = client.Call("UserService.Login", args, &reply)
+
+	if err != nil {
+		return reply.User, errors.New(err.Error())
+	}
+
+	return reply.User, nil
+}
+
+func likePost(user User, postID int) (LikeResponse, error) {
+	logRequest("com.go-micro.services.like")
+	defer logResponse("com.go-micro.services.like", time.Now())
+
+	args := &LikeRequest{UserID: user.ID, PostID: postID}
+	reply := &LikeResponse{}
+	client, err := rpc.DialHTTP("tcp", os.Getenv("LIKE_SERVICE_URL"))
+
+	if err != nil {
+		return LikeResponse{}, errors.New(err.Error())
+	}
+
+	err = client.Call("LikeService.Like", args, &reply)
+
+	if err != nil {
+		return LikeResponse{}, errors.New(err.Error())
+	}
+
+	return *reply, nil
+}
+
+func requestHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := auth_token.Parse(r.Header.Get("Authorization"))
 
 	if err != nil {
@@ -67,27 +113,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := os.Getenv("LIKE_SERVICE_URL")
-	client, err := rpc.DialHTTP("tcp", url)
-	args := &LikeRequest{UserID: user.ID, PostID: 1234}
-	reply := &LikeResponse{}
+	like, err := likePost(user, 1234)
 
 	if err != nil {
-		w.Write([]byte(err.Error()))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = client.Call("LikeService.Like", args, &reply)
-
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	w.Write([]byte(user.FullName() + " w/ Likes: " + string(reply.Count)))
+	w.Write([]byte(user.FullName() + " w/ Likes: " + string(like.Count)))
 }
 
 func main() {
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/", requestHandler)
 	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }

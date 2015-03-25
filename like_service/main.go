@@ -12,6 +12,8 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
+const ServiceName = "com.go-micro.services.like"
+
 type Args struct {
 	UserID int
 	PostID int
