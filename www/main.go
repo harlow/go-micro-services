@@ -11,7 +11,11 @@ import (
 	"github.com/harlow/auth_token"
 )
 
-const ServiceName = "com.go-micro-services.api.v1.like"
+const (
+	APIName         = "api.like"
+	UserServiceName = "service.user"
+	LikeServiceName = "service.like"
+)
 
 type AuthRequest struct {
 	AuthToken string
@@ -47,20 +51,11 @@ type LikeResponse struct {
 	Count int
 }
 
-func logRequest(to string) {
-	log.Printf("[REQ] %v → %v\n", ServiceName, to)
-}
-
-func logResponse(to string, start time.Time) {
-	elapsed := time.Since(start)
-	log.Printf("[REP] %v → %v - %v\n", ServiceName, to, elapsed)
-}
-
 func getUser(token string) (User, error) {
-	logRequest("com.go-micro.services.user")
-	defer logResponse("com.go-micro.services.user", time.Now())
+	logRequest(UserServiceName)
+	defer logResponse(UserServiceName, time.Now())
 
-	args := AuthRequest{AuthToken: token, From: ServiceName, RequestID: "11111111"}
+	args := AuthRequest{AuthToken: token, From: APIName, RequestID: "11111111"}
 	reply := &AuthResponse{}
 	client, err := rpc.DialHTTP("tcp", os.Getenv("USER_SERVICE_URL"))
 
@@ -68,7 +63,7 @@ func getUser(token string) (User, error) {
 		return reply.User, errors.New(err.Error())
 	}
 
-	err = client.Call("UserService.Login", args, &reply)
+	err = client.Call("Service.Login", args, &reply)
 
 	if err != nil {
 		return reply.User, errors.New(err.Error())
@@ -78,8 +73,8 @@ func getUser(token string) (User, error) {
 }
 
 func likePost(user User, postID int) (LikeResponse, error) {
-	logRequest("com.go-micro.services.like")
-	defer logResponse("com.go-micro.services.like", time.Now())
+	logRequest(LikeServiceName)
+	defer logResponse(LikeServiceName, time.Now())
 
 	args := &LikeRequest{UserID: user.ID, PostID: postID}
 	reply := &LikeResponse{}
@@ -89,13 +84,22 @@ func likePost(user User, postID int) (LikeResponse, error) {
 		return LikeResponse{}, errors.New(err.Error())
 	}
 
-	err = client.Call("LikeService.Like", args, &reply)
+	err = client.Call("Service.Like", args, &reply)
 
 	if err != nil {
 		return LikeResponse{}, errors.New(err.Error())
 	}
 
 	return *reply, nil
+}
+
+func logRequest(to string) {
+	log.Printf("[REQ] %v → %v\n", APIName, to)
+}
+
+func logResponse(to string, start time.Time) {
+	elapsed := time.Since(start)
+	log.Printf("[REP] %v → %v - %v\n", APIName, to, elapsed)
 }
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {

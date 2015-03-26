@@ -12,7 +12,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-const ServiceName = "com.go-micro.services.like"
+const ServiceName = "service.like"
 
 type Args struct {
 	UserID int
@@ -23,9 +23,9 @@ type Reply struct {
 	Count int
 }
 
-type LikeService int
+type Service int
 
-func (s LikeService) Like(args *Args, reply *Reply) error {
+func (s Service) Like(args *Args, reply *Reply) error {
 	conn, err := redis.Dial("tcp", ":6379")
   defer conn.Close()
 
@@ -39,8 +39,8 @@ func (s LikeService) Like(args *Args, reply *Reply) error {
 }
 
 func main() {
-	srv := new(LikeService)
-	rpc.Register(srv)
+	s := new(Service)
+	rpc.Register(s)
 	rpc.HandleHTTP()
 	ln, err := net.Listen("tcp", ":"+os.Getenv("LIKE_SERVICE_PORT"))
 

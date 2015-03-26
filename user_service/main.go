@@ -13,7 +13,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const ServiceName = "com.go-micro.services.user"
+const ServiceName = "service.user"
 
 type AuthRequest struct {
 	AuthToken string
@@ -34,18 +34,9 @@ type AuthResponse struct {
 	User      User
 }
 
-type UserService int
+type Service int
 
-func logRequest(from string) {
-	log.Printf("[IN] %v → %v\n", ServiceName, from)
-}
-
-func logResponse(from string, start time.Time) {
-	elapsed := time.Since(start)
-	log.Printf("[OUT] %v → %v - %v\n", ServiceName, from, elapsed)
-}
-
-func (u *UserService) Login(args *AuthRequest, reply *AuthResponse) error {
+func (u *Service) Login(args *AuthRequest, reply *AuthResponse) error {
 	logRequest(args.From)
 	defer logResponse(args.From, time.Now())
 	db, err := sql.Open("postgres", os.Getenv("USER_SERVICE_DATABASE_URL"))
@@ -73,8 +64,17 @@ func (u *UserService) Login(args *AuthRequest, reply *AuthResponse) error {
 	return nil
 }
 
+func logRequest(from string) {
+	log.Printf("[IN]  %v → %v\n", ServiceName, from)
+}
+
+func logResponse(from string, start time.Time) {
+	elapsed := time.Since(start)
+	log.Printf("[OUT] %v → %v - %v\n", ServiceName, from, elapsed)
+}
+
 func main() {
-	srv := new(UserService)
+	srv := new(Service)
 	rpc.Register(srv)
 	rpc.HandleHTTP()
 	ln, err := net.Listen("tcp", ":"+os.Getenv("USER_SERVICE_PORT"))
