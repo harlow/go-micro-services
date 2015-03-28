@@ -28,6 +28,8 @@ type Response struct {
 }
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
+	req.LogReq("requstHandler", APIName)
+	defer req.LogRep("requstHandler", APIName, time.Now())
 	token, err := auth_token.Parse(r.Header.Get("Authorization"))
 
 	if err != nil {
@@ -95,7 +97,7 @@ func likePost(userID int, postID int) (like.Like, error) {
 		return like.Like{}, errors.New(err.Error())
 	}
 
-	args := &like.Args{UserID: userID, PostID: postID}
+	args := &like.Args{UserID: userID, PostID: postID, ServiceID: APIName}
 	reply := &like.Reply{}
 	err = client.Call("Service.Like", args, &reply)
 

@@ -6,9 +6,21 @@ leverage [RPC][3] for inter-service tcp communication.
 ![sequence](https://cloud.githubusercontent.com/assets/739782/6883107/ac49593a-d55b-11e4-8f3e-9c9675db0002.png)
 
 The API Service accepts HTTP requests on port `8000` and then dials a tcp connection
-to the User Service. When the user is verified another tcp request is sent to the Like Service.
+to `service.user` to verify account token. If valid token, then service makes reqeust to
+`service.like` to register a Like.
 
-[gob][3] is the default data encoding format for Golang RPC calls.
+```
+15:10:48 web.1  | 2015/03/28 15:10:48 [REQ] requstHandler → api.like
+15:10:48 web.1  | 2015/03/28 15:10:48 [REQ] api.like → service.user
+15:10:48 user.1 | 2015/03/28 15:10:48 [IN]  service.user → api.like
+15:10:48 user.1 | 2015/03/28 15:10:48 [OUT] service.user ← api.like - 9.225312ms
+15:10:48 web.1  | 2015/03/28 15:10:48 [REP] api.like ← service.user - 11.021613ms
+15:10:48 web.1  | 2015/03/28 15:10:48 [REQ] api.like → service.like
+15:10:48 like.1 | 2015/03/28 15:10:48 [IN]  service.like → api.like
+15:10:48 web.1  | 2015/03/28 15:10:48 [REP] api.like ← service.like - 1.917125ms
+15:10:48 like.1 | 2015/03/28 15:10:48 [OUT] service.like ← api.like - 863ns
+15:10:48 web.1  | 2015/03/28 15:10:48 [REP] requstHandler ← api.like - 13.016259ms
+```
 
 ### Installation
 
