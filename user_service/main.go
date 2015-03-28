@@ -10,37 +10,19 @@ import (
 	"os"
 	"time"
 
+	"../shared/req"
+	"../shared/user"
+
 	_ "github.com/lib/pq"
 )
 
-const ServiceName = "service.user"
-
-type AuthRequest struct {
-	AuthToken string
-	From      string
-	RequestID string
-}
-
-type User struct {
-	Email     string
-	FirstName string
-	ID        int
-	LastName  string
-}
-
-type AuthResponse struct {
-	From      string
-	RequestID string
-	User      User
-}
-
 type Service int
 
-func (u *Service) Login(args *AuthRequest, reply *AuthResponse) error {
-	logRequest(args.From)
-	defer logResponse(args.From, time.Now())
-	db, err := sql.Open("postgres", os.Getenv("USER_SERVICE_DATABASE_URL"))
+func (u *Service) Login(args *user.Args, reply *user.Reply) error {
+	req.LogIn(user.ServiceID, args.ServiceID)
+	defer req.LogOut(user.ServiceID, args.ServiceID, time.Now())
 
+	db, err := sql.Open("postgres", os.Getenv("USER_SERVICE_DATABASE_URL"))
 	if err != nil {
 		return errors.New(err.Error())
 	}
@@ -62,15 +44,6 @@ func (u *Service) Login(args *AuthRequest, reply *AuthResponse) error {
 	}
 
 	return nil
-}
-
-func logRequest(from string) {
-	log.Printf("[IN]  %v → %v\n", ServiceName, from)
-}
-
-func logResponse(from string, start time.Time) {
-	elapsed := time.Since(start)
-	log.Printf("[OUT] %v → %v - %v\n", ServiceName, from, elapsed)
 }
 
 func main() {

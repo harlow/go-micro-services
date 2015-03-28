@@ -1,40 +1,34 @@
 package main
 
 import (
-	"errors"
-	"net"
-	"net/http"
-	"net/rpc"
-	"os"
-	"fmt"
-	"log"
+  "log"
+  "net"
+  "net/http"
+  "net/rpc"
+  "os"
+  "sync/atomic"
 
-	"github.com/garyburd/redigo/redis"
+  "../shared/like"
 )
 
-const ServiceName = "service.like"
+type count32 int32
 
-type Args struct {
-	UserID int
-	PostID int
+func (c *count32) incr() int32 {
+    return atomic.AddInt32((*int32)(c), 1)
 }
 
-type Reply struct {
-	Count int
+func (c *count32) get() int32 {
+    return atomic.LoadInt32((*int32)(c))
 }
+
+var counter count32
 
 type Service int
 
-func (s Service) Like(args *Args, reply *Reply) error {
-	conn, err := redis.Dial("tcp", ":6379")
-  defer conn.Close()
-
-  if err != nil {
-    fmt.Println(err)
-    return errors.New(err.Error())
-  }
-
-  reply.Count = 4
+func (s Service) Like(args *like.Args, reply *like.Reply) error {
+  counter.incr()
+  reply.Like.Count = counter.get()
+  reply.Like.PostID = args.PostID
   return nil
 }
 

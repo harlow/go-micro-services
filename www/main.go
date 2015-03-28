@@ -2,104 +2,29 @@ package main
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"net/rpc"
 	"os"
 	"time"
+	"encoding/json"
+
+	"../shared/like"
+	"../shared/req"
+	"../shared/user"
 
 	"github.com/harlow/auth_token"
 )
 
-const (
-	APIName         = "api.like"
-	UserServiceName = "service.user"
-	LikeServiceName = "service.like"
-)
+const APIName = "api.like"
 
-type AuthRequest struct {
-	AuthToken string
-	From      string
-	RequestID string
+func main() {
+	http.HandleFunc("/", requestHandler)
+	http.ListenAndServe(":"+os.Getenv("API_PORT"), nil)
 }
 
-type AuthResponse struct {
-	From      string
-	RequestID string
-	User      User
-}
-
-type User struct {
-	Email     string
-	FirstName string
-	ID        int
-	LastName  string
-}
-
-func (u *User) FullName() string {
-	return u.FirstName + " " + u.LastName
-}
-
-type LikeRequest struct {
-	From      string
-	PostID    int
-	RequestID string
-	UserID    int
-}
-
-type LikeResponse struct {
-	Count int
-}
-
-func getUser(token string) (User, error) {
-	logRequest(UserServiceName)
-	defer logResponse(UserServiceName, time.Now())
-
-	args := AuthRequest{AuthToken: token, From: APIName, RequestID: "11111111"}
-	reply := &AuthResponse{}
-	client, err := rpc.DialHTTP("tcp", os.Getenv("USER_SERVICE_URL"))
-
-	if err != nil {
-		return reply.User, errors.New(err.Error())
-	}
-
-	err = client.Call("Service.Login", args, &reply)
-
-	if err != nil {
-		return reply.User, errors.New(err.Error())
-	}
-
-	return reply.User, nil
-}
-
-func likePost(user User, postID int) (LikeResponse, error) {
-	logRequest(LikeServiceName)
-	defer logResponse(LikeServiceName, time.Now())
-
-	args := &LikeRequest{UserID: user.ID, PostID: postID}
-	reply := &LikeResponse{}
-	client, err := rpc.DialHTTP("tcp", os.Getenv("LIKE_SERVICE_URL"))
-
-	if err != nil {
-		return LikeResponse{}, errors.New(err.Error())
-	}
-
-	err = client.Call("Service.Like", args, &reply)
-
-	if err != nil {
-		return LikeResponse{}, errors.New(err.Error())
-	}
-
-	return *reply, nil
-}
-
-func logRequest(to string) {
-	log.Printf("[REQ] %v → %v\n", APIName, to)
-}
-
-func logResponse(to string, start time.Time) {
-	elapsed := time.Since(start)
-	log.Printf("[REP] %v → %v - %v\n", APIName, to, elapsed)
+type Response struct {
+    Status string `json:"status"`
+    Count int32 `json:"count"`
 }
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
@@ -117,17 +42,66 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	like, err := likePost(user, 1234)
+	like, err := likePost(user.ID, 1234)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Write([]byte(user.FullName() + " w/ Likes: " + string(like.Count)))
+	s := &Response{
+	  Status: "success",
+	  Count: like.Count,
+	}
+
+  b, err := json.Marshal(s)
+
+  if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+  w.Write(b)
 }
 
-func main() {
-	http.HandleFunc("/", requestHandler)
-	http.ListenAndServe(":"+os.Getenv("API_PORT"), nil)
+func getUser(token string) (user.User, error) {
+	req.LogReq(APIName, user.ServiceID)
+	defer req.LogRep(APIName, user.ServiceID, time.Now())
+
+	client, err := rpc.DialHTTP("tcp", os.Getenv("USER_SERVICE_URL"))
+
+	if err != nil {
+		return user.User{}, errors.New(err.Error())
+	}
+
+	args := user.Args{AuthToken: token, ServiceID: APIName}
+	reply := &user.Reply{}
+	err = client.Call("Service.Login", args, &reply)
+
+	if err != nil {
+		return user.User{}, errors.New(err.Error())
+	}
+
+	return reply.User, nil
+}
+
+func likePost(userID int, postID int) (like.Like, error) {
+	req.LogReq(APIName, like.ServiceID)
+	defer req.LogRep(APIName, like.ServiceID, time.Now())
+
+	client, err := rpc.DialHTTP("tcp", os.Getenv("LIKE_SERVICE_URL"))
+
+	if err != nil {
+		return like.Like{}, errors.New(err.Error())
+	}
+
+	args := &like.Args{UserID: userID, PostID: postID}
+	reply := &like.Reply{}
+	err = client.Call("Service.Like", args, &reply)
+
+	if err != nil {
+		return like.Like{}, errors.New(err.Error())
+	}
+
+	return reply.Like, nil
 }
