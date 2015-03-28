@@ -8,9 +8,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"os"
-	"time"
 
-	"../shared/req"
 	"../shared/user"
 
 	_ "github.com/lib/pq"
@@ -19,9 +17,6 @@ import (
 type Service int
 
 func (u *Service) Login(args *user.Args, reply *user.Reply) error {
-	req.LogIn(user.ServiceID, args.ServiceID)
-	defer req.LogOut(user.ServiceID, args.ServiceID, time.Now())
-
 	db, err := sql.Open("postgres", os.Getenv("USER_SERVICE_DATABASE_URL"))
 	if err != nil {
 		return errors.New(err.Error())

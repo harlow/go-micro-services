@@ -28,8 +28,8 @@ type Response struct {
 }
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
-	req.LogReq("requstHandler", APIName)
-	defer req.LogRep("requstHandler", APIName, time.Now())
+	req.LogReq("www", APIName)
+	defer req.LogRep(APIName, "www", time.Now())
 	token, err := auth_token.Parse(r.Header.Get("Authorization"))
 
 	if err != nil {
@@ -68,7 +68,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 func getUser(token string) (user.User, error) {
 	req.LogReq(APIName, user.ServiceID)
-	defer req.LogRep(APIName, user.ServiceID, time.Now())
+	defer req.LogRep(user.ServiceID, APIName, time.Now())
 
 	client, err := rpc.DialHTTP("tcp", os.Getenv("USER_SERVICE_URL"))
 
@@ -89,7 +89,7 @@ func getUser(token string) (user.User, error) {
 
 func likePost(userID int, postID int) (like.Like, error) {
 	req.LogReq(APIName, like.ServiceID)
-	defer req.LogRep(APIName, like.ServiceID, time.Now())
+	defer req.LogRep(like.ServiceID, APIName, time.Now())
 
 	client, err := rpc.DialHTTP("tcp", os.Getenv("LIKE_SERVICE_URL"))
 

@@ -10,17 +10,17 @@ to `service.user` to verify account token. If valid token, then service makes re
 `service.like` to register a Like.
 
 ```
-15:10:48 web.1  | 2015/03/28 15:10:48 [REQ] requstHandler → api.like
-15:10:48 web.1  | 2015/03/28 15:10:48 [REQ] api.like → service.user
-15:10:48 user.1 | 2015/03/28 15:10:48 [IN]  service.user → api.like
-15:10:48 user.1 | 2015/03/28 15:10:48 [OUT] service.user ← api.like - 9.225312ms
-15:10:48 web.1  | 2015/03/28 15:10:48 [REP] api.like ← service.user - 11.021613ms
-15:10:48 web.1  | 2015/03/28 15:10:48 [REQ] api.like → service.like
-15:10:48 like.1 | 2015/03/28 15:10:48 [IN]  service.like → api.like
-15:10:48 web.1  | 2015/03/28 15:10:48 [REP] api.like ← service.like - 1.917125ms
-15:10:48 like.1 | 2015/03/28 15:10:48 [OUT] service.like ← api.like - 863ns
-15:10:48 web.1  | 2015/03/28 15:10:48 [REP] requstHandler ← api.like - 13.016259ms
+16:52:48 web.1  | 2015/03/28 16:52:48 [REQ] www->api.like:
+16:52:48 web.1  | 2015/03/28 16:52:48 [REQ] api.like->service.user:
+16:52:48 web.1  | 2015/03/28 16:52:48 [REP] service.user-->api.like: 9.096745ms
+16:52:48 web.1  | 2015/03/28 16:52:48 [REQ] api.like->service.like:
+16:52:48 web.1  | 2015/03/28 16:52:48 [REP] service.like-->api.like: 1.739921ms
+16:52:48 web.1  | 2015/03/28 16:52:48 [REP] api.like-->www: 10.899261ms
 ```
+
+Using the tracelog we can create request sequence diagrams:
+
+![websequence](https://cloud.githubusercontent.com/assets/739782/6883457/19270dc2-d56b-11e4-9838-129b8d882518.png)
 
 ### Installation
 

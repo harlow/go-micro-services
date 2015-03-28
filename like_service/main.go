@@ -7,9 +7,7 @@ import (
   "net/rpc"
   "os"
   "sync/atomic"
-  "time"
 
-  "../shared/req"
   "../shared/like"
 )
 
@@ -28,9 +26,6 @@ var counter count32
 type Service int
 
 func (s Service) Like(args *like.Args, reply *like.Reply) error {
-  req.LogIn(like.ServiceID, args.ServiceID)
-  defer req.LogOut(like.ServiceID, args.ServiceID, time.Now())
-
   counter.incr()
   reply.Like.Count = counter.get()
   reply.Like.PostID = args.PostID
