@@ -38,7 +38,7 @@ func (u *Service) Login(args *user.Args, reply *user.Reply) error {
 
 	switch {
 	case err == sql.ErrNoRows:
-		return errors.New("Token not found")
+		return errors.New("Invalid Token")
 	case err != nil:
 		return errors.New(err.Error())
 	}

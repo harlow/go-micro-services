@@ -38,7 +38,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := getUser(token)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
+		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 

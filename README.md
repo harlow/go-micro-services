@@ -16,27 +16,17 @@ Clone the repository:
 
     git clone git@github.com:harlow/go-micro-services.git
 
-Create a Postgres database for test and development environments:
-
-    CREATE DATABASE auth_service_development;
-    CREATE DATABASE auth_service_test;
-
-Use [goose][1] to manage database migrations:
+Install [goose][1] for managing database migrations:
 
     go get bitbucket.org/liamstask/goose/cmd/goose
 
-Run the user service migrations:
+Run the installation script
 
-    cd user_service
-    goose up
+    ./bin/setup
 
-Add a new user to the database with `auth_token=VALID_TOKEN`.
+Add a new user to the development database with `auth_token=VALID_TOKEN`.
 
-### Boot the Services
-
-To make the demo as straigforward we'll use Foreman to bool all the services at once.
-
-Create a `.env` file in the project root:
+A new `.env` file was created in the project root. Make changes if needed:
 
     API_PORT=8000
     LIKE_SERVICE_PORT=5001
@@ -45,21 +35,25 @@ Create a `.env` file in the project root:
     USER_SERVICE_PORT=5002
     USER_SERVICE_URL=localhost:5002
 
+### Boot the Services
+
+To make the demo as straigforward we'll use Foreman to boot all the services at once.
+
 Use [foreman][2] to bring up the services:
 
     foreman start
 
 _Note:_ Typically each application would be run as stand-alone service.
 
-Curl the API endpoint with a valid auth token:
-
-    $ curl http://localhost:8000 -H "Authorization: Bearer VALID_TOKEN"
-    Hello world!
-
 Curl the endpoint with an invalid auth token:
 
     $ curl http://localhost:8000 -H "Authorization: Bearer INVALID_TOKEN"
     Unauthorized
+
+Curl the API endpoint with a valid auth token:
+
+    $ curl http://localhost:8000 -H "Authorization: Bearer VALID_TOKEN"
+    Hello world!
 
 [1]: https://bitbucket.org/liamstask/goose
 [2]: https://github.com/ddollar/foreman
