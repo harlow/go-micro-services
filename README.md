@@ -6,16 +6,15 @@ leverage [RPC][3] for inter-service tcp communication.
 ![sequence](https://cloud.githubusercontent.com/assets/739782/6883107/ac49593a-d55b-11e4-8f3e-9c9675db0002.png)
 
 The API Service accepts HTTP requests on port `8000` and then dials a tcp connection
-to `service.user` to verify account token. If valid token, then service makes reqeust to
-`service.like` to register a Like.
+to `service.user` to gather User info and then to the `service.like`.
 
 ```
-2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c www->api.like:
-2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c api.like->service.user:
-2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c service.user-->api.like: 8.639293ms
-2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c api.like->service.like:
-2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c service.like-->api.like: 1.957688ms
-2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c api.like-->www: 10.69438ms
+www->api.like:
+api.like->service.user:
+service.user-->api.like: 8.639293ms
+api.like->service.like:
+service.like-->api.like: 1.957688ms
+api.like-->www: 10.69438ms
 ```
 
 Using the tracelog we can create request sequence diagrams:
