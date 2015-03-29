@@ -1,18 +1,19 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/rpc"
 	"os"
 	"time"
-	"encoding/json"
 
 	"../shared/like"
-	"../shared/req"
+	"../shared/trace"
 	"../shared/user"
 
 	"github.com/harlow/auth_token"
+	"github.com/nu7hatch/gouuid"
 )
 
 const APIName = "api.like"
@@ -28,8 +29,15 @@ type Response struct {
 }
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
-	req.LogReq("www", APIName)
-	defer req.LogRep(APIName, "www", time.Now())
+	traceID, err := uuid.NewV4()
+
+  if err != nil {
+      http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+  }
+
+	trace.Request(traceID.String(), "www", APIName)
+	defer trace.Reply(traceID.String(), APIName, "www", time.Now())
 	token, err := auth_token.Parse(r.Header.Get("Authorization"))
 
 	if err != nil {
@@ -37,14 +45,14 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := getUser(token)
+	user, err := getUser(traceID.String(), token)
 
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 
-	like, err := likePost(user.ID, 1234)
+	like, err := likePost(traceID.String(), user.ID, 1234)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -66,9 +74,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
   w.Write(b)
 }
 
-func getUser(token string) (user.User, error) {
-	req.LogReq(APIName, user.ServiceID)
-	defer req.LogRep(user.ServiceID, APIName, time.Now())
+func getUser(traceID string, token string) (user.User, error) {
+	trace.Request(traceID, APIName, user.ServiceID)
+	defer trace.Reply(traceID, user.ServiceID, APIName, time.Now())
 
 	client, err := rpc.DialHTTP("tcp", os.Getenv("USER_SERVICE_URL"))
 
@@ -87,9 +95,9 @@ func getUser(token string) (user.User, error) {
 	return reply.User, nil
 }
 
-func likePost(userID int, postID int) (like.Like, error) {
-	req.LogReq(APIName, like.ServiceID)
-	defer req.LogRep(like.ServiceID, APIName, time.Now())
+func likePost(traceID string, userID int, postID int) (like.Like, error) {
+	trace.Request(traceID, APIName, like.ServiceID)
+	defer trace.Reply(traceID, like.ServiceID, APIName, time.Now())
 
 	client, err := rpc.DialHTTP("tcp", os.Getenv("LIKE_SERVICE_URL"))
 

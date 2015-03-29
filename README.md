@@ -10,12 +10,12 @@ to `service.user` to verify account token. If valid token, then service makes re
 `service.like` to register a Like.
 
 ```
-16:52:48 web.1  | 2015/03/28 16:52:48 [REQ] www->api.like:
-16:52:48 web.1  | 2015/03/28 16:52:48 [REQ] api.like->service.user:
-16:52:48 web.1  | 2015/03/28 16:52:48 [REP] service.user-->api.like: 9.096745ms
-16:52:48 web.1  | 2015/03/28 16:52:48 [REQ] api.like->service.like:
-16:52:48 web.1  | 2015/03/28 16:52:48 [REP] service.like-->api.like: 1.739921ms
-16:52:48 web.1  | 2015/03/28 16:52:48 [REP] api.like-->www: 10.899261ms
+2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c www->api.like:
+2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c api.like->service.user:
+2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c service.user-->api.like: 8.639293ms
+2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c api.like->service.like:
+2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c service.like-->api.like: 1.957688ms
+2015/03/29 14:12:53 4f57922d-1953-45f4-57c8-20701bb26c2c api.like-->www: 10.69438ms
 ```
 
 Using the tracelog we can create request sequence diagrams:
