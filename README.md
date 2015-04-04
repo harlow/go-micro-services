@@ -1,20 +1,20 @@
 # HTTP up front, Protobufs in the rear.
 
-An experiment with Golang micro-services that accept external HTTP requests and then
-leverage [RPC][3] for inter-service tcp communication.
+An example repo with Golang micro-services that accept external HTTP requests at API level and then
+leverage [RPC][3] for inter-service communication.
 
 ![sequence](https://cloud.githubusercontent.com/assets/739782/6883107/ac49593a-d55b-11e4-8f3e-9c9675db0002.png)
 
 The API Service accepts HTTP requests on port `8000` and then dials a tcp connection
-to `service.user` to gather User info and then to the `service.like`.
+to `service.user` to gather User info and then records a like with `service.like`.
 
 ```
 www->api.like:
 api.like->service.user:
-service.user-->api.like: 8.639293ms
+service.user-->api.like: 7.078756ms
 api.like->service.like:
-service.like-->api.like: 1.957688ms
-api.like-->www: 10.69438ms
+service.like-->api.like: 872.548µs
+api.like-->www: 8.03021ms
 ```
 
 Using the tracelog we can create request sequence diagrams:
@@ -40,11 +40,7 @@ Add a new user to the development database with `auth_token=VALID_TOKEN`.
 A new `.env` file was created in the project root. Make changes if needed:
 
     API_PORT=8000
-    LIKE_SERVICE_PORT=5001
-    LIKE_SERVICE_URL=localhost:5001
     USER_SERVICE_DATABASE_URL=postgres://localhost/auth_service_development?sslmode=disable
-    USER_SERVICE_PORT=5002
-    USER_SERVICE_URL=localhost:5002
 
 ### Boot the Services
 
