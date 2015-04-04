@@ -123,5 +123,5 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/", requestHandler)
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("API_PORT"), nil))
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("API_V1_PORT"), nil))
 }

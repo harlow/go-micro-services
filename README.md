@@ -39,7 +39,7 @@ Add a new user to the development database with `auth_token=VALID_TOKEN`.
 
 A new `.env` file was created in the project root. Make changes if needed:
 
-    API_PORT=8000
+    API_V1_PORT=8000
     USER_SERVICE_DATABASE_URL=postgres://localhost/auth_service_development?sslmode=disable
 
 ### Boot the Services
