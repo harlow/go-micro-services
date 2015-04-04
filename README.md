@@ -1,4 +1,4 @@
-# HTTP up front, TCP in the rear.
+# HTTP up front, Protobufs in the rear.
 
 An experiment with Golang micro-services that accept external HTTP requests and then
 leverage [RPC][3] for inter-service tcp communication.

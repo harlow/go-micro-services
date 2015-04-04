@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+# Rebuild the protos
+
+FILES=proto/*/*.proto
+for f in $FILES
+do
+  protoc --go_out=plugins=grpc:. $f
+done

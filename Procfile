@@ -1,3 +1,3 @@
-web: go run www/main.go
-user: go run user_service/main.go
-like: go run like_service/main.go
+web: go run api.v1/main.go
+user: go run service.user/main.go
+like: go run service.like/main.go

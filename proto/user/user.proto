@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+service UserService {
+  rpc GetUser(UserRequest) returns (UserResponse);
+}
+
+message UserRequest {
+  string Trace = 1;
+  string From = 2;
+  string Token = 3;
+}
+
+message UserResponse {
+  string Trace = 1;
+  string From = 2;
+  User   User = 3;
+}
+
+message User {
+  int32 ID = 1;
+  string Email = 2;
+  string FirstName = 3;
+  string LastName = 4;
+}
