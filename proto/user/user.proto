@@ -1,19 +1,11 @@
 syntax = "proto3";
 
-service UserService {
-  rpc GetUser(UserRequest) returns (UserResponse);
+service UserLookup {
+  rpc GetUser(Args) returns (User);
 }
 
-message UserRequest {
-  string Trace = 1;
-  string From = 2;
-  string Token = 3;
-}
-
-message UserResponse {
-  string Trace = 1;
-  string From = 2;
-  User   User = 3;
+message Args {
+  string Token = 1;
 }
 
 message User {

@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-# Rebuild the protos
+# Build the protos
 
 FILES=proto/*/*.proto
 for f in $FILES

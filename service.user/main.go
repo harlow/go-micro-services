@@ -3,59 +3,59 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"flag"
+	"fmt"
 	"log"
 	"net"
 	"os"
-	"flag"
-	"fmt"
 
-	pb "../proto/user"
-
-	_ "github.com/lib/pq"
+	"github.com/harlow/go-micro-services/proto/user"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	_ "github.com/lib/pq"
 )
 
 var (
-	port = flag.Int("port", 10002, "The server port")
-	name = "service.user"
+	port       = flag.Int("port", 10002, "The server port")
+	serverName = "service.user"
 )
 
 type server int
 
-// GetUser lookups up a User by token and returns if found.
-func (s *server) GetUser(ctx context.Context, req *pb.UserRequest) (*pb.UserResponse, error) {
+// GetUser finds a User by authentication token.
+func (s *server) GetUser(ctx context.Context, args *user.Args) (*user.User, error) {
 	db, err := sql.Open("postgres", os.Getenv("USER_SERVICE_DATABASE_URL"))
 	if err != nil {
-		return &pb.UserResponse{}, errors.New(err.Error())
+		return &user.User{}, errors.New(err.Error())
 	}
 
+	log.Println(ctx)
+	log.Println(ctx.String())
+
 	defer db.Close()
-	u := &pb.User{}
+	u := &user.User{}
 
 	stmt := "SELECT id, first_name, last_name, email FROM users WHERE auth_token=$1"
-	err = db.QueryRow(stmt, req.Token).Scan(&u.ID, &u.FirstName, &u.LastName, &u.Email)
+	err = db.QueryRow(stmt, args.Token).Scan(&u.ID, &u.FirstName, &u.LastName, &u.Email)
 
 	switch {
 	case err == sql.ErrNoRows:
-		log.Println("sql.ErrNoRows")
-		return &pb.UserResponse{}, errors.New("Invalid Token")
+		return &user.User{}, errors.New("Invalid Token")
 	case err != nil:
-		log.Println(err.Error())
-		return &pb.UserResponse{}, errors.New(err.Error())
+		return &user.User{}, errors.New(err.Error())
 	}
 
-	return &pb.UserResponse{User: u, From: name}, nil
+	return u, nil
 }
 
 func main() {
-  flag.Parse()
-  lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
-  if err != nil {
-    log.Fatalf("failed to listen: %v", err)
-  }
+	flag.Parse()
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
 	s := new(server)
 	grpcServer := grpc.NewServer()
-	pb.RegisterUserServiceServer(grpcServer, s)
+	user.RegisterUserLookupServer(grpcServer, s)
 	grpcServer.Serve(lis)
 }

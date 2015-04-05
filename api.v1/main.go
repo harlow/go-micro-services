@@ -8,83 +8,71 @@ import (
 	"os"
 	"time"
 
-	"../proto/like"
-	"../proto/user"
-	"../trace"
-
 	"github.com/harlow/auth_token"
-	"github.com/nu7hatch/gouuid"
+	"github.com/harlow/go-micro-services/proto/like"
+	"github.com/harlow/go-micro-services/proto/user"
+	"github.com/harlow/go-micro-services/trace"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
 var (
-	name = "api.v1"
+	serverName     = "api.v1"
 	likeServerAddr = flag.String("like_server_addr", "127.0.0.1:10001", "The Like server address in the format of host:port")
-	userServerAddr = flag.String("user_server_addr", "127.0.0.1:10002", "The Like server address in the format of host:port")
+	userServerAddr = flag.String("user_server_addr", "127.0.0.1:10002", "The User server address in the format of host:port")
 )
 
 type Response struct {
-    Status string `json:"status"`
-    Count int32 `json:"count"`
+	Status string `json:"status"`
+	Count  int32  `json:"count"`
 }
 
-func getUser(traceID string, token string) (user.User, error) {
-	trace.Request(traceID, name, "service.user")
-	defer trace.Reply(traceID, "service.user", name, time.Now())
-
+func getUser(t trace.Tracer, token string) (user.User, error) {
 	conn, err := grpc.Dial(*userServerAddr)
 	if err != nil {
 		return user.User{}, err
 	}
 
+	t.Request("service.user")
+	defer t.Reply("service.user", time.Now())
 	defer conn.Close()
-	client := user.NewUserServiceClient(conn)
-	reply, err := client.GetUser(
-		context.Background(),
-		&user.UserRequest{Token: token, From: name},
-	)
+
+	ctx := context.Background()
+	context.WithValue(ctx, "traceID", "SOME STRING")
+	client := user.NewUserLookupClient(conn)
+	u, err := client.GetUser(ctx, &user.Args{token})
 
 	if err != nil {
 		return user.User{}, err
 	}
 
-	return *reply.User, nil
+	return *u, nil
 }
 
-func likePost(traceID string, userID int32, postID int32) (like.Like, error) {
-	trace.Request(traceID, name, "service.like")
-	defer trace.Reply(traceID, "service.like", name, time.Now())
-
+func likePost(t trace.Tracer, userID int32, postID int32) (like.Like, error) {
 	conn, err := grpc.Dial(*likeServerAddr)
 	if err != nil {
 		return like.Like{}, err
 	}
 
+	t.Request("service.like")
+	defer t.Reply("service.like", time.Now())
 	defer conn.Close()
+
+	ctx := context.Background()
+	context.WithValue(ctx, "traceID", "SOME STRING")
+
 	client := like.NewLikeServiceClient(conn)
-	reply, err := client.RecordLike(
-		context.Background(),
-		&like.LikeRequest{UserID: userID, PostID: postID, From: name},
-	)
+	l, err := client.RecordLike(ctx, &like.Args{userID, postID})
 
 	if err != nil {
 		return like.Like{}, err
 	}
 
-	return *reply.Like, nil
+	return *l, nil
 }
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
-	traceID, err := uuid.NewV4()
-
-  if err != nil {
-      http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-  }
-
-	trace.Request(traceID.String(), "www", name)
-	defer trace.Reply(traceID.String(), name, "www", time.Now())
 	token, err := auth_token.Parse(r.Header.Get("Authorization"))
 
 	if err != nil {
@@ -92,33 +80,30 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := getUser(traceID.String(), token)
+	t := trace.NewTracer(serverName)
+	u, err := getUser(t, token)
 
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 
-	like, err := likePost(traceID.String(), user.ID, 1234)
+	like, err := likePost(t, u.ID, 1234)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	s := &Response{
-	  Status: "success",
-	  Count: like.Count,
-	}
+	s := &Response{Status: "success", Count: like.Count}
+	b, err := json.Marshal(s)
 
-  b, err := json.Marshal(s)
-
-  if err != nil {
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-  w.Write(b)
+	w.Write(b)
 }
 
 func main() {

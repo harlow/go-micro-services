@@ -1,23 +1,15 @@
 syntax = "proto3";
 
 service LikeService {
-  rpc RecordLike(LikeRequest) returns (LikeResponse);
+  rpc RecordLike(Args) returns (Like);
 }
 
-message LikeRequest {
-  string trace = 1;
-  string from = 2;
-  int32 postID = 3;
-  int32 userID = 4;
-}
-
-message LikeResponse {
-  string trace = 1;
-  string from = 2;
-  Like   like = 3;
+message Args {
+  int32 PostID = 3;
+  int32 UserID = 4;
 }
 
 message Like {
-  int32 postID = 1;
-  int32 count = 2;
+  int32 PostID = 1;
+  int32 Count = 2;
 }

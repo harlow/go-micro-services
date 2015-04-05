@@ -9,8 +9,7 @@ It is generated from these files:
 	proto/user/user.proto
 
 It has these top-level messages:
-	UserRequest
-	UserResponse
+	Args
 	User
 */
 package user
@@ -29,32 +28,13 @@ var _ grpc.ClientConn
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 
-type UserRequest struct {
-	Trace string `protobuf:"bytes,1,opt" json:"Trace,omitempty"`
-	From  string `protobuf:"bytes,2,opt" json:"From,omitempty"`
-	Token string `protobuf:"bytes,3,opt" json:"Token,omitempty"`
+type Args struct {
+	Token string `protobuf:"bytes,1,opt" json:"Token,omitempty"`
 }
 
-func (m *UserRequest) Reset()         { *m = UserRequest{} }
-func (m *UserRequest) String() string { return proto.CompactTextString(m) }
-func (*UserRequest) ProtoMessage()    {}
-
-type UserResponse struct {
-	Trace string `protobuf:"bytes,1,opt" json:"Trace,omitempty"`
-	From  string `protobuf:"bytes,2,opt" json:"From,omitempty"`
-	User  *User  `protobuf:"bytes,3,opt" json:"User,omitempty"`
-}
-
-func (m *UserResponse) Reset()         { *m = UserResponse{} }
-func (m *UserResponse) String() string { return proto.CompactTextString(m) }
-func (*UserResponse) ProtoMessage()    {}
-
-func (m *UserResponse) GetUser() *User {
-	if m != nil {
-		return m.User
-	}
-	return nil
-}
+func (m *Args) Reset()         { *m = Args{} }
+func (m *Args) String() string { return proto.CompactTextString(m) }
+func (*Args) ProtoMessage()    {}
 
 type User struct {
 	ID        int32  `protobuf:"varint,1,opt" json:"ID,omitempty"`
@@ -70,58 +50,58 @@ func (*User) ProtoMessage()    {}
 func init() {
 }
 
-// Client API for UserService service
+// Client API for UserLookup service
 
-type UserServiceClient interface {
-	GetUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*UserResponse, error)
+type UserLookupClient interface {
+	GetUser(ctx context.Context, in *Args, opts ...grpc.CallOption) (*User, error)
 }
 
-type userServiceClient struct {
+type userLookupClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewUserServiceClient(cc *grpc.ClientConn) UserServiceClient {
-	return &userServiceClient{cc}
+func NewUserLookupClient(cc *grpc.ClientConn) UserLookupClient {
+	return &userLookupClient{cc}
 }
 
-func (c *userServiceClient) GetUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*UserResponse, error) {
-	out := new(UserResponse)
-	err := grpc.Invoke(ctx, "/.UserService/GetUser", in, out, c.cc, opts...)
+func (c *userLookupClient) GetUser(ctx context.Context, in *Args, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
+	err := grpc.Invoke(ctx, "/.UserLookup/GetUser", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for UserService service
+// Server API for UserLookup service
 
-type UserServiceServer interface {
-	GetUser(context.Context, *UserRequest) (*UserResponse, error)
+type UserLookupServer interface {
+	GetUser(context.Context, *Args) (*User, error)
 }
 
-func RegisterUserServiceServer(s *grpc.Server, srv UserServiceServer) {
-	s.RegisterService(&_UserService_serviceDesc, srv)
+func RegisterUserLookupServer(s *grpc.Server, srv UserLookupServer) {
+	s.RegisterService(&_UserLookup_serviceDesc, srv)
 }
 
-func _UserService_GetUser_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
-	in := new(UserRequest)
+func _UserLookup_GetUser_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
+	in := new(Args)
 	if err := proto.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(UserServiceServer).GetUser(ctx, in)
+	out, err := srv.(UserLookupServer).GetUser(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-var _UserService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: ".UserService",
-	HandlerType: (*UserServiceServer)(nil),
+var _UserLookup_serviceDesc = grpc.ServiceDesc{
+	ServiceName: ".UserLookup",
+	HandlerType: (*UserLookupServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "GetUser",
-			Handler:    _UserService_GetUser_Handler,
+			Handler:    _UserLookup_GetUser_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{},
