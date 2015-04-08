@@ -25,16 +25,13 @@ type server int
 // GetUser finds a User by authentication token.
 func (s *server) GetUser(ctx context.Context, args *user.Args) (*user.User, error) {
 	db, err := sql.Open("postgres", os.Getenv("USER_SERVICE_DATABASE_URL"))
+
 	if err != nil {
 		return &user.User{}, errors.New(err.Error())
 	}
 
-	log.Println(ctx)
-	log.Println(ctx.String())
-
 	defer db.Close()
 	u := &user.User{}
-
 	stmt := "SELECT id, first_name, last_name, email FROM users WHERE auth_token=$1"
 	err = db.QueryRow(stmt, args.Token).Scan(&u.ID, &u.FirstName, &u.LastName, &u.Email)
 
