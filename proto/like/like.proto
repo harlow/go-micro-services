@@ -1,10 +1,10 @@
 syntax = "proto3";
 
 service LikeService {
-  rpc RecordLike(Args) returns (Like);
+  rpc RecordLike(Req) returns (Like);
 }
 
-message Args {
+message Req {
   int32 PostID = 3;
   int32 UserID = 4;
 }

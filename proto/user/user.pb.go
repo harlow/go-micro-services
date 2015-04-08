@@ -9,7 +9,7 @@ It is generated from these files:
 	proto/user/user.proto
 
 It has these top-level messages:
-	Args
+	Req
 	User
 */
 package user
@@ -28,13 +28,13 @@ var _ grpc.ClientConn
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 
-type Args struct {
+type Req struct {
 	Token string `protobuf:"bytes,1,opt" json:"Token,omitempty"`
 }
 
-func (m *Args) Reset()         { *m = Args{} }
-func (m *Args) String() string { return proto.CompactTextString(m) }
-func (*Args) ProtoMessage()    {}
+func (m *Req) Reset()         { *m = Req{} }
+func (m *Req) String() string { return proto.CompactTextString(m) }
+func (*Req) ProtoMessage()    {}
 
 type User struct {
 	ID        int32  `protobuf:"varint,1,opt" json:"ID,omitempty"`
@@ -53,7 +53,7 @@ func init() {
 // Client API for UserLookup service
 
 type UserLookupClient interface {
-	GetUser(ctx context.Context, in *Args, opts ...grpc.CallOption) (*User, error)
+	GetUser(ctx context.Context, in *Req, opts ...grpc.CallOption) (*User, error)
 }
 
 type userLookupClient struct {
@@ -64,7 +64,7 @@ func NewUserLookupClient(cc *grpc.ClientConn) UserLookupClient {
 	return &userLookupClient{cc}
 }
 
-func (c *userLookupClient) GetUser(ctx context.Context, in *Args, opts ...grpc.CallOption) (*User, error) {
+func (c *userLookupClient) GetUser(ctx context.Context, in *Req, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
 	err := grpc.Invoke(ctx, "/.UserLookup/GetUser", in, out, c.cc, opts...)
 	if err != nil {
@@ -76,7 +76,7 @@ func (c *userLookupClient) GetUser(ctx context.Context, in *Args, opts ...grpc.C
 // Server API for UserLookup service
 
 type UserLookupServer interface {
-	GetUser(context.Context, *Args) (*User, error)
+	GetUser(context.Context, *Req) (*User, error)
 }
 
 func RegisterUserLookupServer(s *grpc.Server, srv UserLookupServer) {
@@ -84,7 +84,7 @@ func RegisterUserLookupServer(s *grpc.Server, srv UserLookupServer) {
 }
 
 func _UserLookup_GetUser_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
-	in := new(Args)
+	in := new(Req)
 	if err := proto.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}

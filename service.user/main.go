@@ -23,7 +23,7 @@ var (
 type server int
 
 // GetUser finds a User by authentication token.
-func (s *server) GetUser(ctx context.Context, args *user.Args) (*user.User, error) {
+func (s *server) GetUser(ctx context.Context, req *user.Req) (*user.User, error) {
 	db, err := sql.Open("postgres", os.Getenv("USER_SERVICE_DATABASE_URL"))
 
 	if err != nil {
@@ -33,7 +33,7 @@ func (s *server) GetUser(ctx context.Context, args *user.Args) (*user.User, erro
 	defer db.Close()
 	u := &user.User{}
 	stmt := "SELECT id, first_name, last_name, email FROM users WHERE auth_token=$1"
-	err = db.QueryRow(stmt, args.Token).Scan(&u.ID, &u.FirstName, &u.LastName, &u.Email)
+	err = db.QueryRow(stmt, req.Token).Scan(&u.ID, &u.FirstName, &u.LastName, &u.Email)
 
 	switch {
 	case err == sql.ErrNoRows:

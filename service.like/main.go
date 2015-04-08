@@ -32,9 +32,9 @@ var counter count32
 type server int
 
 // RecordLike records a like for a post.
-func (s *server) RecordLike(ctx context.Context, args *like.Args) (*like.Like, error) {
+func (s *server) RecordLike(ctx context.Context, req *like.Req) (*like.Like, error) {
 	counter.incr()
-	l := &like.Like{Count: counter.get(), PostID: args.PostID}
+	l := &like.Like{Count: counter.get(), PostID: req.PostID}
 	return l, nil
 }
 

@@ -1,10 +1,10 @@
 syntax = "proto3";
 
 service UserLookup {
-  rpc GetUser(Args) returns (User);
+  rpc GetUser(Req) returns (User);
 }
 
-message Args {
+message Req {
   string Token = 1;
 }
 
