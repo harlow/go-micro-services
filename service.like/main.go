@@ -7,9 +7,9 @@ import (
 	"net"
 	"sync/atomic"
 
-  "github.com/harlow/go-micro-services/proto/like"
-  "golang.org/x/net/context"
-  "google.golang.org/grpc"
+	"github.com/harlow/go-micro-services/proto/like"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 var (

@@ -10,9 +10,9 @@ import (
 	"os"
 
 	"github.com/harlow/go-micro-services/proto/user"
+	_ "github.com/lib/pq"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	_ "github.com/lib/pq"
 )
 
 var (
