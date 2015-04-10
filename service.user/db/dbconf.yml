@@ -1,9 +1,0 @@
-test:
-  driver: postgres
-  open: dbname=user_service_test sslmode=disable
-development:
-  driver: postgres
-  open: dbname=user_service_development sslmode=disable
-production:
-  driver: postgres
-  open: $DATABASE_URL
