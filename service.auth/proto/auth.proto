@@ -1,0 +1,17 @@
+syntax = "proto3";
+package auth;
+
+service Auth {
+  rpc GetCustomer(Req) returns (Customer);
+}
+
+message Req {
+  string AuthToken = 1;
+}
+
+message Customer {
+  int32 ID = 1;
+  string Email = 2;
+  string Name = 3;
+  string AuthToken = 4;
+}
