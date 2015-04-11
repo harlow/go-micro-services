@@ -24,8 +24,8 @@ type geoServer struct {
 	locations []*pb.Location
 }
 
-// NearbyLocations returns all hotels contained within bounding Rectangle.
-func (s *geoServer) NearbyLocations(rect *pb.Rectangle, stream pb.Geo_NearbyLocationsServer) error {
+// NearbyLocations returns all hotels contained within bounding BoundingBox.
+func (s *geoServer) NearbyLocations(rect *pb.BoundingBox, stream pb.Geo_NearbyLocationsServer) error {
 	for _, loc := range s.locations {
 		if inRange(loc.Location, rect) {
 			if err := stream.Send(loc); err != nil {
@@ -47,8 +47,8 @@ func (s *geoServer) loadHotels(filePath string) {
 	}
 }
 
-// inRange calculates if a point appears within a rectangle.
-func inRange(point *pb.Point, rect *pb.Rectangle) bool {
+// inRange calculates if a point appears within a BoundingBox.
+func inRange(point *pb.Point, rect *pb.BoundingBox) bool {
 	left := math.Min(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
 	right := math.Max(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
 	top := math.Max(float64(rect.Lo.Latitude), float64(rect.Hi.Latitude))
