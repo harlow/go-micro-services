@@ -11,7 +11,8 @@ service Geo {
 // points "lo" and "hi".
 message Args {
   string traceId = 1;
-  Rectangle rect = 2;
+  string From = 2;
+  Rectangle rect = 3;
 }
 
 message Rectangle {

@@ -34,7 +34,8 @@ var _ = proto.Marshal
 // points "lo" and "hi".
 type Args struct {
 	TraceId string     `protobuf:"bytes,1,opt,name=traceId" json:"traceId,omitempty"`
-	Rect    *Rectangle `protobuf:"bytes,2,opt,name=rect" json:"rect,omitempty"`
+	From    string     `protobuf:"bytes,2,opt" json:"From,omitempty"`
+	Rect    *Rectangle `protobuf:"bytes,3,opt,name=rect" json:"rect,omitempty"`
 }
 
 func (m *Args) Reset()         { *m = Args{} }
