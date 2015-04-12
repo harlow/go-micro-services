@@ -21,11 +21,7 @@ If changes are made to the Protocol Buffers a Make file can be used to regenerat
 
 ### Bootstrap the services
 
-To make the demo as straigforward as possible; Foreman is used to launch all the services.
-
-_Note:_ Typically each of the services would be run (and scaled) independently.
-
-Use [foreman][2] to bring up the services:
+To make the demo as straigforward as possible; [foreman][2] is used to run all the services. In a production environment each of the services would be run (and scaled) independently.
 
     foreman start
 
