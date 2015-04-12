@@ -142,6 +142,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	// search for hotels within geo rectangle
 	hotelIds, err := nearbyHotels(t, &geo.Args{
 		TraceId: t.TraceID,
+		From:    serverName,
 		Rect: &geo.Rectangle{
 			&geo.Point{400000000, -750000000},
 			&geo.Point{420000000, -730000000},

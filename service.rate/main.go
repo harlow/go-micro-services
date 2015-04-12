@@ -7,8 +7,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"time"
 
 	pb "github.com/harlow/go-micro-services/service.rate/proto"
+	trace "github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -32,6 +34,10 @@ type rateServer struct {
 
 // GetRates gets rates for hotels for specific date range.
 func (s *rateServer) GetRates(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
+	t := trace.NewTracer()
+	t.In(serverName, args.From)
+	defer t.Out(args.From, serverName, time.Now())
+
 	reply := new(pb.Reply)
 	for _, hotelId := range args.HotelIds {
 		k := stay{hotelId, args.InDate, args.OutDate}
@@ -40,6 +46,7 @@ func (s *rateServer) GetRates(ctx context.Context, args *pb.Args) (*pb.Reply, er
 		}
 		reply.Rates = append(reply.Rates, s.rates[k])
 	}
+
 	return reply, nil
 }
 

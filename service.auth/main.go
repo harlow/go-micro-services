@@ -8,8 +8,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"time"
 
 	pb "github.com/harlow/go-micro-services/service.auth/proto"
+	trace "github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -27,11 +29,16 @@ type authServer struct {
 
 // VerifyToken finds a customer by authentication token.
 func (s *authServer) VerifyToken(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
+	t := trace.NewTracer()
+	t.In(serverName, args.From)
+	defer t.Out(args.From, serverName, time.Now())
+
 	for _, customer := range s.customers {
 		if customer.AuthToken == args.AuthToken {
 			return &pb.Reply{customer}, nil
 		}
 	}
+
 	return &pb.Reply{}, errors.New("Invalid Token")
 }
 

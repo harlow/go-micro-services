@@ -28,7 +28,7 @@ func (t Tracer) Rep(from string, to string, startTime time.Time) {
 }
 
 func (t Tracer) In(from string, to string) {
-	log.Printf("[IN ] %s %v->%v:\n", t.TraceID, from, to)
+	log.Printf("[IN]  %s %v->%v:\n", t.TraceID, from, to)
 }
 
 func (t Tracer) Out(from string, to string, startTime time.Time) {

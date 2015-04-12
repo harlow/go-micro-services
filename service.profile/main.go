@@ -7,8 +7,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"time"
 
 	pb "github.com/harlow/go-micro-services/service.profile/proto"
+	trace "github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -26,10 +28,15 @@ type profileServer struct {
 
 // VerifyToken finds a customer by authentication token.
 func (s *profileServer) GetProfiles(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
+	t := trace.NewTracer()
+	t.In(serverName, args.From)
+	defer t.Out(args.From, serverName, time.Now())
+
 	reply := new(pb.Reply)
 	for _, i := range args.HotelIds {
 		reply.Hotels = append(reply.Hotels, s.hotels[i])
 	}
+
 	return reply, nil
 }
 
