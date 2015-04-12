@@ -36,12 +36,14 @@ func authenticateCustomer(t trace.Tracer, args *auth.Args) error {
 	t.Req(args.From, "service.auth", "AuthenticateCustomer")
 	defer t.Rep("service.auth", args.From, time.Now())
 
+	// dial server connection
 	conn, err := grpc.Dial(*authServerAddr)
 	if err != nil {
 		return err
 	}
-
 	defer conn.Close()
+
+	// verify auth token
 	client := auth.NewAuthClient(conn)
 	_, err = client.VerifyToken(context.Background(), args)
 	if err != nil {
@@ -55,11 +57,14 @@ func nearbyHotels(t trace.Tracer, args *geo.Args) ([]int32, error) {
 	t.Req(args.From, "service.geo", "BoundedBox")
 	defer t.Rep("service.geo", args.From, time.Now())
 
+	// dial server connection
 	conn, err := grpc.Dial(*geoServerAddr)
 	if err != nil {
 		return []int32{}, err
 	}
+	defer conn.Close()
 
+	// get hotels within bounded box
 	client := geo.NewGeoClient(conn)
 	reply, err := client.BoundedBox(context.Background(), args)
 	if err != nil {
@@ -73,12 +78,14 @@ func hotelProfiles(t trace.Tracer, args *profile.Args) ([]*profile.Hotel, error)
 	t.Req(args.From, "service.profile", "GetProfiles")
 	defer t.Rep("service.profile", args.From, time.Now())
 
+	// dial server connection
 	conn, err := grpc.Dial(*profileServerAddr)
 	if err != nil {
 		return []*profile.Hotel{}, err
 	}
 	defer conn.Close()
 
+	// get profile data
 	client := profile.NewProfileClient(conn)
 	reply, err := client.GetProfiles(context.Background(), args)
 	if err != nil {
@@ -92,12 +99,14 @@ func ratePlans(t trace.Tracer, args *rate.Args) ([]*rate.RatePlan, error) {
 	t.Req(args.From, "service.rate", "GetRates")
 	defer t.Rep("service.rate", args.From, time.Now())
 
+	// dial server connection
 	conn, err := grpc.Dial(*rateServerAddr)
 	if err != nil {
 		return []*rate.RatePlan{}, err
 	}
 	defer conn.Close()
 
+	// get rates
 	client := rate.NewRateClient(conn)
 	reply, err := client.GetRates(context.Background(), args)
 	if err != nil {
@@ -112,12 +121,14 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	t.In("www", "api.v1")
 	defer t.Out("api.v1", "www", time.Now())
 
+	// extract authentication token from Authorization header
 	authToken, err := auth_token.Parse(r.Header.Get("Authorization"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
 
+	// validate customer exists for auth token
 	err = authenticateCustomer(t, &auth.Args{
 		TraceId:   t.TraceID,
 		From:      serverName,
@@ -128,6 +139,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// search for hotels within geo rectangle
 	hotelIds, err := nearbyHotels(t, &geo.Args{
 		TraceId: t.TraceID,
 		Rect: &geo.Rectangle{
@@ -140,6 +152,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get hotel profiles
 	hotels, err := hotelProfiles(t, &profile.Args{
 		TraceId:  t.TraceID,
 		From:     serverName,
@@ -150,6 +163,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get hotel rate plans
 	rates, err := ratePlans(t, &rate.Args{
 		TraceId:  t.TraceID,
 		From:     serverName,
@@ -162,6 +176,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// marshal Inventory json
 	inventory := Inventory{Hotels: hotels, Rates: rates}
 	body, err := json.Marshal(inventory)
 	if err != nil {
