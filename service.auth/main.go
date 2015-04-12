@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	port       = flag.Int("port", 10002, "The server port")
-	jsonDBFile = flag.String("json_db_file", "./data/customers.json", "A json file containing a list of customers")
+	port       = flag.Int("port", 10001, "The server port")
+	jsonDBFile = flag.String("json_db_file", "data/customers.json", "A json file containing a list of customers")
 	serverName = "service.auth"
 )
 
@@ -25,14 +25,14 @@ type authServer struct {
 	customers []*pb.Customer
 }
 
-// GetCustomer finds a customer by authentication token.
-func (s *authServer) GetCustomer(ctx context.Context, req *pb.Req) (*pb.Customer, error) {
-	for _, c := range s.customers {
-		if c.AuthToken == req.AuthToken {
-			return c, nil
+// VerifyToken finds a customer by authentication token.
+func (s *authServer) VerifyToken(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
+	for _, customer := range s.customers {
+		if customer.AuthToken == args.AuthToken {
+			return &pb.Reply{customer}, nil
 		}
 	}
-	return &pb.Customer{}, errors.New("Invalid Token")
+	return &pb.Reply{}, errors.New("Invalid Token")
 }
 
 // loadCustomers loads customers from a JSON file.
