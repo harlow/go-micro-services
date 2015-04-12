@@ -3,29 +3,11 @@
 An demonstration of Golang micro-services that accept HTTP/JSON requests at API level and then
 leverage [gRPC][1] for inter-service communication.
 
-The API Endpoint accepts HTTP requests on port `5000` and then sends a number of RPC requests to backend services.
-.
-
-```
-www->api.v1:
-api.v1->service.auth:
-service.auth-->api.v1: 717.771µs
-api.v1->service.geo:
-service.geo-->api.v1: 739.634µs
-api.v1->service.profile:
-service.profile->service.locale:
-service.locale-->service.profile: 1.171136ms
-service.profile-->api.v1: 1.171136ms
-api.v1->service.rate:
-service.rate->service.currency:
-service.currency-->service.rate: 634.804µs
-service.rate-->api.v1: 1.407254ms
-api.v1-->www: 4.230684ms
-```
-
-Using the tracelog we can create request sequence diagrams:
-
 ![flow_sequential](https://cloud.githubusercontent.com/assets/739782/7106819/9cc00ec4-e103-11e4-8718-851b92b913cc.png)
+
+The API Endpoint accepts HTTP requests on port `5000` and then spawns a number of RPC requests to the backend services.
+
+_Note:_ Data for each of the services is stored in JSON flat files under the `/data/` directory. In reality each of the services could choose their own specialty datastore. The Geo service for example could use PostGis or any other database specializing in geospacial queries.
 
 ### Installation
 
