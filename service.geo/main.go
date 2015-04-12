@@ -23,7 +23,7 @@ var (
 
 type location struct {
 	HotelId int32
-	Point *pb.Point
+	Point   *pb.Point
 }
 
 type geoServer struct {
