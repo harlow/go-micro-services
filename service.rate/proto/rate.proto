@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package rate;
+
+service Rate {
+  // GetRates returns rate codes for hotels for a given date range
+  rpc GetRates(Args) returns (Reply);
+}
+
+message Args {
+  string traceId = 1;
+  string from = 2;
+  repeated int32 hotelIds = 3;
+  string inDate = 4;
+  string outDate = 5;
+}
+
+message Reply {
+  repeated RatePlan rates = 1;
+}
+
+message RatePlan {
+  int32 hotelId = 1;
+  string code = 2;
+  string inDate = 3;
+  string outDate = 4;
+  RoomType roomType = 5;
+}
+
+message RoomType {
+  double bookableRate = 1;
+  double totalRate = 2;
+  double TotalRateInclusive = 3;
+  string code = 4;
+  string currency = 5;
+  string roomDescription = 6;
+}
