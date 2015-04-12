@@ -19,15 +19,15 @@ If changes are made to the Protocol Buffers a Make file can be used to regenerat
 
     make
 
-### Bootstrap the Services
+### Bootstrap the services
 
 To make the demo as straigforward as possible; Foreman is used to launch all the services.
+
+_Note:_ Typically each of the services would be run (and scaled) independently.
 
 Use [foreman][2] to bring up the services:
 
     foreman start
-
-_Note:_ Typically each service would be run independently.
 
 Curl the endpoint with an invalid auth token:
 
