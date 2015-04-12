@@ -4,7 +4,7 @@ package geo;
 
 service Geo {
   // Obtains the Locations contained within the given Rectangle.
-  rpc BoundingBox(Args) returns (Reply);
+  rpc BoundedBox(Args) returns (Reply);
 }
 
 // A latitude-longitude bounding box, represented as two diagonally opposite
@@ -29,11 +29,5 @@ message Point {
 }
 
 message Reply {
-  repeated Location locations = 1;
-}
-
-// A location is represented by a hotel address at given point.
-message Location {
-  int32 hotelId = 1;
-  Point point = 3;
+  repeated int32 hotelIds = 1;
 }

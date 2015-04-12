@@ -13,7 +13,6 @@ It has these top-level messages:
 	Rectangle
 	Point
 	Reply
-	Location
 */
 package geo
 
@@ -86,36 +85,12 @@ func (m *Point) String() string { return proto.CompactTextString(m) }
 func (*Point) ProtoMessage()    {}
 
 type Reply struct {
-	Locations []*Location `protobuf:"bytes,1,rep,name=locations" json:"locations,omitempty"`
+	HotelIds []int32 `protobuf:"varint,1,rep,name=hotelIds" json:"hotelIds,omitempty"`
 }
 
 func (m *Reply) Reset()         { *m = Reply{} }
 func (m *Reply) String() string { return proto.CompactTextString(m) }
 func (*Reply) ProtoMessage()    {}
-
-func (m *Reply) GetLocations() []*Location {
-	if m != nil {
-		return m.Locations
-	}
-	return nil
-}
-
-// A location is represented by a hotel address at given point.
-type Location struct {
-	HotelId int32  `protobuf:"varint,1,opt,name=hotelId" json:"hotelId,omitempty"`
-	Point   *Point `protobuf:"bytes,3,opt,name=point" json:"point,omitempty"`
-}
-
-func (m *Location) Reset()         { *m = Location{} }
-func (m *Location) String() string { return proto.CompactTextString(m) }
-func (*Location) ProtoMessage()    {}
-
-func (m *Location) GetPoint() *Point {
-	if m != nil {
-		return m.Point
-	}
-	return nil
-}
 
 func init() {
 }
@@ -124,7 +99,7 @@ func init() {
 
 type GeoClient interface {
 	// Obtains the Locations contained within the given Rectangle.
-	BoundingBox(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error)
+	BoundedBox(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error)
 }
 
 type geoClient struct {
@@ -135,9 +110,9 @@ func NewGeoClient(cc *grpc.ClientConn) GeoClient {
 	return &geoClient{cc}
 }
 
-func (c *geoClient) BoundingBox(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error) {
+func (c *geoClient) BoundedBox(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error) {
 	out := new(Reply)
-	err := grpc.Invoke(ctx, "/geo.Geo/BoundingBox", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/geo.Geo/BoundedBox", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -148,19 +123,19 @@ func (c *geoClient) BoundingBox(ctx context.Context, in *Args, opts ...grpc.Call
 
 type GeoServer interface {
 	// Obtains the Locations contained within the given Rectangle.
-	BoundingBox(context.Context, *Args) (*Reply, error)
+	BoundedBox(context.Context, *Args) (*Reply, error)
 }
 
 func RegisterGeoServer(s *grpc.Server, srv GeoServer) {
 	s.RegisterService(&_Geo_serviceDesc, srv)
 }
 
-func _Geo_BoundingBox_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
+func _Geo_BoundedBox_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
 	in := new(Args)
 	if err := proto.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(GeoServer).BoundingBox(ctx, in)
+	out, err := srv.(GeoServer).BoundedBox(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -172,8 +147,8 @@ var _Geo_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*GeoServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "BoundingBox",
-			Handler:    _Geo_BoundingBox_Handler,
+			MethodName: "BoundedBox",
+			Handler:    _Geo_BoundedBox_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{},

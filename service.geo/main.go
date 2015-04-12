@@ -11,6 +11,7 @@ import (
 
 	pb "github.com/harlow/go-micro-services/service.geo/proto"
 
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
@@ -20,20 +21,24 @@ var (
 	serverName = "service.geo"
 )
 
-type geoServer struct {
-	locations []*pb.Location
+type location struct {
+	HotelId int32
+	Point *pb.Point
 }
 
-// NearbyLocations returns all hotels contained within bounding BoundingBox.
-func (s *geoServer) NearbyLocations(args *pb.Args, stream pb.Geo_NearbyLocationsServer) error {
+type geoServer struct {
+	locations []location
+}
+
+// BoundedBox returns all hotels contained within a given rectangle.
+func (s *geoServer) BoundedBox(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
+	reply := new(pb.Reply)
 	for _, loc := range s.locations {
-		if inRange(loc.Point, args) {
-			if err := stream.Send(loc); err != nil {
-				return err
-			}
+		if inRange(loc.Point, args.Rect) {
+			reply.HotelIds = append(reply.HotelIds, loc.HotelId)
 		}
 	}
-	return nil
+	return reply, nil
 }
 
 // loadLocations loads hotel locations from a JSON file.
@@ -48,11 +53,11 @@ func (s *geoServer) loadLocations(filePath string) {
 }
 
 // inRange calculates if a point appears within a BoundingBox.
-func inRange(point *pb.Point, args *pb.Args) bool {
-	left := math.Min(float64(args.Lo.Longitude), float64(args.Hi.Longitude))
-	right := math.Max(float64(args.Lo.Longitude), float64(args.Hi.Longitude))
-	top := math.Max(float64(args.Lo.Latitude), float64(args.Hi.Latitude))
-	bottom := math.Min(float64(args.Lo.Latitude), float64(args.Hi.Latitude))
+func inRange(point *pb.Point, rect *pb.Rectangle) bool {
+	left := math.Min(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
+	right := math.Max(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
+	top := math.Max(float64(rect.Lo.Latitude), float64(rect.Hi.Latitude))
+	bottom := math.Min(float64(rect.Lo.Latitude), float64(rect.Hi.Latitude))
 
 	if float64(point.Longitude) >= left &&
 		float64(point.Longitude) <= right &&
