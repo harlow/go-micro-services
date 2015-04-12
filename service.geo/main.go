@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	port       = flag.Int("port", 10003, "The server port")
-	jsonDBFile = flag.String("json_db_file", "./data/locations.json", "A json file containing hotel locations")
+	port       = flag.Int("port", 10002, "The server port")
+	jsonDBFile = flag.String("json_db_file", "data/locations.json", "A json file containing hotel locations")
 	serverName = "service.geo"
 )
 
@@ -25,9 +25,9 @@ type geoServer struct {
 }
 
 // NearbyLocations returns all hotels contained within bounding BoundingBox.
-func (s *geoServer) NearbyLocations(rect *pb.BoundingBox, stream pb.Geo_NearbyLocationsServer) error {
+func (s *geoServer) NearbyLocations(args *pb.Args, stream pb.Geo_NearbyLocationsServer) error {
 	for _, loc := range s.locations {
-		if inRange(loc.Location, rect) {
+		if inRange(loc.Point, args) {
 			if err := stream.Send(loc); err != nil {
 				return err
 			}
@@ -36,8 +36,8 @@ func (s *geoServer) NearbyLocations(rect *pb.BoundingBox, stream pb.Geo_NearbyLo
 	return nil
 }
 
-// loadHotels loads hotel locations from a JSON file.
-func (s *geoServer) loadHotels(filePath string) {
+// loadLocations loads hotel locations from a JSON file.
+func (s *geoServer) loadLocations(filePath string) {
 	file, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("Failed to load file: %v", err)
@@ -48,11 +48,11 @@ func (s *geoServer) loadHotels(filePath string) {
 }
 
 // inRange calculates if a point appears within a BoundingBox.
-func inRange(point *pb.Point, rect *pb.BoundingBox) bool {
-	left := math.Min(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
-	right := math.Max(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
-	top := math.Max(float64(rect.Lo.Latitude), float64(rect.Hi.Latitude))
-	bottom := math.Min(float64(rect.Lo.Latitude), float64(rect.Hi.Latitude))
+func inRange(point *pb.Point, args *pb.Args) bool {
+	left := math.Min(float64(args.Lo.Longitude), float64(args.Hi.Longitude))
+	right := math.Max(float64(args.Lo.Longitude), float64(args.Hi.Longitude))
+	top := math.Max(float64(args.Lo.Latitude), float64(args.Hi.Latitude))
+	bottom := math.Min(float64(args.Lo.Latitude), float64(args.Hi.Latitude))
 
 	if float64(point.Longitude) >= left &&
 		float64(point.Longitude) <= right &&
@@ -65,7 +65,7 @@ func inRange(point *pb.Point, rect *pb.BoundingBox) bool {
 
 func newServer() *geoServer {
 	s := new(geoServer)
-	s.loadHotels(*jsonDBFile)
+	s.loadLocations(*jsonDBFile)
 	return s
 }
 

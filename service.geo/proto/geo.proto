@@ -4,23 +4,19 @@ package geo;
 
 service Geo {
   // Obtains the Locations contained within the given Rectangle.
-  rpc NearbyLocations(BoundingBox) returns (stream Location);
+  rpc BoundingBox(Args) returns (Reply);
 }
 
 // A latitude-longitude bounding box, represented as two diagonally opposite
 // points "lo" and "hi".
-message BoundingBox {
-  // One corner of the rectangle.
-  Point lo = 1;
-
-  // The other corner of the rectangle.
-  Point hi = 2;
+message Args {
+  string traceId = 1;
+  Rectangle rect = 2;
 }
 
-// A location is represented by a hotel at given point.
-message Location {
-  int32 hotelID = 1;
-  Point location = 2;
+message Rectangle {
+  Point lo = 2;
+  Point hi = 3;
 }
 
 // Points are represented as latitude-longitude pairs in the E7 representation
@@ -30,4 +26,14 @@ message Location {
 message Point {
   int32 latitude = 1;
   int32 longitude = 2;
+}
+
+message Reply {
+  repeated Location locations = 1;
+}
+
+// A location is represented by a hotel address at given point.
+message Location {
+  int32 hotelId = 1;
+  Point point = 3;
 }

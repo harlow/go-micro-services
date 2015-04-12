@@ -9,9 +9,11 @@ It is generated from these files:
 	service.geo/proto/geo.proto
 
 It has these top-level messages:
-	BoundingBox
-	Location
+	Args
+	Rectangle
 	Point
+	Reply
+	Location
 */
 package geo
 
@@ -31,44 +33,41 @@ var _ = proto.Marshal
 
 // A latitude-longitude bounding box, represented as two diagonally opposite
 // points "lo" and "hi".
-type BoundingBox struct {
-	// One corner of the rectangle.
-	Lo *Point `protobuf:"bytes,1,opt,name=lo" json:"lo,omitempty"`
-	// The other corner of the rectangle.
-	Hi *Point `protobuf:"bytes,2,opt,name=hi" json:"hi,omitempty"`
+type Args struct {
+	TraceId string     `protobuf:"bytes,1,opt,name=traceId" json:"traceId,omitempty"`
+	Rect    *Rectangle `protobuf:"bytes,2,opt,name=rect" json:"rect,omitempty"`
 }
 
-func (m *BoundingBox) Reset()         { *m = BoundingBox{} }
-func (m *BoundingBox) String() string { return proto.CompactTextString(m) }
-func (*BoundingBox) ProtoMessage()    {}
+func (m *Args) Reset()         { *m = Args{} }
+func (m *Args) String() string { return proto.CompactTextString(m) }
+func (*Args) ProtoMessage()    {}
 
-func (m *BoundingBox) GetLo() *Point {
+func (m *Args) GetRect() *Rectangle {
+	if m != nil {
+		return m.Rect
+	}
+	return nil
+}
+
+type Rectangle struct {
+	Lo *Point `protobuf:"bytes,2,opt,name=lo" json:"lo,omitempty"`
+	Hi *Point `protobuf:"bytes,3,opt,name=hi" json:"hi,omitempty"`
+}
+
+func (m *Rectangle) Reset()         { *m = Rectangle{} }
+func (m *Rectangle) String() string { return proto.CompactTextString(m) }
+func (*Rectangle) ProtoMessage()    {}
+
+func (m *Rectangle) GetLo() *Point {
 	if m != nil {
 		return m.Lo
 	}
 	return nil
 }
 
-func (m *BoundingBox) GetHi() *Point {
+func (m *Rectangle) GetHi() *Point {
 	if m != nil {
 		return m.Hi
-	}
-	return nil
-}
-
-// A location is represented by a hotel at given point.
-type Location struct {
-	HotelID  int32  `protobuf:"varint,1,opt,name=hotelID" json:"hotelID,omitempty"`
-	Location *Point `protobuf:"bytes,2,opt,name=location" json:"location,omitempty"`
-}
-
-func (m *Location) Reset()         { *m = Location{} }
-func (m *Location) String() string { return proto.CompactTextString(m) }
-func (*Location) ProtoMessage()    {}
-
-func (m *Location) GetLocation() *Point {
-	if m != nil {
-		return m.Location
 	}
 	return nil
 }
@@ -86,6 +85,38 @@ func (m *Point) Reset()         { *m = Point{} }
 func (m *Point) String() string { return proto.CompactTextString(m) }
 func (*Point) ProtoMessage()    {}
 
+type Reply struct {
+	Locations []*Location `protobuf:"bytes,1,rep,name=locations" json:"locations,omitempty"`
+}
+
+func (m *Reply) Reset()         { *m = Reply{} }
+func (m *Reply) String() string { return proto.CompactTextString(m) }
+func (*Reply) ProtoMessage()    {}
+
+func (m *Reply) GetLocations() []*Location {
+	if m != nil {
+		return m.Locations
+	}
+	return nil
+}
+
+// A location is represented by a hotel address at given point.
+type Location struct {
+	HotelId int32  `protobuf:"varint,1,opt,name=hotelId" json:"hotelId,omitempty"`
+	Point   *Point `protobuf:"bytes,3,opt,name=point" json:"point,omitempty"`
+}
+
+func (m *Location) Reset()         { *m = Location{} }
+func (m *Location) String() string { return proto.CompactTextString(m) }
+func (*Location) ProtoMessage()    {}
+
+func (m *Location) GetPoint() *Point {
+	if m != nil {
+		return m.Point
+	}
+	return nil
+}
+
 func init() {
 }
 
@@ -93,7 +124,7 @@ func init() {
 
 type GeoClient interface {
 	// Obtains the Locations contained within the given Rectangle.
-	NearbyLocations(ctx context.Context, in *BoundingBox, opts ...grpc.CallOption) (Geo_NearbyLocationsClient, error)
+	BoundingBox(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error)
 }
 
 type geoClient struct {
@@ -104,79 +135,46 @@ func NewGeoClient(cc *grpc.ClientConn) GeoClient {
 	return &geoClient{cc}
 }
 
-func (c *geoClient) NearbyLocations(ctx context.Context, in *BoundingBox, opts ...grpc.CallOption) (Geo_NearbyLocationsClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_Geo_serviceDesc.Streams[0], c.cc, "/geo.Geo/NearbyLocations", opts...)
+func (c *geoClient) BoundingBox(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error) {
+	out := new(Reply)
+	err := grpc.Invoke(ctx, "/geo.Geo/BoundingBox", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &geoNearbyLocationsClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type Geo_NearbyLocationsClient interface {
-	Recv() (*Location, error)
-	grpc.ClientStream
-}
-
-type geoNearbyLocationsClient struct {
-	grpc.ClientStream
-}
-
-func (x *geoNearbyLocationsClient) Recv() (*Location, error) {
-	m := new(Location)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 // Server API for Geo service
 
 type GeoServer interface {
 	// Obtains the Locations contained within the given Rectangle.
-	NearbyLocations(*BoundingBox, Geo_NearbyLocationsServer) error
+	BoundingBox(context.Context, *Args) (*Reply, error)
 }
 
 func RegisterGeoServer(s *grpc.Server, srv GeoServer) {
 	s.RegisterService(&_Geo_serviceDesc, srv)
 }
 
-func _Geo_NearbyLocations_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(BoundingBox)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _Geo_BoundingBox_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
+	in := new(Args)
+	if err := proto.Unmarshal(buf, in); err != nil {
+		return nil, err
 	}
-	return srv.(GeoServer).NearbyLocations(m, &geoNearbyLocationsServer{stream})
-}
-
-type Geo_NearbyLocationsServer interface {
-	Send(*Location) error
-	grpc.ServerStream
-}
-
-type geoNearbyLocationsServer struct {
-	grpc.ServerStream
-}
-
-func (x *geoNearbyLocationsServer) Send(m *Location) error {
-	return x.ServerStream.SendMsg(m)
+	out, err := srv.(GeoServer).BoundingBox(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 var _Geo_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "geo.Geo",
 	HandlerType: (*GeoServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
+	Methods: []grpc.MethodDesc{
 		{
-			StreamName:    "NearbyLocations",
-			Handler:       _Geo_NearbyLocations_Handler,
-			ServerStreams: true,
+			MethodName: "BoundingBox",
+			Handler:    _Geo_BoundingBox_Handler,
 		},
 	},
+	Streams: []grpc.StreamDesc{},
 }
