@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package profile;
+
+service Profile {
+  rpc GetProfiles(Args) returns (Reply);
+}
+
+message Args {
+  string traceId = 1;
+  string from = 2;
+  repeated int32 hotelIds = 3;
+  string locale = 4;
+}
+
+message Reply {
+  repeated Hotel hotels = 1;
+}
+
+message Hotel {
+  int32 id = 1;
+  string name = 2;
+  string phoneNumber = 3;
+  string description = 4;
+  Address address = 5;
+  repeated Image images = 6;
+}
+
+message Address {
+  string streetNumber = 1;
+  string streetName = 2;
+  string city = 3;
+  string state = 4;
+  string country = 5;
+  string postalCode = 6;
+}
+
+message Image {
+  string url = 1;
+  bool default = 2;
+}
