@@ -66,5 +66,16 @@ Curl the API endpoint with a valid auth token:
         ]
     }
 
+### Credits
+
+This example codebase was heavily inspired by the following talks/repositories:
+
+* [Scaling microservices in Go][3]
+* [GRPC Example Service][4]
+* [Gokit][4]
+
 [1]: http://www.grpc.io/
 [2]: https://github.com/ddollar/foreman
+[3]: https://speakerdeck.com/mattheath/scaling-microservices-in-go-high-load-strategy-2015
+[4]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
+[5]: https://github.com/peterbourgon/gokit
