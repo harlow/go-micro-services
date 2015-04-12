@@ -21,27 +21,16 @@ var (
 )
 
 type profileServer struct {
-  hotels []*pb.Hotel
+  hotels map[int32]*pb.Hotel
 }
 
 // VerifyToken finds a customer by authentication token.
 func (s *profileServer) GetProfiles(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
   reply := new(pb.Reply)
-  for _, hotel := range s.hotels {
-    if inRange(hotel.Id, args.HotelIds) {
-      reply.Hotels = append(reply.Hotels, hotel)
-    }
+  for _, i := range args.HotelIds {
+    reply.Hotels = append(reply.Hotels, s.hotels[i])
   }
   return reply, nil
-}
-
-func inRange(hotelId int32, wantIds []int32) bool {
-  for _, id := range wantIds {
-    if id == hotelId {
-      return true
-    }
-  }
-  return false
 }
 
 // loadProfiles loads hotel profiles from a JSON file.
@@ -50,11 +39,17 @@ func (s *profileServer) loadProfiles(filePath string) {
   if err != nil {
     log.Fatalf("Failed to load file: %v", err)
   }
-  if err := json.Unmarshal(file, &s.hotels); err != nil {
+  hotels := []*pb.Hotel{}
+  if err := json.Unmarshal(file, &hotels); err != nil {
     log.Fatalf("Failed to load json: %v", err)
+  }
+  s.hotels = make(map[int32]*pb.Hotel)
+  for _, hotel := range hotels {
+    s.hotels[hotel.Id] = hotel
   }
 }
 
+// newServer returns a server with initialization data loaded.
 func newServer() *profileServer {
   s := new(profileServer)
   s.loadProfiles(*jsonDBFile)

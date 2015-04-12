@@ -3,15 +3,14 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"io"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 
 	auth "github.com/harlow/go-micro-services/service.auth/proto"
 	geo "github.com/harlow/go-micro-services/service.geo/proto"
 	profile "github.com/harlow/go-micro-services/service.profile/proto"
+	rate "github.com/harlow/go-micro-services/service.rate/proto"
 
 	"github.com/harlow/auth_token"
 	"github.com/harlow/go-micro-services/trace"
@@ -25,11 +24,12 @@ var (
 	authServerAddr    = flag.String("auth_server_addr", "127.0.0.1:10001", "The Auth server address in the format of host:port")
 	geoServerAddr     = flag.String("geo_server_addr", "127.0.0.1:10002", "The Geo server address in the format of host:port")
 	profileServerAddr = flag.String("profile_server_addr", "127.0.0.1:10003", "The Pofile server address in the format of host:port")
+	rateServerAddr = flag.String("rate_server_addr", "127.0.0.1:10004", "The Rate Code server address in the format of host:port")
 )
 
 type Inventory struct {
-	Points []*geo.Point `json:"point"`
-	Profiles []*geo.Profile `json:"profiles"`
+	Hotels []*profile.Hotel `json:"hotels"`
+	Rates []*rate.RatePlan `json:"rates"`
 }
 
 func authenticateCustomer(t trace.Tracer, authToken string) error {
@@ -43,86 +43,79 @@ func authenticateCustomer(t trace.Tracer, authToken string) error {
 
 	defer conn.Close()
 	client := auth.NewAuthClient(conn)
-	_, err = client.VerifyToken(
-		context.Background(),
-		&auth.Args{
-			TraceId:   t.TraceID,
-			From:      "api.v1",
-			AuthToken: authToken,
-		},
-	)
+	args := &auth.Args{TraceId: t.TraceID, From: "api.v1", AuthToken: authToken}
+	_, err = client.VerifyToken(context.Background(), args)
+
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func nearbyHotels(t trace.Tracer) ([]int32, error) {
-	t.Req(serverName, "service.geo", "NearbyLocations")
+	t.Req(serverName, "service.geo", "BoundingBox")
 	defer t.Rep("service.geo", serverName, time.Now())
 
 	conn, err := grpc.Dial(*geoServerAddr)
 	if err != nil {
-		return []*Hotel{}, err
+		return []int32{}, err
 	}
 
 	rect := &geo.Rectangle{
 		&geo.Point{400000000, -750000000},
 		&geo.Point{420000000, -730000000},
 	}
-	geoArgs := &geo.Args{t.TraceID, rect}
-
+	args := &geo.Args{t.TraceID, rect}
 	client := geo.NewGeoClient(conn)
-	geoReply, err := client.BoundedBox(context.Background(), geoArgs)
+	reply, err := client.BoundedBox(context.Background(), args)
 	if err != nil {
 		log.Fatalf("%v.BoundedBox(_) = _, %v", conn, err)
 	}
 
-	var wg sync.WaitGroup
-	var hotels []Hotel
-
-	for {
-		loc, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatalf("%v.NearbyLocations(_) = _, %v", conn, err)
-		}
-		h := &Hotel{ID: loc.HotelId, Address: loc.Address, Point: loc.Point}
-		hotels = append(hotels, h)
-		// wg.Add(1)
-		// go setHotelDetails(t, h, &wg)
-	}
-
-	// wg.Wait()
-	hotels = getHotelProfiles(t, hotels)
 	return reply.HotelIds, nil
 }
 
-func getHotelProfiles(t trace.Tracer, h *Hotel) []Hotel {
-	t.Req(serverName, "service.profile", "MultiProfile")
+func hotelProfiles(t trace.Tracer, hotelIds []int32) ([]*profile.Hotel, error) {
+	t.Req(serverName, "service.profile", "GetProfiles")
 	defer t.Rep("service.profile", serverName, time.Now())
-	defer wg.Done()
 
 	conn, err := grpc.Dial(*profileServerAddr)
 	if err != nil {
-		return err
+		return []*profile.Hotel{}, err
 	}
 
 	defer conn.Close()
-	args := &profile.Args{TraceId: t.TraceID, From: "api.v1", HotelIds: h.ID}
-	client := profile.NewHotelProfileClient(conn)
-	reply, err := client.GetProfile(context.Background(), args)
+	args := &profile.Args{
+		TraceId: t.TraceID,
+		From: "api.v1",
+		HotelIds: hotelIds,
+	}
+	client := profile.NewProfileClient(conn)
+	reply, err := client.GetProfiles(context.Background(), args)
 	if err != nil {
-		return err
+		return []*profile.Hotel{}, err
 	}
 
-	h.Name = reply.Name
-	h.PhoneNumber = reply.PhoneNumber
-	h.Description = reply.Description
-	return nil
+	return reply.Hotels, nil
+}
+
+func ratePlans(t trace.Tracer, args *rate.Args) ([]*rate.RatePlan, error) {
+	t.Req(serverName, "service.rate", "GetRates")
+	defer t.Rep("service.rate", serverName, time.Now())
+
+	conn, err := grpc.Dial(*rateServerAddr)
+	if err != nil {
+		return []*rate.RatePlan{}, err
+	}
+
+	defer conn.Close()
+	client := rate.NewRateClient(conn)
+	reply, err := client.GetRates(context.Background(), args)
+	if err != nil {
+		return []*rate.RatePlan{}, err
+	}
+
+	return reply.Rates, nil
 }
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
@@ -142,13 +135,32 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hotels, err := nearbyHotels(t)
+	hotelIds, err := nearbyHotels(t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	body, err := json.Marshal(hotels)
+	hotels, err := hotelProfiles(t, hotelIds)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rateArgs := &rate.Args{
+		TraceId: t.TraceID,
+		HotelIds: hotelIds,
+		InDate: "2015-04-09",
+		OutDate: "2015-04-10",
+	}
+	rates, err := ratePlans(t, rateArgs)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	inventory := Inventory{Hotels: hotels, Rates: rates}
+	body, err := json.Marshal(inventory)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
