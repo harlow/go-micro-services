@@ -7,33 +7,31 @@ import (
   "github.com/nu7hatch/gouuid"
 )
 
-func NewTracer(name string) Tracer {
+func NewTracer() Tracer {
   traceID, _ := uuid.NewV4()
   return Tracer{
-    Name: name,
     TraceID: traceID.String(),
   }
 }
 
 type Tracer struct {
   TraceID string
-  Name string
 }
 
-func (t Tracer) Request(to string) {
-  log.Printf("%s %v->%v:\n", t.TraceID, t.Name, to)
+func (t Tracer) Req(from string, to string, call string) {
+  log.Printf("[REQ] %s %v->%v: %v\n", t.TraceID, from, to, call)
 }
 
-func (t Tracer) Reply(from string, startTime time.Time) {
+func (t Tracer) Rep(from string, to string, startTime time.Time) {
   elapsed := time.Since(startTime)
-  log.Printf("%s %v-->%v: %v\n", t.TraceID, from, t.Name, elapsed)
+  log.Printf("[REP] %s %v-->%v: %v\n", t.TraceID, from, to, elapsed)
 }
 
-func (t Tracer) In() {
-  log.Printf("%s %v\n", t.TraceID, t.Name)
+func (t Tracer) In(from string, to string) {
+  log.Printf("[IN ] %s %v->%v:\n", t.TraceID, from, to)
 }
 
-func (t Tracer) Out(startTime time.Time) {
+func (t Tracer) Out(from string, to string, startTime time.Time) {
   elapsed := time.Since(startTime)
-  log.Printf("%s %v: %v\n", t.TraceID, t.Name, elapsed)
+  log.Printf("[OUT] %s %v-->%v: %v\n", t.TraceID, from, to, elapsed)
 }
