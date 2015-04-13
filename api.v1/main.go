@@ -33,7 +33,7 @@ type Inventory struct {
 }
 
 func authenticateCustomer(t trace.Tracer, args *auth.Args) error {
-	t.Req(args.From, "service.auth", "AuthenticateCustomer")
+	t.Req(args.From, "service.auth", "VerifyToken")
 	defer t.Rep("service.auth", args.From, time.Now())
 
 	// dial server connection
