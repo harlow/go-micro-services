@@ -130,7 +130,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// validate customer exists for auth token
 	err = authenticateCustomer(t, &auth.Args{
-		TraceId:   t.TraceID,
+		TraceId:   t.TraceId,
 		From:      serverName,
 		AuthToken: authToken,
 	})
@@ -141,7 +141,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// search for hotels within geo rectangle
 	hotelIds, err := nearbyHotels(t, &geo.Args{
-		TraceId: t.TraceID,
+		TraceId: t.TraceId,
 		From:    serverName,
 		Rect: &geo.Rectangle{
 			&geo.Point{400000000, -750000000},
@@ -155,7 +155,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// get hotel profiles
 	hotels, err := hotelProfiles(t, &profile.Args{
-		TraceId:  t.TraceID,
+		TraceId:  t.TraceId,
 		From:     serverName,
 		HotelIds: hotelIds,
 	})
@@ -166,7 +166,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// get hotel rate plans
 	rates, err := ratePlans(t, &rate.Args{
-		TraceId:  t.TraceID,
+		TraceId:  t.TraceId,
 		From:     serverName,
 		HotelIds: hotelIds,
 		InDate:   "2015-04-09",

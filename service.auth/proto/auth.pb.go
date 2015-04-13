@@ -10,7 +10,6 @@ It is generated from these files:
 
 It has these top-level messages:
 	Args
-	Reply
 	Customer
 */
 package auth
@@ -39,21 +38,6 @@ func (m *Args) Reset()         { *m = Args{} }
 func (m *Args) String() string { return proto.CompactTextString(m) }
 func (*Args) ProtoMessage()    {}
 
-type Reply struct {
-	Customer *Customer `protobuf:"bytes,1,opt,name=customer" json:"customer,omitempty"`
-}
-
-func (m *Reply) Reset()         { *m = Reply{} }
-func (m *Reply) String() string { return proto.CompactTextString(m) }
-func (*Reply) ProtoMessage()    {}
-
-func (m *Reply) GetCustomer() *Customer {
-	if m != nil {
-		return m.Customer
-	}
-	return nil
-}
-
 type Customer struct {
 	Id        int32  `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
 	AuthToken string `protobuf:"bytes,2,opt,name=authToken" json:"authToken,omitempty"`
@@ -69,7 +53,7 @@ func init() {
 // Client API for Auth service
 
 type AuthClient interface {
-	VerifyToken(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error)
+	VerifyToken(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Customer, error)
 }
 
 type authClient struct {
@@ -80,8 +64,8 @@ func NewAuthClient(cc *grpc.ClientConn) AuthClient {
 	return &authClient{cc}
 }
 
-func (c *authClient) VerifyToken(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error) {
-	out := new(Reply)
+func (c *authClient) VerifyToken(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Customer, error) {
+	out := new(Customer)
 	err := grpc.Invoke(ctx, "/auth.Auth/VerifyToken", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -92,7 +76,7 @@ func (c *authClient) VerifyToken(ctx context.Context, in *Args, opts ...grpc.Cal
 // Server API for Auth service
 
 type AuthServer interface {
-	VerifyToken(context.Context, *Args) (*Reply, error)
+	VerifyToken(context.Context, *Args) (*Customer, error)
 }
 
 func RegisterAuthServer(s *grpc.Server, srv AuthServer) {

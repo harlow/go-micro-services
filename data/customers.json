@@ -1,6 +1,6 @@
 [
     {
-        "customerId": 1,
+        "id": 1,
         "authToken": "VALID_TOKEN"
     }
 ]

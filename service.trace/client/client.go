@@ -10,7 +10,7 @@ import (
 func NewTracer() Tracer {
 	traceID, _ := uuid.NewV4()
 	return Tracer{
-		TraceId: traceID.String(),
+		TraceId: traceId.String(),
 	}
 }
 

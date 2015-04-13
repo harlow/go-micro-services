@@ -3,17 +3,13 @@ syntax = "proto3";
 package auth;
 
 service Auth {
-  rpc VerifyToken(Args) returns (Reply) {}
+  rpc VerifyToken(Args) returns (Customer) {}
 }
 
 message Args {
   string traceId = 1;
   string from = 2;
   string authToken = 3;
-}
-
-message Reply {
-  Customer customer = 1;
 }
 
 message Customer {

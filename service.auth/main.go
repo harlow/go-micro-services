@@ -24,32 +24,41 @@ var (
 )
 
 type authServer struct {
-	customers []*pb.Customer
+	customers map[string]*pb.Customer
 }
 
 // VerifyToken finds a customer by authentication token.
-func (s *authServer) VerifyToken(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
-	t := trace.NewTracer()
+func (s *authServer) VerifyToken(ctx context.Context, args *pb.Args) (*pb.Customer, error) {
+	t := trace.Tracer{TraceId: args.TraceId}
 	t.In(serverName, args.From)
 	defer t.Out(args.From, serverName, time.Now())
 
-	for _, customer := range s.customers {
-		if customer.AuthToken == args.AuthToken {
-			return &pb.Reply{customer}, nil
-		}
+	customer := s.customers[args.AuthToken]
+	if customer == nil {
+		return &pb.Customer{}, errors.New("Invalid Token")
 	}
 
-	return &pb.Reply{}, errors.New("Invalid Token")
+	return customer, nil
 }
 
 // loadCustomers loads customers from a JSON file.
 func (s *authServer) loadCustomers(filePath string) {
+	// open data file
 	file, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("Failed to load file: %v", err)
 	}
-	if err := json.Unmarshal(file, &s.customers); err != nil {
-		log.Fatalf("Failed to load json: %v", err)
+
+	// unmarshal JSON
+	customers := []*pb.Customer{}
+	if err := json.Unmarshal(file, &customers); err != nil {
+		log.Fatalf("Failed to unmarshal json: %v", err)
+	}
+
+	// create customer lookup map
+	s.customers = make(map[string]*pb.Customer)
+	for _, c := range customers {
+		s.customers[c.AuthToken] = c
 	}
 }
 
