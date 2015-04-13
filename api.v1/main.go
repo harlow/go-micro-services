@@ -32,7 +32,7 @@ type Inventory struct {
 	Rates  []*rate.RatePlan `json:"rates"`
 }
 
-func authenticateCustomer(t trace.Tracer, args *auth.Args) error {
+func verifyToken(t trace.Tracer, args *auth.Args) error {
 	t.Req(args.From, "service.auth", "VerifyToken")
 	defer t.Rep("service.auth", args.From, time.Now())
 
@@ -53,7 +53,7 @@ func authenticateCustomer(t trace.Tracer, args *auth.Args) error {
 	return nil
 }
 
-func nearbyHotels(t trace.Tracer, args *geo.Args) ([]int32, error) {
+func hotelsWithinBoundedBox(t trace.Tracer, args *geo.Args) ([]int32, error) {
 	t.Req(args.From, "service.geo", "BoundedBox")
 	defer t.Rep("service.geo", args.From, time.Now())
 
@@ -128,8 +128,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validate customer exists for auth token
-	err = authenticateCustomer(t, &auth.Args{
+	// verify auth token
+	err = verifyToken(t, &auth.Args{
 		TraceId:   t.TraceId,
 		From:      serverName,
 		AuthToken: authToken,
@@ -140,7 +140,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// search for hotels within geo rectangle
-	hotelIds, err := nearbyHotels(t, &geo.Args{
+	hotelIds, err := hotelsWithinBoundedBox(t, &geo.Args{
 		TraceId: t.TraceId,
 		From:    serverName,
 		Rect: &geo.Rectangle{
@@ -153,8 +153,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get hotel profiles
-	hotels, err := hotelProfiles(t, &profile.Args{
+	// fetch hotel profiles
+	profiles, err := hotelProfiles(t, &profile.Args{
 		TraceId:  t.TraceId,
 		From:     serverName,
 		HotelIds: hotelIds,
@@ -164,8 +164,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get hotel rate plans
-	rates, err := ratePlans(t, &rate.Args{
+	// fetch hotel rate plans
+	ratePlans, err := ratePlans(t, &rate.Args{
 		TraceId:  t.TraceId,
 		From:     serverName,
 		HotelIds: hotelIds,
@@ -177,8 +177,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// marshal Inventory json
-	inventory := Inventory{Hotels: hotels, Rates: rates}
+	// marshal json
+	inventory := Inventory{Hotels: profiles, Rates: ratePlans}
 	body, err := json.Marshal(inventory)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
