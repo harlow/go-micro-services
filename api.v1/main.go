@@ -138,17 +138,12 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// checkin date
+	// grab and verify in and out date
 	inDate := r.URL.Query().Get("inDate")
-	if inDate == "" {
-		http.Error(w, "Please specify inDate", http.StatusBadRequest)
-		return
-	}
-
-	// checkout date
 	outDate := r.URL.Query().Get("outDate")
-	if outDate == "" {
-		http.Error(w, "Please specify outDate", http.StatusBadRequest)
+
+	if inDate == "" || outDate == "" {
+		http.Error(w, "Please specify inDate / outDate", http.StatusBadRequest)
 		return
 	}
 
