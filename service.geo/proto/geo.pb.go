@@ -33,7 +33,7 @@ var _ = proto.Marshal
 // A latitude-longitude bounding box, represented as two diagonally opposite
 // points "lo" and "hi".
 type Args struct {
-	TraceId string     `protobuf:"bytes,1,opt,name=traceId" json:"traceId,omitempty"`
+	TraceID string     `protobuf:"bytes,1,opt,name=traceID" json:"traceID,omitempty"`
 	From    string     `protobuf:"bytes,2,opt" json:"From,omitempty"`
 	Rect    *Rectangle `protobuf:"bytes,3,opt,name=rect" json:"rect,omitempty"`
 }

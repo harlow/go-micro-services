@@ -27,12 +27,12 @@ var (
 	rateServerAddr    = flag.String("rate_server_addr", "127.0.0.1:10004", "The Rate Code server address in the format of host:port")
 )
 
-type Inventory struct {
+type inventory struct {
 	Hotels []*profile.Hotel `json:"hotels"`
 	Rates  []*rate.RatePlan `json:"rates"`
 }
 
-func verifyToken(traceId string, serverName string, authToken string) error {
+func verifyToken(traceID string, serverName string, authToken string) error {
 	// dial server connection
 	conn, err := grpc.Dial(*authServerAddr)
 	if err != nil {
@@ -41,7 +41,7 @@ func verifyToken(traceId string, serverName string, authToken string) error {
 	defer conn.Close()
 
 	// set up args and client
-	args := &auth.Args{TraceId: traceId, From: serverName, AuthToken: authToken}
+	args := &auth.Args{TraceID: traceID, From: serverName, AuthToken: authToken}
 	client := auth.NewAuthClient(conn)
 
 	// verify auth token
@@ -53,7 +53,7 @@ func verifyToken(traceId string, serverName string, authToken string) error {
 	return nil
 }
 
-func hotelsWithinBoundedBox(traceId string, serverName string, latitude int32, longitude int32) ([]int32, error) {
+func hotelsWithinBoundedBox(traceID string, serverName string, latitude int32, longitude int32) ([]int32, error) {
 	// dial server connection
 	conn, err := grpc.Dial(*geoServerAddr)
 	if err != nil {
@@ -66,7 +66,7 @@ func hotelsWithinBoundedBox(traceId string, serverName string, latitude int32, l
 		&geo.Point{400000000, -750000000},
 		&geo.Point{420000000, -730000000},
 	}
-	args := &geo.Args{TraceId: traceId, From: serverName, Rect: rect}
+	args := &geo.Args{TraceID: traceID, From: serverName, Rect: rect}
 	client := geo.NewGeoClient(conn)
 
 	// get hotels within bounded bob
@@ -78,7 +78,7 @@ func hotelsWithinBoundedBox(traceId string, serverName string, latitude int32, l
 	return reply.HotelIds, nil
 }
 
-func hotelProfiles(traceId string, serverName string, hotelIds []int32) ([]*profile.Hotel, error) {
+func hotelProfiles(traceID string, serverName string, hotelIds []int32) ([]*profile.Hotel, error) {
 	// dial server connection
 	conn, err := grpc.Dial(*profileServerAddr)
 	if err != nil {
@@ -87,7 +87,7 @@ func hotelProfiles(traceId string, serverName string, hotelIds []int32) ([]*prof
 	defer conn.Close()
 
 	// set up args
-	args := &profile.Args{TraceId: traceId, From: serverName, HotelIds: hotelIds}
+	args := &profile.Args{TraceID: traceID, From: serverName, HotelIds: hotelIds}
 	client := profile.NewProfileClient(conn)
 
 	// get profile data
@@ -99,7 +99,7 @@ func hotelProfiles(traceId string, serverName string, hotelIds []int32) ([]*prof
 	return reply.Hotels, nil
 }
 
-func getRates(traceId string, serverName string, hotelIds []int32, inDate string, outDate string) ([]*rate.RatePlan, error) {
+func getRates(traceID string, serverName string, hotelIds []int32, inDate string, outDate string) ([]*rate.RatePlan, error) {
 	// dial server connection
 	conn, err := grpc.Dial(*rateServerAddr)
 	if err != nil {
@@ -109,7 +109,7 @@ func getRates(traceId string, serverName string, hotelIds []int32, inDate string
 
 	// set up args
 	args := &rate.Args{
-		TraceId:  traceId,
+		TraceID:  traceID,
 		From:     serverName,
 		HotelIds: hotelIds,
 		InDate:   inDate,
@@ -149,7 +149,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// verify auth token
 	t.Req(serverName, "service.auth", "VerifyToken")
-	err = verifyToken(t.TraceId, serverName, authToken)
+	err = verifyToken(t.TraceID, serverName, authToken)
 	t.Rep("service.auth", serverName, time.Now())
 
 	if err != nil {
@@ -159,7 +159,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// search for hotels within geo rectangle
 	t.Req(serverName, "service.geo", "BoundedBox")
-	hotelIds, err := hotelsWithinBoundedBox(t.TraceId, serverName, 100, 100)
+	hotelIds, err := hotelsWithinBoundedBox(t.TraceID, serverName, 100, 100)
 	t.Rep("service.geo", serverName, time.Now())
 
 	if err != nil {
@@ -169,7 +169,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// fetch hotel profiles
 	t.Req(serverName, "service.profile", "GetProfiles")
-	profiles, err := hotelProfiles(t.TraceId, serverName, hotelIds)
+	profiles, err := hotelProfiles(t.TraceID, serverName, hotelIds)
 	t.Rep("service.profile", serverName, time.Now())
 
 	if err != nil {
@@ -179,7 +179,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// fetch hotel rate plans
 	t.Req(serverName, "service.rate", "GetRates")
-	ratePlans, err := getRates(t.TraceId, serverName, hotelIds, inDate, outDate)
+	ratePlans, err := getRates(t.TraceID, serverName, hotelIds, inDate, outDate)
 	t.Rep("service.rate", serverName, time.Now())
 
 	if err != nil {
@@ -188,7 +188,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// marshal json body
-	inventory := Inventory{Hotels: profiles, Rates: ratePlans}
+	inventory := inventory{Hotels: profiles, Rates: ratePlans}
 	body, err := json.Marshal(inventory)
 
 	if err != nil {

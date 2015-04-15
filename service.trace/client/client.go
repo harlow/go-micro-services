@@ -10,28 +10,28 @@ import (
 func NewTracer() Tracer {
 	traceID, _ := uuid.NewV4()
 	return Tracer{
-		TraceId: traceId.String(),
+		TraceID: traceId.String(),
 	}
 }
 
 type Tracer struct {
-	TraceId string
+	TraceID string
 }
 
 func (t Tracer) Req(from string, to string, call string) {
-	log.Printf("[REQ] %s %v->%v: %v\n", t.TraceId, from, to, call)
+	log.Printf("[REQ] %s %v->%v: %v\n", t.TraceID, from, to, call)
 }
 
 func (t Tracer) Rep(from string, to string, startTime time.Time) {
 	elapsed := time.Since(startTime)
-	log.Printf("[REP] %s %v-->%v: %v\n", t.TraceId, from, to, elapsed)
+	log.Printf("[REP] %s %v-->%v: %v\n", t.TraceID, from, to, elapsed)
 }
 
 func (t Tracer) In(from string, to string) {
-	log.Printf("[IN]  %s %v->%v:\n", t.TraceId, from, to)
+	log.Printf("[IN]  %s %v->%v:\n", t.TraceID, from, to)
 }
 
 func (t Tracer) Out(from string, to string, startTime time.Time) {
 	elapsed := time.Since(startTime)
-	log.Printf("[OUT] %s %v-->%v: %v\n", t.TraceId, from, to, elapsed)
+	log.Printf("[OUT] %s %v-->%v: %v\n", t.TraceID, from, to, elapsed)
 }

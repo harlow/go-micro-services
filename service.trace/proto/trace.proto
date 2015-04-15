@@ -7,7 +7,7 @@ service Tracer {
 }
 
 message Trace {
-  string traceId = 1;
+  string traceID = 1;
   string type = 2;
   string from = 3;
   string to = 4;

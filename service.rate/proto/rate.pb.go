@@ -31,7 +31,7 @@ var _ grpc.ClientConn
 var _ = proto.Marshal
 
 type Args struct {
-	TraceId  string  `protobuf:"bytes,1,opt,name=traceId" json:"traceId,omitempty"`
+	TraceID  string  `protobuf:"bytes,1,opt,name=traceID" json:"traceID,omitempty"`
 	From     string  `protobuf:"bytes,2,opt,name=from" json:"from,omitempty"`
 	HotelIds []int32 `protobuf:"varint,3,rep,name=hotelIds" json:"hotelIds,omitempty"`
 	InDate   string  `protobuf:"bytes,4,opt,name=inDate" json:"inDate,omitempty"`

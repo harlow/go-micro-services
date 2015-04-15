@@ -29,7 +29,7 @@ var _ grpc.ClientConn
 var _ = proto.Marshal
 
 type Trace struct {
-	TraceId   string `protobuf:"bytes,1,opt,name=traceId" json:"traceId,omitempty"`
+	TraceID   string `protobuf:"bytes,1,opt,name=traceID" json:"traceID,omitempty"`
 	Type      string `protobuf:"bytes,2,opt,name=type" json:"type,omitempty"`
 	From      string `protobuf:"bytes,3,opt,name=from" json:"from,omitempty"`
 	To        string `protobuf:"bytes,4,opt,name=to" json:"to,omitempty"`

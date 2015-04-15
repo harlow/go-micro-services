@@ -8,7 +8,7 @@ service Rate {
 }
 
 message Args {
-  string traceId = 1;
+  string traceID = 1;
   string from = 2;
   repeated int32 hotelIds = 3;
   string inDate = 4;
