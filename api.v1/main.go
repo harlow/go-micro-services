@@ -75,10 +75,10 @@ func hotelsWithinBoundedBox(traceID string, serverName string, latitude int32, l
 		return []int32{}, err
 	}
 
-	return reply.HotelIds, nil
+	return reply.HotelIDs, nil
 }
 
-func hotelProfiles(traceID string, serverName string, hotelIds []int32) ([]*profile.Hotel, error) {
+func hotelProfiles(traceID string, serverName string, hotelIDs []int32) ([]*profile.Hotel, error) {
 	// dial server connection
 	conn, err := grpc.Dial(*profileServerAddr)
 	if err != nil {
@@ -87,7 +87,7 @@ func hotelProfiles(traceID string, serverName string, hotelIds []int32) ([]*prof
 	defer conn.Close()
 
 	// set up args
-	args := &profile.Args{TraceID: traceID, From: serverName, HotelIds: hotelIds}
+	args := &profile.Args{TraceID: traceID, From: serverName, HotelIDs: hotelIDs}
 	client := profile.NewProfileClient(conn)
 
 	// get profile data
@@ -99,7 +99,7 @@ func hotelProfiles(traceID string, serverName string, hotelIds []int32) ([]*prof
 	return reply.Hotels, nil
 }
 
-func getRates(traceID string, serverName string, hotelIds []int32, inDate string, outDate string) ([]*rate.RatePlan, error) {
+func getRates(traceID string, serverName string, hotelIDs []int32, inDate string, outDate string) ([]*rate.RatePlan, error) {
 	// dial server connection
 	conn, err := grpc.Dial(*rateServerAddr)
 	if err != nil {
@@ -111,7 +111,7 @@ func getRates(traceID string, serverName string, hotelIds []int32, inDate string
 	args := &rate.Args{
 		TraceID:  traceID,
 		From:     serverName,
-		HotelIds: hotelIds,
+		HotelIDs: hotelIDs,
 		InDate:   inDate,
 		OutDate:  outDate,
 	}
@@ -159,7 +159,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// search for hotels within geo rectangle
 	t.Req(serverName, "service.geo", "BoundedBox")
-	hotelIds, err := hotelsWithinBoundedBox(t.TraceID, serverName, 100, 100)
+	hotelIDs, err := hotelsWithinBoundedBox(t.TraceID, serverName, 100, 100)
 	t.Rep("service.geo", serverName, time.Now())
 
 	if err != nil {
@@ -169,7 +169,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// fetch hotel profiles
 	t.Req(serverName, "service.profile", "GetProfiles")
-	profiles, err := hotelProfiles(t.TraceID, serverName, hotelIds)
+	profiles, err := hotelProfiles(t.TraceID, serverName, hotelIDs)
 	t.Rep("service.profile", serverName, time.Now())
 
 	if err != nil {
@@ -179,7 +179,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// fetch hotel rate plans
 	t.Req(serverName, "service.rate", "GetRates")
-	ratePlans, err := getRates(t.TraceID, serverName, hotelIds, inDate, outDate)
+	ratePlans, err := getRates(t.TraceID, serverName, hotelIDs, inDate, outDate)
 	t.Rep("service.rate", serverName, time.Now())
 
 	if err != nil {

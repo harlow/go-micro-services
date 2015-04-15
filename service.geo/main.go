@@ -24,7 +24,7 @@ var (
 )
 
 type location struct {
-	HotelId int32
+	HotelID int32
 	Point   *pb.Point
 }
 
@@ -41,7 +41,7 @@ func (s *geoServer) BoundedBox(ctx context.Context, args *pb.Args) (*pb.Reply, e
 	reply := new(pb.Reply)
 	for _, loc := range s.locations {
 		if inRange(loc.Point, args.Rect) {
-			reply.HotelIds = append(reply.HotelIds, loc.HotelId)
+			reply.HotelIDs = append(reply.HotelIDs, loc.HotelID)
 		}
 	}
 

@@ -9,7 +9,7 @@ service Profile {
 message Args {
   string traceID = 1;
   string from = 2;
-  repeated int32 hotelIds = 3;
+  repeated int32 hotelIDs = 3;
   string locale = 4;
 }
 

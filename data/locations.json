@@ -1,41 +1,41 @@
 [
     {
-        "hotelId": 1,
+        "hotelID": 1,
         "point": {
             "latitude": 407838351,
             "longitude": -746143763
         }
     },
     {
-        "hotelId": 2,
+        "hotelID": 2,
         "point": {
             "latitude": 408122808,
             "longitude": -743999179
         }
     },
     {
-        "hotelId": 3,
+        "hotelID": 3,
         "point": {
             "latitude": 413628156,
             "longitude": -749015468
         }
     },
     {
-        "hotelId": 4,
+        "hotelID": 4,
         "point": {
             "latitude": 419999544,
             "longitude": -740371136
         }
     },
     {
-        "hotelId": 5,
+        "hotelID": 5,
         "point": {
             "latitude": 414008389,
             "longitude": -743951297
         }
     },
     {
-        "hotelId": 6,
+        "hotelID": 6,
         "point": {
             "latitude": 414008389,
             "longitude": -743951297

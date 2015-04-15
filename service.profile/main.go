@@ -33,7 +33,7 @@ func (s *profileServer) GetProfiles(ctx context.Context, args *pb.Args) (*pb.Rep
 	defer t.Out(args.From, serverName, time.Now())
 
 	reply := new(pb.Reply)
-	for _, i := range args.HotelIds {
+	for _, i := range args.HotelIDs {
 		reply.Hotels = append(reply.Hotels, s.hotels[i])
 	}
 

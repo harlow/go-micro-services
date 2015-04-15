@@ -30,5 +30,5 @@ message Point {
 }
 
 message Reply {
-  repeated int32 hotelIds = 1;
+  repeated int32 hotelIDs = 1;
 }

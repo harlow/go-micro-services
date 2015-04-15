@@ -86,7 +86,7 @@ func (m *Point) String() string { return proto.CompactTextString(m) }
 func (*Point) ProtoMessage()    {}
 
 type Reply struct {
-	HotelIds []int32 `protobuf:"varint,1,rep,name=hotelIds" json:"hotelIds,omitempty"`
+	HotelIDs []int32 `protobuf:"varint,1,rep,name=hotelIDs" json:"hotelIDs,omitempty"`
 }
 
 func (m *Reply) Reset()         { *m = Reply{} }

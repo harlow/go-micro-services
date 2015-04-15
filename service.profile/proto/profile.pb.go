@@ -34,7 +34,7 @@ var _ = proto.Marshal
 type Args struct {
 	TraceID  string  `protobuf:"bytes,1,opt,name=traceID" json:"traceID,omitempty"`
 	From     string  `protobuf:"bytes,2,opt,name=from" json:"from,omitempty"`
-	HotelIds []int32 `protobuf:"varint,3,rep,name=hotelIds" json:"hotelIds,omitempty"`
+	HotelIDs []int32 `protobuf:"varint,3,rep,name=hotelIDs" json:"hotelIDs,omitempty"`
 	Locale   string  `protobuf:"bytes,4,opt,name=locale" json:"locale,omitempty"`
 }
 

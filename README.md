@@ -57,7 +57,7 @@ Curl the API endpoint with a valid auth token:
         ],
         "rates": [
             {
-                "hotelId": 1,
+                "hotelID": 1,
                 "code": "RACK",
                 "inDate": "2015-04-09",
                 "outDate": "2015-04-10",

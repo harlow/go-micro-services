@@ -23,7 +23,7 @@ var (
 )
 
 type stay struct {
-	HotelId int32
+	HotelID int32
 	InDate  string
 	OutDate string
 }
@@ -39,8 +39,8 @@ func (s *rateServer) GetRates(ctx context.Context, args *pb.Args) (*pb.Reply, er
 	defer t.Out(args.From, serverName, time.Now())
 
 	reply := new(pb.Reply)
-	for _, hotelId := range args.HotelIds {
-		k := stay{hotelId, args.InDate, args.OutDate}
+	for _, hotelID := range args.HotelIDs {
+		k := stay{hotelID, args.InDate, args.OutDate}
 		if s.rates[k] == nil {
 			continue
 		}
@@ -62,7 +62,7 @@ func (s *rateServer) loadRates(filePath string) {
 	}
 	s.rates = make(map[stay]*pb.RatePlan)
 	for _, ratePlan := range rates {
-		k := stay{ratePlan.HotelId, ratePlan.InDate, ratePlan.OutDate}
+		k := stay{ratePlan.HotelID, ratePlan.InDate, ratePlan.OutDate}
 		s.rates[k] = ratePlan
 	}
 }
