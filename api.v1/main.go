@@ -138,6 +138,20 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// checkin date
+	inDate := r.URL.Query().Get("inDate")
+	if inDate == "" {
+		http.Error(w, "Please specify inDate", http.StatusBadRequest)
+		return
+	}
+
+	// checkout date
+	outDate := r.URL.Query().Get("outDate")
+	if outDate == "" {
+		http.Error(w, "Please specify outDate", http.StatusBadRequest)
+		return
+	}
+
 	// verify auth token
 	t.Req(serverName, "service.auth", "VerifyToken")
 	err = verifyToken(t.TraceId, serverName, authToken)
@@ -170,7 +184,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// fetch hotel rate plans
 	t.Req(serverName, "service.rate", "GetRates")
-	ratePlans, err := getRates(t.TraceId, serverName, hotelIds, "2015-04-09", "2015-04-10")
+	ratePlans, err := getRates(t.TraceId, serverName, hotelIds, inDate, outDate)
 	t.Rep("service.rate", serverName, time.Now())
 
 	if err != nil {
