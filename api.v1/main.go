@@ -63,8 +63,8 @@ func hotelsWithinBoundedBox(traceID string, serverName string, latitude int32, l
 
 	// set up args and client
 	rect := &geo.Rectangle{
-		&geo.Point{400000000, -750000000},
-		&geo.Point{420000000, -730000000},
+		Lo: &geo.Point{Latitude: 400000000, Longitude: -750000000},
+		Hi: &geo.Point{Latitude: 420000000, Longitude: -730000000},
 	}
 	args := &geo.Args{TraceID: traceID, From: serverName, Rect: rect}
 	client := geo.NewGeoClient(conn)
