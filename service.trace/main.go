@@ -27,7 +27,7 @@ type traceServer struct {
 
 // GetRates gets rates for hotels for specific date range.
 func (s *traceServer) Track(ctx context.Context, trace *pb.Trace) (*pb.Reply, error) {
-	trace.events[trace.TraceID] = trace
+	trace.events[trace.TraceId] = trace
 	return *pb.Reply{}, nil
 }
 

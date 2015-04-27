@@ -35,7 +35,7 @@ type Trace struct {
 	To        string `protobuf:"bytes,4,opt,name=to" json:"to,omitempty"`
 	Timestamp string `protobuf:"bytes,5,opt,name=timestamp" json:"timestamp,omitempty"`
 	Duration  string `protobuf:"bytes,6,opt,name=duration" json:"duration,omitempty"`
-	Func      string `protobuf:"bytes,7,opt,name=func" json:"func,omitempty"`
+	FuncCall  string `protobuf:"bytes,7,opt,name=funcCall" json:"funcCall,omitempty"`
 }
 
 func (m *Trace) Reset()         { *m = Trace{} }
