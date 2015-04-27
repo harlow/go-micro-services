@@ -10,7 +10,7 @@ service Geo {
 // A latitude-longitude bounding box, represented as two diagonally opposite
 // points "lo" and "hi".
 message Args {
-  string traceID = 1;
+  string traceId = 1;
   string From = 2;
   Rectangle rect = 3;
 }
@@ -30,5 +30,5 @@ message Point {
 }
 
 message Reply {
-  repeated int32 hotelIDs = 1;
+  repeated int32 hotelIds = 1;
 }

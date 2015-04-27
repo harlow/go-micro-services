@@ -34,12 +34,12 @@ type rateServer struct {
 
 // GetRates gets rates for hotels for specific date range.
 func (s *rateServer) GetRates(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
-	t := trace.Tracer{TraceID: args.TraceID}
+	t := trace.Tracer{TraceID: args.TraceId}
 	t.In(serverName, args.From)
 	defer t.Out(args.From, serverName, time.Now())
 
 	reply := new(pb.Reply)
-	for _, hotelID := range args.HotelIDs {
+	for _, hotelID := range args.HotelIds {
 		k := stay{hotelID, args.InDate, args.OutDate}
 		if s.rates[k] == nil {
 			continue
@@ -62,7 +62,7 @@ func (s *rateServer) loadRates(filePath string) {
 	}
 	s.rates = make(map[stay]*pb.RatePlan)
 	for _, ratePlan := range rates {
-		k := stay{ratePlan.HotelID, ratePlan.InDate, ratePlan.OutDate}
+		k := stay{ratePlan.HotelId, ratePlan.InDate, ratePlan.OutDate}
 		s.rates[k] = ratePlan
 	}
 }

@@ -33,7 +33,7 @@ var _ = proto.Marshal
 // A latitude-longitude bounding box, represented as two diagonally opposite
 // points "lo" and "hi".
 type Args struct {
-	TraceID string     `protobuf:"bytes,1,opt,name=traceID" json:"traceID,omitempty"`
+	TraceId string     `protobuf:"bytes,1,opt,name=traceId" json:"traceId,omitempty"`
 	From    string     `protobuf:"bytes,2,opt" json:"From,omitempty"`
 	Rect    *Rectangle `protobuf:"bytes,3,opt,name=rect" json:"rect,omitempty"`
 }
@@ -86,7 +86,7 @@ func (m *Point) String() string { return proto.CompactTextString(m) }
 func (*Point) ProtoMessage()    {}
 
 type Reply struct {
-	HotelIDs []int32 `protobuf:"varint,1,rep,name=hotelIDs" json:"hotelIDs,omitempty"`
+	HotelIds []int32 `protobuf:"varint,1,rep,name=hotelIds" json:"hotelIds,omitempty"`
 }
 
 func (m *Reply) Reset()         { *m = Reply{} }

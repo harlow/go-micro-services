@@ -7,7 +7,7 @@ service Auth {
 }
 
 message Args {
-  string traceID = 1;
+  string traceId = 1;
   string from = 2;
   string authToken = 3;
 }

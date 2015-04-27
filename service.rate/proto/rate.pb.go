@@ -31,9 +31,9 @@ var _ grpc.ClientConn
 var _ = proto.Marshal
 
 type Args struct {
-	TraceID  string  `protobuf:"bytes,1,opt,name=traceID" json:"traceID,omitempty"`
+	TraceId  string  `protobuf:"bytes,1,opt,name=traceId" json:"traceId,omitempty"`
 	From     string  `protobuf:"bytes,2,opt,name=from" json:"from,omitempty"`
-	HotelIDs []int32 `protobuf:"varint,3,rep,name=hotelIDs" json:"hotelIDs,omitempty"`
+	HotelIds []int32 `protobuf:"varint,3,rep,name=hotelIds" json:"hotelIds,omitempty"`
 	InDate   string  `protobuf:"bytes,4,opt,name=inDate" json:"inDate,omitempty"`
 	OutDate  string  `protobuf:"bytes,5,opt,name=outDate" json:"outDate,omitempty"`
 }
@@ -58,7 +58,7 @@ func (m *Reply) GetRates() []*RatePlan {
 }
 
 type RatePlan struct {
-	HotelID  int32     `protobuf:"varint,1,opt,name=hotelID" json:"hotelID,omitempty"`
+	HotelId  int32     `protobuf:"varint,1,opt,name=hotelId" json:"hotelId,omitempty"`
 	Code     string    `protobuf:"bytes,2,opt,name=code" json:"code,omitempty"`
 	InDate   string    `protobuf:"bytes,3,opt,name=inDate" json:"inDate,omitempty"`
 	OutDate  string    `protobuf:"bytes,4,opt,name=outDate" json:"outDate,omitempty"`

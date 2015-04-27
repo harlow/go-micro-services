@@ -34,14 +34,14 @@ type geoServer struct {
 
 // BoundedBox returns all hotels contained within a given rectangle.
 func (s *geoServer) BoundedBox(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
-	t := trace.Tracer{TraceID: args.TraceID}
+	t := trace.Tracer{TraceID: args.TraceId}
 	t.In(serverName, args.From)
 	defer t.Out(args.From, serverName, time.Now())
 
 	reply := new(pb.Reply)
 	for _, loc := range s.locations {
 		if inRange(loc.Point, args.Rect) {
-			reply.HotelIDs = append(reply.HotelIDs, loc.HotelID)
+			reply.HotelIds = append(reply.HotelIds, loc.HotelID)
 		}
 	}
 

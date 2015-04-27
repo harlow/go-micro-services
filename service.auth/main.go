@@ -29,7 +29,7 @@ type authServer struct {
 
 // VerifyToken finds a customer by authentication token.
 func (s *authServer) VerifyToken(ctx context.Context, args *pb.Args) (*pb.Customer, error) {
-	t := trace.Tracer{TraceID: args.TraceID}
+	t := trace.Tracer{TraceID: args.TraceId}
 	t.In(serverName, args.From)
 	defer t.Out(args.From, serverName, time.Now())
 

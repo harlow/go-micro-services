@@ -41,7 +41,7 @@ func verifyToken(traceID string, serverName string, authToken string) error {
 	defer conn.Close()
 
 	// set up args and client
-	args := &auth.Args{TraceID: traceID, From: serverName, AuthToken: authToken}
+	args := &auth.Args{TraceId: traceID, From: serverName, AuthToken: authToken}
 	client := auth.NewAuthClient(conn)
 
 	// verify auth token
@@ -66,7 +66,7 @@ func hotelsWithinBoundedBox(traceID string, serverName string, latitude int32, l
 		Lo: &geo.Point{Latitude: 400000000, Longitude: -750000000},
 		Hi: &geo.Point{Latitude: 420000000, Longitude: -730000000},
 	}
-	args := &geo.Args{TraceID: traceID, From: serverName, Rect: rect}
+	args := &geo.Args{TraceId: traceID, From: serverName, Rect: rect}
 	client := geo.NewGeoClient(conn)
 
 	// get hotels within bounded bob
@@ -75,7 +75,7 @@ func hotelsWithinBoundedBox(traceID string, serverName string, latitude int32, l
 		return []int32{}, err
 	}
 
-	return reply.HotelIDs, nil
+	return reply.HotelIds, nil
 }
 
 func hotelProfiles(traceID string, serverName string, hotelIDs []int32) ([]*profile.Hotel, error) {
@@ -87,7 +87,7 @@ func hotelProfiles(traceID string, serverName string, hotelIDs []int32) ([]*prof
 	defer conn.Close()
 
 	// set up args
-	args := &profile.Args{TraceID: traceID, From: serverName, HotelIDs: hotelIDs}
+	args := &profile.Args{TraceId: traceID, From: serverName, HotelIds: hotelIDs}
 	client := profile.NewProfileClient(conn)
 
 	// get profile data
@@ -109,9 +109,9 @@ func getRates(traceID string, serverName string, hotelIDs []int32, inDate string
 
 	// set up args
 	args := &rate.Args{
-		TraceID:  traceID,
+		TraceId:  traceID,
 		From:     serverName,
-		HotelIDs: hotelIDs,
+		HotelIds: hotelIDs,
 		InDate:   inDate,
 		OutDate:  outDate,
 	}

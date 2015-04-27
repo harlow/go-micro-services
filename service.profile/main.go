@@ -28,12 +28,12 @@ type profileServer struct {
 
 // VerifyToken finds a customer by authentication token.
 func (s *profileServer) GetProfiles(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
-	t := trace.Tracer{TraceID: args.TraceID}
+	t := trace.Tracer{TraceID: args.TraceId}
 	t.In(serverName, args.From)
 	defer t.Out(args.From, serverName, time.Now())
 
 	reply := new(pb.Reply)
-	for _, i := range args.HotelIDs {
+	for _, i := range args.HotelIds {
 		reply.Hotels = append(reply.Hotels, s.hotels[i])
 	}
 

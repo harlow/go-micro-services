@@ -1,6 +1,6 @@
 [
     {
-        "hotelID": 1,
+        "hotelId": 1,
         "code": "RACK",
         "inDate": "2015-04-09",
         "outDate": "2015-04-10",
