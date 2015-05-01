@@ -29,9 +29,8 @@ var _ grpc.ClientConn
 var _ = proto.Marshal
 
 type Args struct {
-	TraceId   string `protobuf:"bytes,1,opt,name=traceId" json:"traceId,omitempty"`
-	From      string `protobuf:"bytes,2,opt,name=from" json:"from,omitempty"`
-	AuthToken string `protobuf:"bytes,3,opt,name=authToken" json:"authToken,omitempty"`
+	From      string `protobuf:"bytes,1,opt,name=from" json:"from,omitempty"`
+	AuthToken string `protobuf:"bytes,2,opt,name=authToken" json:"authToken,omitempty"`
 }
 
 func (m *Args) Reset()         { *m = Args{} }

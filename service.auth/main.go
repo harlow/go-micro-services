@@ -15,6 +15,7 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 var (
@@ -29,7 +30,9 @@ type authServer struct {
 
 // VerifyToken finds a customer by authentication token.
 func (s *authServer) VerifyToken(ctx context.Context, args *pb.Args) (*pb.Customer, error) {
-	t := trace.Tracer{TraceID: args.TraceId}
+	md, _ := metadata.FromContext(ctx)
+
+	t := trace.Tracer{TraceID: md["traceID"]}
 	t.In(serverName, args.From)
 	defer t.Out(args.From, serverName, time.Now())
 

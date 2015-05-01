@@ -30,16 +30,15 @@ func (c Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c Client) VerifyToken(traceID string, serverName string, authToken string) error {
+func (c Client) VerifyToken(ctx context.Context, serverName string, authToken string) error {
 	// set up args and client
 	args := &auth.Args{
-		TraceId:   traceID,
 		From:      serverName,
 		AuthToken: authToken,
 	}
 
 	// verify auth token
-	if _, err := c.client.VerifyToken(context.Background(), args); err != nil {
+	if _, err := c.client.VerifyToken(ctx, args); err != nil {
 		return err
 	}
 

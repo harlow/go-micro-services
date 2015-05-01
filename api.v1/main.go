@@ -17,6 +17,7 @@ import (
 	"github.com/harlow/go-micro-services/trace"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 var (
@@ -111,6 +112,11 @@ type api struct {
 
 func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	t := trace.NewTracer()
+
+	md := metadata.Pairs("traceID", t.TraceID)
+	ctx := context.Background()
+	ctx = metadata.NewContext(ctx, md)
+
 	t.In("www", "api.v1")
 	defer t.Out("api.v1", "www", time.Now())
 
@@ -132,7 +138,7 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// verify auth token
 	t.Req(serverName, "service.auth", "VerifyToken")
-	err = api.authClient.VerifyToken(t.TraceID, serverName, authToken)
+	err = api.authClient.VerifyToken(ctx, serverName, authToken)
 	t.Rep("service.auth", serverName, time.Now())
 
 	if err != nil {
