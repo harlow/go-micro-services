@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	_ "expvar"
 	"flag"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"time"
 
 	auth "github.com/harlow/go-micro-services/service.auth/lib"
