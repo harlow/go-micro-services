@@ -7,7 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	auth "github.com/harlow/go-micro-services/service.auth/proto"
+	auth "github.com/harlow/go-micro-services/service.auth/lib"
+
 	geo "github.com/harlow/go-micro-services/service.geo/proto"
 	profile "github.com/harlow/go-micro-services/service.profile/proto"
 	rate "github.com/harlow/go-micro-services/service.rate/proto"
@@ -21,7 +22,6 @@ import (
 var (
 	serverName        = "api.v1"
 	port              = flag.String("port", "5000", "The server port")
-	authServerAddr    = flag.String("auth_server_addr", "127.0.0.1:10001", "The Auth server address in the format of host:port")
 	geoServerAddr     = flag.String("geo_server_addr", "127.0.0.1:10002", "The Geo server address in the format of host:port")
 	profileServerAddr = flag.String("profile_server_addr", "127.0.0.1:10003", "The Pofile server address in the format of host:port")
 	rateServerAddr    = flag.String("rate_server_addr", "127.0.0.1:10004", "The Rate Code server address in the format of host:port")
@@ -30,27 +30,6 @@ var (
 type inventory struct {
 	Hotels []*profile.Hotel `json:"hotels"`
 	Rates  []*rate.RatePlan `json:"rates"`
-}
-
-func verifyToken(traceID string, serverName string, authToken string) error {
-	// dial server connection
-	conn, err := grpc.Dial(*authServerAddr)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	// set up args and client
-	args := &auth.Args{TraceId: traceID, From: serverName, AuthToken: authToken}
-	client := auth.NewAuthClient(conn)
-
-	// verify auth token
-	_, err = client.VerifyToken(context.Background(), args)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func hotelsWithinBoundedBox(traceID string, serverName string, latitude int32, longitude int32) ([]int32, error) {
@@ -126,7 +105,11 @@ func getRates(traceID string, serverName string, hotelIDs []int32, inDate string
 	return reply.Rates, nil
 }
 
-func requestHandler(w http.ResponseWriter, r *http.Request) {
+type api struct {
+	authClient *auth.Client
+}
+
+func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	t := trace.NewTracer()
 	t.In("www", "api.v1")
 	defer t.Out("api.v1", "www", time.Now())
@@ -149,7 +132,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// verify auth token
 	t.Req(serverName, "service.auth", "VerifyToken")
-	err = verifyToken(t.TraceID, serverName, authToken)
+	err = api.authClient.VerifyToken(t.TraceID, serverName, authToken)
 	t.Rep("service.auth", serverName, time.Now())
 
 	if err != nil {
@@ -200,7 +183,22 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	authServerAddr := flag.String("auth_server_addr", "127.0.0.1:10001", "The Auth server address in the format of host:port")
+
 	flag.Parse()
-	http.HandleFunc("/", requestHandler)
+
+	authClient, err := auth.NewClient(*authServerAddr)
+
+	if err != nil {
+		log.Fatal("AuthClient error:", err)
+	}
+
+	defer authClient.Close()
+
+	api := api{
+		authClient: authClient,
+	}
+
+	http.HandleFunc("/", api.requestHandler)
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
