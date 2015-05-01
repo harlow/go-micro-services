@@ -156,28 +156,25 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// fetch hotel profiles
-	t.Req(serverName, "service.profile", "GetProfiles")
-	profiles, err := hotelProfiles(t.TraceID, serverName, hotelIDs)
-	t.Rep("service.profile", serverName, time.Now())
+	hotelProfilesReady := api.getHotelProfiles(t.TraceID, serverName, hotelIDs)
+	ratePlansReady := api.getRates(t.TraceID, serverName, hotelIDs, inDate, outDate)
 
-	if err != nil {
+	hotelProfileResp := <-hotelProfilesReady
+	if err := hotelProfileResp.err; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// fetch hotel rate plans
-	t.Req(serverName, "service.rate", "GetRates")
-	ratePlans, err := getRates(t.TraceID, serverName, hotelIDs, inDate, outDate)
-	t.Rep("service.rate", serverName, time.Now())
-
-	if err != nil {
+	ratePlanResp := <-ratePlansReady
+	if err := ratePlanResp.err; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// marshal json body
-	inventory := inventory{Hotels: profiles, Rates: ratePlans}
+	inventory := inventory{
+		Hotels: hotelProfileResp.hotelProfiles,
+		Rates:  ratePlanResp.ratePlans,
+	}
 	body, err := json.Marshal(inventory)
 
 	if err != nil {
@@ -186,6 +183,46 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(body)
+}
+
+type ratePlanResults struct {
+	ratePlans []*rate.RatePlan
+	err       error
+}
+
+func (api api) getRates(traceID string, serverName string, hotelIDs []int32, inDate string, outDate string) chan ratePlanResults {
+	ch := make(chan ratePlanResults, 1)
+
+	go func() {
+		ratePlans, err := getRates(traceID, serverName, hotelIDs, inDate, outDate)
+
+		ch <- ratePlanResults{
+			ratePlans: ratePlans,
+			err:       err,
+		}
+	}()
+
+	return ch
+}
+
+type hotelProfileResults struct {
+	hotelProfiles []*profile.Hotel
+	err           error
+}
+
+func (api api) getHotelProfiles(traceID string, serverName string, hotelIDs []int32) chan hotelProfileResults {
+	ch := make(chan hotelProfileResults, 1)
+
+	go func() {
+		hotelProfiles, err := hotelProfiles(traceID, serverName, hotelIDs)
+
+		ch <- hotelProfileResults{
+			hotelProfiles: hotelProfiles,
+			err:           err,
+		}
+	}()
+
+	return ch
 }
 
 func main() {
