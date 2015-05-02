@@ -4,17 +4,11 @@ package geo;
 
 service Geo {
   // Obtains the Locations contained within the given Rectangle.
-  rpc BoundedBox(Args) returns (Reply);
+  rpc BoundedBox(Rectangle) returns (Reply);
 }
 
 // A latitude-longitude bounding box, represented as two diagonally opposite
 // points "lo" and "hi".
-message Args {
-  string traceId = 1;
-  string From = 2;
-  Rectangle rect = 3;
-}
-
 message Rectangle {
   Point lo = 2;
   Point hi = 3;

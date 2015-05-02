@@ -9,7 +9,6 @@ It is generated from these files:
 	service.geo/proto/geo.proto
 
 It has these top-level messages:
-	Args
 	Rectangle
 	Point
 	Reply
@@ -32,23 +31,6 @@ var _ = proto.Marshal
 
 // A latitude-longitude bounding box, represented as two diagonally opposite
 // points "lo" and "hi".
-type Args struct {
-	TraceId string     `protobuf:"bytes,1,opt,name=traceId" json:"traceId,omitempty"`
-	From    string     `protobuf:"bytes,2,opt" json:"From,omitempty"`
-	Rect    *Rectangle `protobuf:"bytes,3,opt,name=rect" json:"rect,omitempty"`
-}
-
-func (m *Args) Reset()         { *m = Args{} }
-func (m *Args) String() string { return proto.CompactTextString(m) }
-func (*Args) ProtoMessage()    {}
-
-func (m *Args) GetRect() *Rectangle {
-	if m != nil {
-		return m.Rect
-	}
-	return nil
-}
-
 type Rectangle struct {
 	Lo *Point `protobuf:"bytes,2,opt,name=lo" json:"lo,omitempty"`
 	Hi *Point `protobuf:"bytes,3,opt,name=hi" json:"hi,omitempty"`
@@ -100,7 +82,7 @@ func init() {
 
 type GeoClient interface {
 	// Obtains the Locations contained within the given Rectangle.
-	BoundedBox(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error)
+	BoundedBox(ctx context.Context, in *Rectangle, opts ...grpc.CallOption) (*Reply, error)
 }
 
 type geoClient struct {
@@ -111,7 +93,7 @@ func NewGeoClient(cc *grpc.ClientConn) GeoClient {
 	return &geoClient{cc}
 }
 
-func (c *geoClient) BoundedBox(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error) {
+func (c *geoClient) BoundedBox(ctx context.Context, in *Rectangle, opts ...grpc.CallOption) (*Reply, error) {
 	out := new(Reply)
 	err := grpc.Invoke(ctx, "/geo.Geo/BoundedBox", in, out, c.cc, opts...)
 	if err != nil {
@@ -124,7 +106,7 @@ func (c *geoClient) BoundedBox(ctx context.Context, in *Args, opts ...grpc.CallO
 
 type GeoServer interface {
 	// Obtains the Locations contained within the given Rectangle.
-	BoundedBox(context.Context, *Args) (*Reply, error)
+	BoundedBox(context.Context, *Rectangle) (*Reply, error)
 }
 
 func RegisterGeoServer(s *grpc.Server, srv GeoServer) {
@@ -132,7 +114,7 @@ func RegisterGeoServer(s *grpc.Server, srv GeoServer) {
 }
 
 func _Geo_BoundedBox_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
-	in := new(Args)
+	in := new(Rectangle)
 	if err := proto.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}

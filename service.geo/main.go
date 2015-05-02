@@ -15,6 +15,7 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 var (
@@ -33,14 +34,15 @@ type geoServer struct {
 }
 
 // BoundedBox returns all hotels contained within a given rectangle.
-func (s *geoServer) BoundedBox(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
-	t := trace.Tracer{TraceID: args.TraceId}
-	t.In(serverName, args.From)
-	defer t.Out(args.From, serverName, time.Now())
+func (s *geoServer) BoundedBox(ctx context.Context, rect *pb.Rectangle) (*pb.Reply, error) {
+	md, _ := metadata.FromContext(ctx)
+	t := trace.Tracer{TraceID: md["traceID"]}
+	t.In(serverName, md["from"])
+	defer t.Out(md["from"], serverName, time.Now())
 
 	reply := new(pb.Reply)
 	for _, loc := range s.locations {
-		if inRange(loc.Point, args.Rect) {
+		if inRange(loc.Point, rect) {
 			reply.HotelIds = append(reply.HotelIds, loc.HotelID)
 		}
 	}
