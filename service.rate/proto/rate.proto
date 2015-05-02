@@ -8,15 +8,13 @@ service Rate {
 }
 
 message Args {
-  string traceId = 1;
-  string from = 2;
-  repeated int32 hotelIds = 3;
-  string inDate = 4;
-  string outDate = 5;
+  repeated int32 hotelIds = 1;
+  string inDate = 2;
+  string outDate = 3;
 }
 
 message Reply {
-  repeated RatePlan rates = 1;
+  repeated RatePlan ratePlans = 1;
 }
 
 message RatePlan {

@@ -31,11 +31,9 @@ var _ grpc.ClientConn
 var _ = proto.Marshal
 
 type Args struct {
-	TraceId  string  `protobuf:"bytes,1,opt,name=traceId" json:"traceId,omitempty"`
-	From     string  `protobuf:"bytes,2,opt,name=from" json:"from,omitempty"`
-	HotelIds []int32 `protobuf:"varint,3,rep,name=hotelIds" json:"hotelIds,omitempty"`
-	InDate   string  `protobuf:"bytes,4,opt,name=inDate" json:"inDate,omitempty"`
-	OutDate  string  `protobuf:"bytes,5,opt,name=outDate" json:"outDate,omitempty"`
+	HotelIds []int32 `protobuf:"varint,1,rep,name=hotelIds" json:"hotelIds,omitempty"`
+	InDate   string  `protobuf:"bytes,2,opt,name=inDate" json:"inDate,omitempty"`
+	OutDate  string  `protobuf:"bytes,3,opt,name=outDate" json:"outDate,omitempty"`
 }
 
 func (m *Args) Reset()         { *m = Args{} }
@@ -43,16 +41,16 @@ func (m *Args) String() string { return proto.CompactTextString(m) }
 func (*Args) ProtoMessage()    {}
 
 type Reply struct {
-	Rates []*RatePlan `protobuf:"bytes,1,rep,name=rates" json:"rates,omitempty"`
+	RatePlans []*RatePlan `protobuf:"bytes,1,rep,name=ratePlans" json:"ratePlans,omitempty"`
 }
 
 func (m *Reply) Reset()         { *m = Reply{} }
 func (m *Reply) String() string { return proto.CompactTextString(m) }
 func (*Reply) ProtoMessage()    {}
 
-func (m *Reply) GetRates() []*RatePlan {
+func (m *Reply) GetRatePlans() []*RatePlan {
 	if m != nil {
-		return m.Rates
+		return m.RatePlans
 	}
 	return nil
 }

@@ -1,10 +1,14 @@
 package lib
 
 import (
+	"time"
+
 	auth "github.com/harlow/go-micro-services/service.auth/proto"
+	trace "github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 type Client struct {
@@ -31,13 +35,16 @@ func (c Client) Close() error {
 }
 
 func (c Client) VerifyToken(ctx context.Context, serverName string, authToken string) error {
-	// set up args and client
+	md, _ := metadata.FromContext(ctx)
+	t := trace.Tracer{TraceID: md["traceID"]}
+	t.Req(md["from"], "service.auth", "VerifyToken")
+	defer t.Rep("service.auth", md["from"], time.Now())
+
 	args := &auth.Args{
 		From:      serverName,
 		AuthToken: authToken,
 	}
 
-	// verify auth token
 	if _, err := c.client.VerifyToken(ctx, args); err != nil {
 		return err
 	}
