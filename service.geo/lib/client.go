@@ -1,10 +1,14 @@
 package lib
 
 import (
+	"time"
+
 	pb "github.com/harlow/go-micro-services/service.geo/proto"
+	trace "github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 type Client struct {
@@ -31,6 +35,11 @@ func (c Client) Close() error {
 }
 
 func (c Client) HotelsWithinBoundedBox(ctx context.Context, latitude int32, longitude int32) ([]int32, error) {
+	md, _ := metadata.FromContext(ctx)
+	t := trace.Tracer{TraceID: md["traceID"]}
+	t.Req(md["from"], "service.geo", "BoundedBox")
+	defer t.Rep("service.geo", md["from"], time.Now())
+
 	rect := &pb.Rectangle{
 		Lo: &pb.Point{Latitude: 400000000, Longitude: -750000000},
 		Hi: &pb.Point{Latitude: 420000000, Longitude: -730000000},
