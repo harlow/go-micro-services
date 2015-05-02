@@ -38,38 +38,43 @@ Curl the endpoint without checkin or checkout dates:
 Curl the API endpoint with a valid auth token:
 
     $ curl "http://localhost:5000?inDate=2015-04-09&outDate=2015-04-10" -H "Authorization: Bearer VALID_TOKEN"
+
+The JSON response:
+
+```json
+{
+  "hotels": [
     {
-        "hotels": [
-            {
-                "id": 1,
-                "name": "Clift Hotel",
-                "phoneNumber": "(415) 775-4700",
-                "description": "A 6-minute walk from Union Square and 4 minutes from a Muni Metro station, this luxury hotel designed by Philippe Starck features an artsy furniture collection in the lobby, including work by Salvador Dali.",
-                "address": {
-                    "streetNumber": "495",
-                    "streetName": "Geary St",
-                    "city": "San Francisco",
-                    "state": "CA",
-                    "country": "United States",
-                    "postalCode": "94102"
-                }
-            }
-        ],
-        "rates": [
-            {
-                "hotelID": 1,
-                "code": "RACK",
-                "inDate": "2015-04-09",
-                "outDate": "2015-04-10",
-                "roomType": {
-                    "bookableRate": 109,
-                    "totalRate": 109,
-                    "TotalRateInclusive": 123.17,
-                    "code": "KNG"
-                }
-            }
-        ]
+      "id": 1,
+      "name": "Clift Hotel",
+      "phoneNumber": "(415) 775-4700",
+      "description": "A 6-minute walk from Union Square and 4 minutes from a Muni Metro station, this luxury hotel designed by Philippe Starck features an artsy furniture collection in the lobby, including work by Salvador Dali.",
+      "address": {
+        "streetNumber": "495",
+        "streetName": "Geary St",
+        "city": "San Francisco",
+        "state": "CA",
+        "country": "United States",
+        "postalCode": "94102"
+      }
     }
+  ],
+  "ratePlans": [
+    {
+      "hotelId": 1,
+      "code": "RACK",
+      "inDate": "2015-04-09",
+      "outDate": "2015-04-10",
+      "roomType": {
+        "bookableRate": 109,
+        "totalRate": 109,
+        "TotalRateInclusive": 123.17,
+        "code": "KNG"
+      }
+    }
+  ]
+}
+```
 
 ### Credits
 

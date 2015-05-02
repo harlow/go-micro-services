@@ -29,7 +29,7 @@ var (
 
 type inventory struct {
 	Hotels    []*profile_pb.Hotel `json:"hotels"`
-	RatePlans []*rate_pb.RatePlan `json:"rate_plans"`
+	RatePlans []*rate_pb.RatePlan `json:"ratePlans"`
 }
 
 type api struct {
