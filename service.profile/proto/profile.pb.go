@@ -32,10 +32,8 @@ var _ grpc.ClientConn
 var _ = proto.Marshal
 
 type Args struct {
-	TraceId  string  `protobuf:"bytes,1,opt,name=traceId" json:"traceId,omitempty"`
-	From     string  `protobuf:"bytes,2,opt,name=from" json:"from,omitempty"`
-	HotelIds []int32 `protobuf:"varint,3,rep,name=hotelIds" json:"hotelIds,omitempty"`
-	Locale   string  `protobuf:"bytes,4,opt,name=locale" json:"locale,omitempty"`
+	HotelIds []int32 `protobuf:"varint,1,rep,name=hotelIds" json:"hotelIds,omitempty"`
+	Locale   string  `protobuf:"bytes,2,opt,name=locale" json:"locale,omitempty"`
 }
 
 func (m *Args) Reset()         { *m = Args{} }
@@ -112,7 +110,7 @@ func init() {
 // Client API for Profile service
 
 type ProfileClient interface {
-	GetProfiles(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error)
+	GetHotels(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error)
 }
 
 type profileClient struct {
@@ -123,9 +121,9 @@ func NewProfileClient(cc *grpc.ClientConn) ProfileClient {
 	return &profileClient{cc}
 }
 
-func (c *profileClient) GetProfiles(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error) {
+func (c *profileClient) GetHotels(ctx context.Context, in *Args, opts ...grpc.CallOption) (*Reply, error) {
 	out := new(Reply)
-	err := grpc.Invoke(ctx, "/profile.Profile/GetProfiles", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/profile.Profile/GetHotels", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -135,19 +133,19 @@ func (c *profileClient) GetProfiles(ctx context.Context, in *Args, opts ...grpc.
 // Server API for Profile service
 
 type ProfileServer interface {
-	GetProfiles(context.Context, *Args) (*Reply, error)
+	GetHotels(context.Context, *Args) (*Reply, error)
 }
 
 func RegisterProfileServer(s *grpc.Server, srv ProfileServer) {
 	s.RegisterService(&_Profile_serviceDesc, srv)
 }
 
-func _Profile_GetProfiles_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
+func _Profile_GetHotels_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
 	in := new(Args)
 	if err := proto.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(ProfileServer).GetProfiles(ctx, in)
+	out, err := srv.(ProfileServer).GetHotels(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -159,8 +157,8 @@ var _Profile_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*ProfileServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetProfiles",
-			Handler:    _Profile_GetProfiles_Handler,
+			MethodName: "GetHotels",
+			Handler:    _Profile_GetHotels_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{},

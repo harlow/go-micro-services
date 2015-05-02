@@ -11,8 +11,9 @@ import (
 
 	auth "github.com/harlow/go-micro-services/service.auth/lib"
 	geo "github.com/harlow/go-micro-services/service.geo/lib"
+	profile "github.com/harlow/go-micro-services/service.profile/lib"
 
-	profile "github.com/harlow/go-micro-services/service.profile/proto"
+	profile_pb "github.com/harlow/go-micro-services/service.profile/proto"
 	rate "github.com/harlow/go-micro-services/service.rate/proto"
 
 	"github.com/harlow/auth_token"
@@ -23,36 +24,14 @@ import (
 )
 
 var (
-	serverName        = "api.v1"
-	port              = flag.String("port", "5000", "The server port")
-	profileServerAddr = flag.String("profile_server_addr", "127.0.0.1:10003", "The Pofile server address in the format of host:port")
-	rateServerAddr    = flag.String("rate_server_addr", "127.0.0.1:10004", "The Rate Code server address in the format of host:port")
+	serverName     = "api.v1"
+	port           = flag.String("port", "5000", "The server port")
+	rateServerAddr = flag.String("rate_server_addr", "127.0.0.1:10004", "The Rate Code server address in the format of host:port")
 )
 
 type inventory struct {
-	Hotels []*profile.Hotel `json:"hotels"`
-	Rates  []*rate.RatePlan `json:"rates"`
-}
-
-func hotelProfiles(traceID string, serverName string, hotelIDs []int32) ([]*profile.Hotel, error) {
-	// dial server connection
-	conn, err := grpc.Dial(*profileServerAddr)
-	if err != nil {
-		return []*profile.Hotel{}, err
-	}
-	defer conn.Close()
-
-	// set up args
-	args := &profile.Args{TraceId: traceID, From: serverName, HotelIds: hotelIDs}
-	client := profile.NewProfileClient(conn)
-
-	// get profile data
-	reply, err := client.GetProfiles(context.Background(), args)
-	if err != nil {
-		return []*profile.Hotel{}, err
-	}
-
-	return reply.Hotels, nil
+	Hotels []*profile_pb.Hotel `json:"hotels"`
+	Rates  []*rate.RatePlan    `json:"rates"`
 }
 
 func getRates(traceID string, serverName string, hotelIDs []int32, inDate string, outDate string) ([]*rate.RatePlan, error) {
@@ -83,19 +62,19 @@ func getRates(traceID string, serverName string, hotelIDs []int32, inDate string
 }
 
 type api struct {
-	authClient *auth.Client
-	geoClient  *geo.Client
+	authClient    *auth.Client
+	geoClient     *geo.Client
+	profileClient *profile.Client
 }
 
 func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	t := trace.NewTracer()
+	t.In("www", "api.v1")
+	defer t.Out("api.v1", "www", time.Now())
 
 	md := metadata.Pairs("traceID", t.TraceID, "from", serverName)
 	ctx := context.Background()
 	ctx = metadata.NewContext(ctx, md)
-
-	t.In("www", "api.v1")
-	defer t.Out("api.v1", "www", time.Now())
 
 	// parse token from Authorization header
 	authToken, err := auth_token.Parse(r.Header.Get("Authorization"))
@@ -112,31 +91,27 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// t.Req(serverName, "service.auth", "VerifyToken")
+	// t.Rep("service.auth", serverName, time.Now())
 	// verify auth token
-	t.Req(serverName, "service.auth", "VerifyToken")
 	err = api.authClient.VerifyToken(ctx, serverName, authToken)
-	t.Rep("service.auth", serverName, time.Now())
-
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 
-	// search for hotels within geo rectangle
-	t.Req(serverName, "service.geo", "BoundedBox")
+	// get hotels within geo rectangle
 	hotelIDs, err := api.geoClient.HotelsWithinBoundedBox(ctx, 100, 100)
-	t.Rep("service.geo", serverName, time.Now())
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	hotelProfilesReady := api.getHotelProfiles(t.TraceID, serverName, hotelIDs)
+	hotelsCh := api.getHotels(ctx, hotelIDs)
 	ratePlansReady := api.getRates(t.TraceID, serverName, hotelIDs, inDate, outDate)
 
-	hotelProfileResp := <-hotelProfilesReady
-	if err := hotelProfileResp.err; err != nil {
+	hotelsReply := <-hotelsCh
+	if err := hotelsReply.err; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -148,7 +123,7 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inventory := inventory{
-		Hotels: hotelProfileResp.hotelProfiles,
+		Hotels: hotelsReply.hotels,
 		Rates:  ratePlanResp.ratePlans,
 	}
 
@@ -181,20 +156,20 @@ func (api api) getRates(traceID string, serverName string, hotelIDs []int32, inD
 	return ch
 }
 
-type hotelProfileResults struct {
-	hotelProfiles []*profile.Hotel
-	err           error
+type profileResults struct {
+	hotels []*profile_pb.Hotel
+	err    error
 }
 
-func (api api) getHotelProfiles(traceID string, serverName string, hotelIDs []int32) chan hotelProfileResults {
-	ch := make(chan hotelProfileResults, 1)
+func (api api) getHotels(ctx context.Context, hotelIDs []int32) chan profileResults {
+	ch := make(chan profileResults, 1)
 
 	go func() {
-		hotelProfiles, err := hotelProfiles(traceID, serverName, hotelIDs)
+		hotels, err := api.profileClient.GetHotels(ctx, hotelIDs)
 
-		ch <- hotelProfileResults{
-			hotelProfiles: hotelProfiles,
-			err:           err,
+		ch <- profileResults{
+			hotels: hotels,
+			err:    err,
 		}
 	}()
 
@@ -204,7 +179,7 @@ func (api api) getHotelProfiles(traceID string, serverName string, hotelIDs []in
 func main() {
 	authServerAddr := flag.String("auth_server_addr", "127.0.0.1:10001", "The Auth server address in the format of host:port")
 	geoServerAddr := flag.String("geo_server_addr", "127.0.0.1:10002", "The Geo server address in the format of host:port")
-
+	profileServerAddr := flag.String("profile_server_addr", "127.0.0.1:10003", "The Pofile server address in the format of host:port")
 	flag.Parse()
 
 	authClient, err := auth.NewClient(*authServerAddr)
@@ -219,9 +194,16 @@ func main() {
 	}
 	defer geoClient.Close()
 
+	profileClient, err := profile.NewClient(*profileServerAddr)
+	if err != nil {
+		log.Fatal("ProfileClient error:", err)
+	}
+	defer profileClient.Close()
+
 	api := api{
-		authClient: authClient,
-		geoClient:  geoClient,
+		authClient:    authClient,
+		geoClient:     geoClient,
+		profileClient: profileClient,
 	}
 
 	http.HandleFunc("/", api.requestHandler)
