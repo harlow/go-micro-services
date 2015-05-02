@@ -12,9 +12,8 @@ import (
 	auth "github.com/harlow/go-micro-services/service.auth/lib"
 	geo "github.com/harlow/go-micro-services/service.geo/lib"
 	profile "github.com/harlow/go-micro-services/service.profile/lib"
-	rate "github.com/harlow/go-micro-services/service.rate/lib"
-
 	profile_pb "github.com/harlow/go-micro-services/service.profile/proto"
+	rate "github.com/harlow/go-micro-services/service.rate/lib"
 	rate_pb "github.com/harlow/go-micro-services/service.rate/proto"
 
 	"github.com/harlow/auth_token"
@@ -29,8 +28,8 @@ var (
 )
 
 type inventory struct {
-	Hotels []*profile_pb.Hotel `json:"hotels"`
-	Rates  []*rate_pb.RatePlan `json:"rates"`
+	Hotels    []*profile_pb.Hotel `json:"hotels"`
+	RatePlans []*rate_pb.RatePlan `json:"rate_plans"`
 }
 
 type api struct {
@@ -79,24 +78,24 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hotelsCh := api.getHotels(ctx, hotelIDs)
-	ratesCh := api.getRates(ctx, hotelIDs, inDate, outDate)
+	profileCh := api.getHotels(ctx, hotelIDs)
+	rateCh := api.getRatePlans(ctx, hotelIDs, inDate, outDate)
 
-	hotelsReply := <-hotelsCh
-	if err := hotelsReply.err; err != nil {
+	profileReply := <-profileCh
+	if err := profileReply.err; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	ratesReply := <-ratesCh
-	if err := ratesReply.err; err != nil {
+	rateReply := <-rateCh
+	if err := rateReply.err; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	inventory := inventory{
-		Hotels: hotelsReply.hotels,
-		Rates:  ratesReply.ratePlans,
+		Hotels:    profileReply.hotels,
+		RatePlans: rateReply.ratePlans,
 	}
 
 	body, err := json.Marshal(inventory)
@@ -108,18 +107,18 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 }
 
-type ratePlanResults struct {
+type rateResults struct {
 	ratePlans []*rate_pb.RatePlan
 	err       error
 }
 
-func (api api) getRates(ctx context.Context, hotelIDs []int32, inDate string, outDate string) chan ratePlanResults {
-	ch := make(chan ratePlanResults, 1)
+func (api api) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) chan rateResults {
+	ch := make(chan rateResults, 1)
 
 	go func() {
 		ratePlans, err := api.rateClient.GetRatePlans(ctx, hotelIDs, inDate, outDate)
 
-		ch <- ratePlanResults{
+		ch <- rateResults{
 			ratePlans: ratePlans,
 			err:       err,
 		}
