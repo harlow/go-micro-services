@@ -11,6 +11,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+type RatePlanReply struct {
+	RatePlans []*pb.RatePlan
+	Err       error
+}
+
 type Client struct {
 	conn   *grpc.ClientConn
 	client pb.RateClient
@@ -30,7 +35,7 @@ func NewClient(addr string) (*Client, error) {
 	}, nil
 }
 
-func (c Client) GetRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) ([]*pb.RatePlan, error) {
+func (c Client) GetRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) RatePlanReply {
 	md, _ := metadata.FromContext(ctx)
 	t := trace.Tracer{TraceID: md["traceID"]}
 	t.Req(md["from"], "service.rate", "GetRatePlans")
@@ -43,11 +48,18 @@ func (c Client) GetRatePlans(ctx context.Context, hotelIDs []int32, inDate strin
 	}
 
 	reply, err := c.client.GetRates(ctx, args)
+
 	if err != nil {
-		return []*pb.RatePlan{}, err
+		return RatePlanReply{
+			RatePlans: []*pb.RatePlan{},
+			Err:       err,
+		}
 	}
 
-	return reply.RatePlans, nil
+	return RatePlanReply{
+		RatePlans: reply.RatePlans,
+		Err:       nil,
+	}
 }
 
 func (c Client) Close() error {
