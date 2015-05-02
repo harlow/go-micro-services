@@ -11,6 +11,13 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+type Hotel pb.Hotel
+
+type ProfileReply struct {
+	Hotels []*pb.Hotel
+	Err       error
+}
+
 type Client struct {
 	conn   *grpc.ClientConn
 	client pb.ProfileClient
@@ -30,8 +37,9 @@ func NewClient(addr string) (*Client, error) {
 	}, nil
 }
 
-func (c Client) GetHotels(ctx context.Context, hotelIDs []int32) ([]*pb.Hotel, error) {
+func (c Client) GetHotels(ctx context.Context, hotelIDs []int32) ProfileReply {
 	md, _ := metadata.FromContext(ctx)
+
 	t := trace.Tracer{TraceID: md["traceID"]}
 	t.Req(md["from"], "service.profile", "GetHotels")
 	defer t.Rep("service.profile", md["from"], time.Now())
@@ -40,10 +48,16 @@ func (c Client) GetHotels(ctx context.Context, hotelIDs []int32) ([]*pb.Hotel, e
 	reply, err := c.client.GetHotels(ctx, args)
 
 	if err != nil {
-		return []*pb.Hotel{}, err
+		return ProfileReply{
+			Hotels:  []*pb.Hotel{},
+			Err: err,
+		}
 	}
 
-	return reply.Hotels, nil
+	return ProfileReply{
+		Hotels: reply.Hotels,
+		Err:       nil,
+	}
 }
 
 func (c Client) Close() error {
