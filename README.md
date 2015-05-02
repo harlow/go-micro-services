@@ -3,7 +3,7 @@
 An demonstration of Golang micro-services that accept HTTP/JSON requests at API level and then
 leverage [gRPC][1] for inter-service communication.
 
-![sequence](https://cloud.githubusercontent.com/assets/739782/7439573/bf8a3e70-f035-11e4-9001-2c17db8a1e64.png)
+![new_sequence](https://cloud.githubusercontent.com/assets/739782/7439604/d1f324c2-f036-11e4-958a-6f6913049946.png)
 
 The API Endpoint accepts HTTP requests on port `5000` and then spawns a number of RPC requests to the backend services.
 

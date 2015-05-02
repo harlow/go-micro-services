@@ -33,8 +33,8 @@ func NewClient(addr string) (*Client, error) {
 func (c Client) GetHotels(ctx context.Context, hotelIDs []int32) ([]*pb.Hotel, error) {
 	md, _ := metadata.FromContext(ctx)
 	t := trace.Tracer{TraceID: md["traceID"]}
-	t.Req(md["from"], "service.geo", "GetHotels")
-	defer t.Rep("service.geo", md["from"], time.Now())
+	t.Req(md["from"], "service.profile", "GetHotels")
+	defer t.Rep("service.profile", md["from"], time.Now())
 
 	args := &pb.Args{HotelIds: hotelIDs}
 	reply, err := c.client.GetHotels(ctx, args)
