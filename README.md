@@ -88,4 +88,4 @@ This example codebase was heavily inspired by the following talks/repositories:
 [2]: https://github.com/ddollar/foreman
 [3]: https://speakerdeck.com/mattheath/scaling-microservices-in-go-high-load-strategy-2015
 [4]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
-[5]: https://github.com/peterbourgon/gokit
+[5]: https://github.com/go-kit/kit
