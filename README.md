@@ -14,6 +14,10 @@ _Note:_ Data for each of the services is stored in JSON flat files under the `/d
 Protobuf v3 are required:
 
     $ brew install protobuf --devel
+    
+Install the protoc-gen libraries:
+
+    $ go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
 
 Clone the repository:
 
@@ -21,7 +25,7 @@ Clone the repository:
 
 If changes are made to the Protocol Buffers a Make file can be used to regenerate:
 
-    $ make
+    $ make -s
 
 ### Bootstrap the services
 
