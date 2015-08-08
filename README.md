@@ -11,13 +11,17 @@ _Note:_ Data for each of the services is stored in JSON flat files under the `/d
 
 ### Installation
 
+Protobuf v3 are required:
+
+    $ brew install protobuf --devel
+
 Clone the repository:
 
-    git clone git@github.com:harlow/go-micro-services.git
+    $ git clone git@github.com:harlow/go-micro-services.git
 
 If changes are made to the Protocol Buffers a Make file can be used to regenerate:
 
-    make
+    $ make
 
 ### Bootstrap the services
 
