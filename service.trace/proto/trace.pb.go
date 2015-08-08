@@ -49,9 +49,6 @@ func (m *Reply) Reset()         { *m = Reply{} }
 func (m *Reply) String() string { return proto.CompactTextString(m) }
 func (*Reply) ProtoMessage()    {}
 
-func init() {
-}
-
 // Client API for Tracer service
 
 type TracerClient interface {
@@ -85,9 +82,9 @@ func RegisterTracerServer(s *grpc.Server, srv TracerServer) {
 	s.RegisterService(&_Tracer_serviceDesc, srv)
 }
 
-func _Tracer_Track_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
+func _Tracer_Track_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
 	in := new(Trace)
-	if err := proto.Unmarshal(buf, in); err != nil {
+	if err := codec.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
 	out, err := srv.(TracerServer).Track(ctx, in)

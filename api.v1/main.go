@@ -56,18 +56,18 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// verify auth token
+	err = api.authClient.VerifyToken(ctx, serverName, authToken)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+
 	// read and validate in/out arguments
 	inDate := r.URL.Query().Get("inDate")
 	outDate := r.URL.Query().Get("outDate")
 	if inDate == "" || outDate == "" {
 		http.Error(w, "Please specify inDate / outDate", http.StatusBadRequest)
-		return
-	}
-
-	// verify auth token
-	err = api.authClient.VerifyToken(ctx, serverName, authToken)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 
@@ -154,6 +154,7 @@ func main() {
 		profileServerAddr = flag.String("profile_server_addr", "127.0.0.1:10003", "The Pofile server address in the format of host:port")
 		rateServerAddr    = flag.String("rate_server_addr", "127.0.0.1:10004", "The Rate Code server address in the format of host:port")
 	)
+
 	flag.Parse()
 
 	authClient, err := auth.NewClient(*authServerAddr)

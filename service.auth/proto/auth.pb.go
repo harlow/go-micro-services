@@ -46,9 +46,6 @@ func (m *Customer) Reset()         { *m = Customer{} }
 func (m *Customer) String() string { return proto.CompactTextString(m) }
 func (*Customer) ProtoMessage()    {}
 
-func init() {
-}
-
 // Client API for Auth service
 
 type AuthClient interface {
@@ -82,9 +79,9 @@ func RegisterAuthServer(s *grpc.Server, srv AuthServer) {
 	s.RegisterService(&_Auth_serviceDesc, srv)
 }
 
-func _Auth_VerifyToken_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
+func _Auth_VerifyToken_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
 	in := new(Args)
-	if err := proto.Unmarshal(buf, in); err != nil {
+	if err := codec.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
 	out, err := srv.(AuthServer).VerifyToken(ctx, in)

@@ -75,9 +75,6 @@ func (m *Reply) Reset()         { *m = Reply{} }
 func (m *Reply) String() string { return proto.CompactTextString(m) }
 func (*Reply) ProtoMessage()    {}
 
-func init() {
-}
-
 // Client API for Geo service
 
 type GeoClient interface {
@@ -113,9 +110,9 @@ func RegisterGeoServer(s *grpc.Server, srv GeoServer) {
 	s.RegisterService(&_Geo_serviceDesc, srv)
 }
 
-func _Geo_BoundedBox_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
+func _Geo_BoundedBox_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
 	in := new(Rectangle)
-	if err := proto.Unmarshal(buf, in); err != nil {
+	if err := codec.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
 	out, err := srv.(GeoServer).BoundedBox(ctx, in)

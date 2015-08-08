@@ -104,9 +104,6 @@ func (m *Image) Reset()         { *m = Image{} }
 func (m *Image) String() string { return proto.CompactTextString(m) }
 func (*Image) ProtoMessage()    {}
 
-func init() {
-}
-
 // Client API for Profile service
 
 type ProfileClient interface {
@@ -140,9 +137,9 @@ func RegisterProfileServer(s *grpc.Server, srv ProfileServer) {
 	s.RegisterService(&_Profile_serviceDesc, srv)
 }
 
-func _Profile_GetHotels_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
+func _Profile_GetHotels_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
 	in := new(Args)
-	if err := proto.Unmarshal(buf, in); err != nil {
+	if err := codec.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
 	out, err := srv.(ProfileServer).GetHotels(ctx, in)

@@ -87,9 +87,6 @@ func (m *RoomType) Reset()         { *m = RoomType{} }
 func (m *RoomType) String() string { return proto.CompactTextString(m) }
 func (*RoomType) ProtoMessage()    {}
 
-func init() {
-}
-
 // Client API for Rate service
 
 type RateClient interface {
@@ -125,9 +122,9 @@ func RegisterRateServer(s *grpc.Server, srv RateServer) {
 	s.RegisterService(&_Rate_serviceDesc, srv)
 }
 
-func _Rate_GetRates_Handler(srv interface{}, ctx context.Context, buf []byte) (interface{}, error) {
+func _Rate_GetRates_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
 	in := new(Args)
-	if err := proto.Unmarshal(buf, in); err != nil {
+	if err := codec.Unmarshal(buf, in); err != nil {
 		return nil, err
 	}
 	out, err := srv.(RateServer).GetRates(ctx, in)
