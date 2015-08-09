@@ -89,8 +89,8 @@ The JSON response:
 This example codebase was heavily inspired by the following talks/repositories:
 
 * [Scaling microservices in Go][3]
-* [GRPC Example Service][4]
-* [Gokit][4]
+* [gRPC Example Service][4]
+* [go-kit][4]
 
 [1]: http://www.grpc.io/
 [2]: https://github.com/ddollar/foreman
