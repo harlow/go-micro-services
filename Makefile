@@ -7,14 +7,7 @@ proto:
 	done
 
 build:
-	p=`pwd`
-	for d in cmd/*; do
-		if [[ -d $d ]]; then
-			cd $p/$d;
-			env GOOS=linux GOARCH=386 go build;
-		fi
-	done
-	cd $p
+	./build.sh
 
 data:
 	go-bindata -o data/bindata.go -pkg data data/*.json
