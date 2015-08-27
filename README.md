@@ -1,3 +1,10 @@
+# Attention
+
+This is a fork, so it's not go get-able, you'll have to setup the project structure as the original,
+e.g.
+
+    git clone https://github.com/isaiah/go-micro-services.git $GOPATH/src/github.com/harlow/
+
 # HTTP up front, Protobufs in the rear.
 
 An demonstration of Golang micro-services that accept HTTP/JSON requests at API level and then
@@ -29,9 +36,10 @@ If changes are made to the Protocol Buffers a Make file can be used to regenerat
 
 ### Bootstrap the services
 
-To make the demo as straigforward as possible; [foreman][2] is used to run all the services. In a production environment each of the services would be run (and scaled) independently.
+To make the demo as straigforward as possible; docker is used to run all the services. In a production environment each of the services would be run (and scaled) independently.
 
-    foreman start
+    make build
+    docker-compose up
 
 Curl the endpoint with an invalid auth token:
 
