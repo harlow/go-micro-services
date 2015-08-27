@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
 	"net"
 	"time"
 
+	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/geo"
 	"github.com/harlow/go-micro-services/trace"
 
@@ -21,7 +21,6 @@ import (
 
 var (
 	port       = flag.Int("port", 8080, "The server port")
-	jsonDBFile = flag.String("json_db_file", "data/locations.json", "A json file containing hotel locations")
 	serverName = "service.geo"
 )
 
@@ -52,11 +51,7 @@ func (s *geoServer) BoundedBox(ctx context.Context, rect *geo.Rectangle) (*geo.R
 }
 
 // loadLocations loads hotel locations from a JSON file.
-func (s *geoServer) loadLocations(filePath string) {
-	file, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		log.Fatalf("Failed to load file: %v", err)
-	}
+func (s *geoServer) loadLocations(file []byte) {
 	if err := json.Unmarshal(file, &s.locations); err != nil {
 		log.Fatalf("Failed to load hotels: %v", err)
 	}
@@ -80,7 +75,7 @@ func inRange(point *geo.Point, rect *geo.Rectangle) bool {
 
 func newServer() *geoServer {
 	s := new(geoServer)
-	s.loadLocations(*jsonDBFile)
+	s.loadLocations(data.MustAsset("data/locations.json"))
 	return s
 }
 

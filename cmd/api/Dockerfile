@@ -4,6 +4,7 @@ RUN apt-get update
 RUN apt-get install -y ca-certificates
 
 ADD . /app
+WORKDIR /app
 
 EXPOSE 8080
 

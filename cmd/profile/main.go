@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"time"
 
+	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/profile"
 	"github.com/harlow/go-micro-services/trace"
-
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -20,7 +19,6 @@ import (
 
 var (
 	port       = flag.Int("port", 8080, "The server port")
-	jsonDBFile = flag.String("json_db_file", "data/profiles.json", "A json file containing a list of customers")
 	serverName = "service.profile"
 )
 
@@ -44,11 +42,7 @@ func (s *profileServer) GetHotels(ctx context.Context, args *profile.Args) (*pro
 }
 
 // loadProfiles loads hotel profiles from a JSON file.
-func (s *profileServer) loadProfiles(filePath string) {
-	file, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		log.Fatalf("Failed to load file: %v", err)
-	}
+func (s *profileServer) loadProfiles(file []byte) {
 	hotels := []*profile.Hotel{}
 	if err := json.Unmarshal(file, &hotels); err != nil {
 		log.Fatalf("Failed to load json: %v", err)
@@ -62,7 +56,7 @@ func (s *profileServer) loadProfiles(filePath string) {
 // newServer returns a server with initialization data loaded.
 func newServer() *profileServer {
 	s := new(profileServer)
-	s.loadProfiles(*jsonDBFile)
+	s.loadProfiles(data.MustAsset("data/profiles.json"))
 	return s
 }
 

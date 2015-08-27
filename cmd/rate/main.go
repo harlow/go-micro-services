@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/harlow/go-micro-services/rate"
 	"github.com/harlow/go-micro-services/trace"
 
+	"github.com/harlow/go-micro-services/data"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -20,7 +20,6 @@ import (
 
 var (
 	port       = flag.Int("port", 8080, "The server port")
-	jsonDBFile = flag.String("json_db_file", "data/rates.json", "A json file containing a list of rate plans")
 	serverName = "service.rate"
 )
 
@@ -54,11 +53,7 @@ func (s *rateServer) GetRates(ctx context.Context, args *rate.Args) (*rate.Reply
 }
 
 // loadRates loads rate codes from JSON file.
-func (s *rateServer) loadRates(filePath string) {
-	file, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		log.Fatalf("Failed to load file: %v", err)
-	}
+func (s *rateServer) loadRates(file []byte) {
 	rates := []*rate.RatePlan{}
 	if err := json.Unmarshal(file, &rates); err != nil {
 		log.Fatalf("Failed to load json: %v", err)
@@ -73,7 +68,7 @@ func (s *rateServer) loadRates(filePath string) {
 // newServer returns a server with initialization data loaded.
 func newServer() *rateServer {
 	s := new(rateServer)
-	s.loadRates(*jsonDBFile)
+	s.loadRates(data.MustAsset("data/rates.json"))
 	return s
 }
 
