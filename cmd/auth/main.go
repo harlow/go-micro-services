@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	port       = flag.Int("port", 10001, "The server port")
+	port       = flag.Int("port", 8080, "The server port")
 	jsonDBFile = flag.String("json_db_file", "data/customers.json", "A json file containing a list of customers")
 	serverName = "service.auth"
 )

@@ -1,0 +1,21 @@
+api:
+  build: .
+  ports:
+    - "8080:8080"
+  links:
+    - auth
+    - geo
+    - profile
+    - rate
+    - trace
+
+auth:
+  image: auth
+geo:
+  image: geo
+profile:
+  image: profile
+rate:
+  image: rate
+trace:
+  image: trace
