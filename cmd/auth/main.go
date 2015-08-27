@@ -5,12 +5,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"time"
 
 	"github.com/harlow/go-micro-services/auth"
+	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
@@ -21,7 +21,6 @@ import (
 
 var (
 	port       = flag.Int("port", 8080, "The server port")
-	jsonDBFile = flag.String("json_db_file", "data/customers.json", "A json file containing a list of customers")
 	serverName = "service.auth"
 )
 
@@ -46,13 +45,7 @@ func (s *authServer) VerifyToken(ctx context.Context, args *auth.Args) (*auth.Cu
 }
 
 // loadCustomers loads customers from a JSON file.
-func (s *authServer) loadCustomers(filePath string) {
-	// open data file
-	file, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		log.Fatalf("Failed to load file: %v", err)
-	}
-
+func (s *authServer) loadCustomers(file []byte) {
 	// unmarshal JSON
 	customers := []*auth.Customer{}
 	if err := json.Unmarshal(file, &customers); err != nil {
@@ -68,7 +61,7 @@ func (s *authServer) loadCustomers(filePath string) {
 
 func newServer() *authServer {
 	s := new(authServer)
-	s.loadCustomers(*jsonDBFile)
+	s.loadCustomers(data.MustAsset("data/customers.json"))
 	return s
 }
 

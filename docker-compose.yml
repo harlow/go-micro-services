@@ -1,0 +1,20 @@
+api:
+  build: ./cmd/api
+  ports:
+    - "8080:8080"
+  links:
+    - auth
+    - geo
+    - profile
+    - rate
+    - trace
+auth:
+  build: ./cmd/auth
+geo:
+  build: ./cmd/geo
+profile:
+  build: ./cmd/profile
+rate:
+  build: ./cmd/rate
+trace:
+  build: ./cmd/trace
