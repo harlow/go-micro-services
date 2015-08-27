@@ -10,12 +10,13 @@ import (
 	"net"
 	"time"
 
-	pb "github.com/harlow/go-micro-services/service.geo/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	"github.com/harlow/go-micro-services/geo"
+	"github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"strings"
 )
 
 var (
@@ -26,7 +27,7 @@ var (
 
 type location struct {
 	HotelID int32
-	Point   *pb.Point
+	Point   *geo.Point
 }
 
 type geoServer struct {
@@ -34,13 +35,13 @@ type geoServer struct {
 }
 
 // BoundedBox returns all hotels contained within a given rectangle.
-func (s *geoServer) BoundedBox(ctx context.Context, rect *pb.Rectangle) (*pb.Reply, error) {
+func (s *geoServer) BoundedBox(ctx context.Context, rect *geo.Rectangle) (*geo.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(serverName, md["from"])
-	defer t.Out(md["from"], serverName, time.Now())
+	t := trace.Tracer{TraceID: strings.Join(md["traceID"], ",")}
+	t.In(serverName, strings.Join(md["from"], ","))
+	defer t.Out(strings.Join(md["from"], ","), serverName, time.Now())
 
-	reply := new(pb.Reply)
+	reply := new(geo.Reply)
 	for _, loc := range s.locations {
 		if inRange(loc.Point, rect) {
 			reply.HotelIds = append(reply.HotelIds, loc.HotelID)
@@ -62,7 +63,7 @@ func (s *geoServer) loadLocations(filePath string) {
 }
 
 // inRange calculates if a point appears within a BoundingBox.
-func inRange(point *pb.Point, rect *pb.Rectangle) bool {
+func inRange(point *geo.Point, rect *geo.Rectangle) bool {
 	left := math.Min(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
 	right := math.Max(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
 	top := math.Max(float64(rect.Lo.Latitude), float64(rect.Hi.Latitude))
@@ -90,6 +91,6 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterGeoServer(grpcServer, newServer())
+	geo.RegisterGeoServer(grpcServer, newServer())
 	grpcServer.Serve(lis)
 }

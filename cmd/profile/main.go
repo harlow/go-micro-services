@@ -9,12 +9,13 @@ import (
 	"net"
 	"time"
 
-	pb "github.com/harlow/go-micro-services/service.profile/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	"github.com/harlow/go-micro-services/profile"
+	"github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"strings"
 )
 
 var (
@@ -24,17 +25,17 @@ var (
 )
 
 type profileServer struct {
-	hotels map[int32]*pb.Hotel
+	hotels map[int32]*profile.Hotel
 }
 
 // VerifyToken finds a customer by authentication token.
-func (s *profileServer) GetHotels(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
+func (s *profileServer) GetHotels(ctx context.Context, args *profile.Args) (*profile.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(serverName, md["from"])
-	defer t.Out(md["from"], serverName, time.Now())
+	t := trace.Tracer{TraceID: strings.Join(md["traceID"], ",")}
+	t.In(serverName, strings.Join(md["from"], ","))
+	defer t.Out(strings.Join(md["from"], ","), serverName, time.Now())
 
-	reply := new(pb.Reply)
+	reply := new(profile.Reply)
 	for _, i := range args.HotelIds {
 		reply.Hotels = append(reply.Hotels, s.hotels[i])
 	}
@@ -48,11 +49,11 @@ func (s *profileServer) loadProfiles(filePath string) {
 	if err != nil {
 		log.Fatalf("Failed to load file: %v", err)
 	}
-	hotels := []*pb.Hotel{}
+	hotels := []*profile.Hotel{}
 	if err := json.Unmarshal(file, &hotels); err != nil {
 		log.Fatalf("Failed to load json: %v", err)
 	}
-	s.hotels = make(map[int32]*pb.Hotel)
+	s.hotels = make(map[int32]*profile.Hotel)
 	for _, hotel := range hotels {
 		s.hotels[hotel.Id] = hotel
 	}
@@ -72,6 +73,6 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterProfileServer(grpcServer, newServer())
+	profile.RegisterProfileServer(grpcServer, newServer())
 	grpcServer.Serve(lis)
 }

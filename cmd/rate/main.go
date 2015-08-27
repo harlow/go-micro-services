@@ -9,12 +9,13 @@ import (
 	"net"
 	"time"
 
-	pb "github.com/harlow/go-micro-services/service.rate/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	"github.com/harlow/go-micro-services/rate"
+	"github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"strings"
 )
 
 var (
@@ -30,17 +31,17 @@ type stay struct {
 }
 
 type rateServer struct {
-	rates map[stay]*pb.RatePlan
+	rates map[stay]*rate.RatePlan
 }
 
 // GetRates gets rates for hotels for specific date range.
-func (s *rateServer) GetRates(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
+func (s *rateServer) GetRates(ctx context.Context, args *rate.Args) (*rate.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(serverName, md["from"])
-	defer t.Out(md["from"], serverName, time.Now())
+	t := trace.Tracer{TraceID: strings.Join(md["traceID"], ",")}
+	t.In(serverName, strings.Join(md["from"], ","))
+	defer t.Out(strings.Join(md["from"], ","), serverName, time.Now())
 
-	reply := new(pb.Reply)
+	reply := new(rate.Reply)
 	for _, hotelID := range args.HotelIds {
 		k := stay{hotelID, args.InDate, args.OutDate}
 		if s.rates[k] == nil {
@@ -58,11 +59,11 @@ func (s *rateServer) loadRates(filePath string) {
 	if err != nil {
 		log.Fatalf("Failed to load file: %v", err)
 	}
-	rates := []*pb.RatePlan{}
+	rates := []*rate.RatePlan{}
 	if err := json.Unmarshal(file, &rates); err != nil {
 		log.Fatalf("Failed to load json: %v", err)
 	}
-	s.rates = make(map[stay]*pb.RatePlan)
+	s.rates = make(map[stay]*rate.RatePlan)
 	for _, ratePlan := range rates {
 		k := stay{ratePlan.HotelId, ratePlan.InDate, ratePlan.OutDate}
 		s.rates[k] = ratePlan
@@ -83,6 +84,6 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterRateServer(grpcServer, newServer())
+	rate.RegisterRateServer(grpcServer, newServer())
 	grpcServer.Serve(lis)
 }
