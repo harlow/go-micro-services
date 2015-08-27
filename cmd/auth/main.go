@@ -10,12 +10,13 @@ import (
 	"net"
 	"time"
 
-	pb "github.com/harlow/go-micro-services/service.auth/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	"github.com/harlow/go-micro-services/auth"
+	"github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"strings"
 )
 
 var (
@@ -25,20 +26,20 @@ var (
 )
 
 type authServer struct {
-	customers map[string]*pb.Customer
+	customers map[string]*auth.Customer
 }
 
 // VerifyToken finds a customer by authentication token.
-func (s *authServer) VerifyToken(ctx context.Context, args *pb.Args) (*pb.Customer, error) {
+func (s *authServer) VerifyToken(ctx context.Context, args *auth.Args) (*auth.Customer, error) {
 	md, _ := metadata.FromContext(ctx)
 
-	t := trace.Tracer{TraceID: md["traceID"]}
+	t := trace.Tracer{TraceID: strings.Join(md["traceID"], ",")}
 	t.In(serverName, args.From)
 	defer t.Out(args.From, serverName, time.Now())
 
 	customer := s.customers[args.AuthToken]
 	if customer == nil {
-		return &pb.Customer{}, errors.New("Invalid Token")
+		return &auth.Customer{}, errors.New("Invalid Token")
 	}
 
 	return customer, nil
@@ -53,13 +54,13 @@ func (s *authServer) loadCustomers(filePath string) {
 	}
 
 	// unmarshal JSON
-	customers := []*pb.Customer{}
+	customers := []*auth.Customer{}
 	if err := json.Unmarshal(file, &customers); err != nil {
 		log.Fatalf("Failed to unmarshal json: %v", err)
 	}
 
 	// create customer lookup map
-	s.customers = make(map[string]*pb.Customer)
+	s.customers = make(map[string]*auth.Customer)
 	for _, c := range customers {
 		s.customers[c.AuthToken] = c
 	}
@@ -78,6 +79,6 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterAuthServer(grpcServer, newServer())
+	auth.RegisterAuthServer(grpcServer, newServer())
 	grpcServer.Serve(lis)
 }
