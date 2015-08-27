@@ -22,8 +22,12 @@ import (
 )
 
 var (
-	serverName = "api.v1"
-	port       = flag.String("port", "5000", "The server port")
+	serverName        = "api.v1"
+	port              = flag.String("port", "8080", "The server port")
+	authServerAddr    = flag.String("auth", "auth:8080", "The Auth server address in the format of host:port")
+	geoServerAddr     = flag.String("geo", "geo:8080", "The Geo server address in the format of host:port")
+	profileServerAddr = flag.String("profile", "profile:8080", "The Pofile server address in the format of host:port")
+	rateServerAddr    = flag.String("rate", "rate:8080", "The Rate Code server address in the format of host:port")
 )
 
 type inventory struct {
@@ -152,13 +156,6 @@ func (api api) getHotels(ctx context.Context, hotelIDs []int32) chan profileResu
 }
 
 func main() {
-	var (
-		authServerAddr    = flag.String("auth_server_addr", "127.0.0.1:10001", "The Auth server address in the format of host:port")
-		geoServerAddr     = flag.String("geo_server_addr", "127.0.0.1:10002", "The Geo server address in the format of host:port")
-		profileServerAddr = flag.String("profile_server_addr", "127.0.0.1:10003", "The Pofile server address in the format of host:port")
-		rateServerAddr    = flag.String("rate_server_addr", "127.0.0.1:10004", "The Rate Code server address in the format of host:port")
-	)
-
 	flag.Parse()
 
 	api := newAPI(authServerAddr, geoServerAddr, profileServerAddr, rateServerAddr)

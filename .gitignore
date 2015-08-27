@@ -1,1 +1,7 @@
 .env
+cmd/*/data
+cmd/rate/rate
+cmd/profile/profile
+cmd/api/api
+cmd/geo/geo
+cmd/trace/trace
