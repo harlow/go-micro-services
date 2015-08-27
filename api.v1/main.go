@@ -9,16 +9,15 @@ import (
 	_ "net/http/pprof"
 	"time"
 
-	auth "github.com/harlow/go-micro-services/service.auth/lib"
-	geo "github.com/harlow/go-micro-services/service.geo/lib"
-	profile "github.com/harlow/go-micro-services/service.profile/lib"
-	profile_pb "github.com/harlow/go-micro-services/service.profile/proto"
-	rate "github.com/harlow/go-micro-services/service.rate/lib"
-	rate_pb "github.com/harlow/go-micro-services/service.rate/proto"
+	auth "github.com/harlow/go-micro-services/service.auth/proto"
+	geo "github.com/harlow/go-micro-services/service.geo/proto"
+	profile "github.com/harlow/go-micro-services/service.profile/proto"
+	rate "github.com/harlow/go-micro-services/service.rate/proto"
 
 	"github.com/harlow/auth_token"
 	"github.com/harlow/go-micro-services/trace"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -28,15 +27,15 @@ var (
 )
 
 type inventory struct {
-	Hotels    []*profile_pb.Hotel `json:"hotels"`
-	RatePlans []*rate_pb.RatePlan `json:"ratePlans"`
+	Hotels    []*profile.Hotel `json:"hotels"`
+	RatePlans []*rate.RatePlan `json:"ratePlans"`
 }
 
 type api struct {
-	authClient    *auth.Client
-	geoClient     *geo.Client
-	profileClient *profile.Client
-	rateClient    *rate.Client
+	auth.AuthClient
+	geo.GeoClient
+	profile.ProfileClient
+	rate.RateClient
 }
 
 func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +56,10 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify auth token
-	err = api.authClient.VerifyToken(ctx, serverName, authToken)
+	_, err = api.VerifyToken(ctx, &auth.Args{
+		From:      serverName,
+		AuthToken: authToken,
+	})
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
@@ -72,43 +74,40 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get hotels within geo box
-	hotelIDs, err := api.geoClient.HotelsWithinBoundedBox(ctx, 100, 100)
+	reply, err := api.BoundedBox(ctx, &geo.Rectangle{
+		Lo: &geo.Point{Latitude: 400000000, Longitude: -750000000},
+		Hi: &geo.Point{Latitude: 420000000, Longitude: -730000000},
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	profileCh := api.getHotels(ctx, hotelIDs)
-	rateCh := api.getRatePlans(ctx, hotelIDs, inDate, outDate)
-
-	profileReply := <-profileCh
-	if err := profileReply.err; err != nil {
+	inventory := &inventory{}
+	for i := 0; i < 2; i++ {
+		select {
+		case profileReply := <-api.getHotels(ctx, reply.HotelIds):
+			if err := profileReply.err; err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			inventory.Hotels = profileReply.hotels
+		case rateReply := <-api.getRatePlans(ctx, reply.HotelIds, inDate, outDate):
+			if err := rateReply.err; err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			inventory.RatePlans = rateReply.ratePlans
+		}
+	}
+	encoder := json.NewEncoder(w)
+	if err = encoder.Encode(inventory); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
-
-	rateReply := <-rateCh
-	if err := rateReply.err; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	inventory := inventory{
-		Hotels:    profileReply.hotels,
-		RatePlans: rateReply.ratePlans,
-	}
-
-	body, err := json.Marshal(inventory)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Write(body)
 }
 
 type rateResults struct {
-	ratePlans []*rate_pb.RatePlan
+	ratePlans []*rate.RatePlan
 	err       error
 }
 
@@ -116,10 +115,15 @@ func (api api) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string
 	ch := make(chan rateResults, 1)
 
 	go func() {
-		ratePlans, err := api.rateClient.GetRatePlans(ctx, hotelIDs, inDate, outDate)
+		reply, err := api.GetRates(ctx,
+			&rate.Args{
+				HotelIds: hotelIDs,
+				InDate:   inDate,
+				OutDate:  outDate,
+			})
 
 		ch <- rateResults{
-			ratePlans: ratePlans,
+			ratePlans: reply.RatePlans,
 			err:       err,
 		}
 	}()
@@ -128,7 +132,7 @@ func (api api) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string
 }
 
 type profileResults struct {
-	hotels []*profile_pb.Hotel
+	hotels []*profile.Hotel
 	err    error
 }
 
@@ -136,10 +140,10 @@ func (api api) getHotels(ctx context.Context, hotelIDs []int32) chan profileResu
 	ch := make(chan profileResults, 1)
 
 	go func() {
-		hotels, err := api.profileClient.GetHotels(ctx, hotelIDs)
+		reply, err := api.GetHotels(ctx, &profile.Args{HotelIds: hotelIDs})
 
 		ch <- profileResults{
-			hotels: hotels,
+			hotels: reply.Hotels,
 			err:    err,
 		}
 	}()
@@ -157,37 +161,25 @@ func main() {
 
 	flag.Parse()
 
-	authClient, err := auth.NewClient(*authServerAddr)
-	if err != nil {
-		log.Fatal("AuthClient error:", err)
-	}
-	defer authClient.Close()
-
-	geoClient, err := geo.NewClient(*geoServerAddr)
-	if err != nil {
-		log.Fatal("GeoClient error:", err)
-	}
-	defer geoClient.Close()
-
-	profileClient, err := profile.NewClient(*profileServerAddr)
-	if err != nil {
-		log.Fatal("ProfileClient error:", err)
-	}
-	defer profileClient.Close()
-
-	rateClient, err := rate.NewClient(*rateServerAddr)
-	if err != nil {
-		log.Fatal("RateClient error:", err)
-	}
-	defer rateClient.Close()
-
-	api := api{
-		authClient:    authClient,
-		geoClient:     geoClient,
-		profileClient: profileClient,
-		rateClient:    rateClient,
-	}
-
+	api := newAPI(authServerAddr, geoServerAddr, profileServerAddr, rateServerAddr)
 	http.HandleFunc("/", api.requestHandler)
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
+}
+
+func mustDial(addr *string) *grpc.ClientConn {
+	conn, err := grpc.Dial(*addr)
+	if err != nil {
+		log.Fatalf("dial failed: %s", err)
+		panic(err)
+	}
+	return conn
+}
+
+func newAPI(authAddr, geoAddr, profileAddr, rateAddr *string) api {
+	return api{
+		AuthClient:    auth.NewAuthClient(mustDial(authAddr)),
+		GeoClient:     geo.NewGeoClient(mustDial(geoAddr)),
+		ProfileClient: profile.NewProfileClient(mustDial(profileAddr)),
+		RateClient:    rate.NewRateClient(mustDial(rateAddr)),
+	}
 }
