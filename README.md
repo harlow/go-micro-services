@@ -90,7 +90,7 @@ This example codebase was heavily inspired by the following talks/repositories:
 
 * [Scaling microservices in Go][3]
 * [gRPC Example Service][4]
-* [go-kit][4]
+* [go-kit][5]
 
 [1]: http://www.grpc.io/
 [2]: https://github.com/ddollar/foreman
