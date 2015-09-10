@@ -18,17 +18,13 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var (
-	port       = flag.Int("port", 10001, "The server port")
-	jsonDBFile = flag.String("json_db_file", "data/customers.json", "A json file containing a list of customers")
-	serverName = "service.auth"
-)
+var serverName = "service.auth"
 
 // newServer creates a new authServer and loads the customers from
 // JSON file into customers map
-func newServer() *authServer {
+func newServer(path string) *authServer {
 	s := new(authServer)
-	s.loadCustomers(*jsonDBFile)
+	s.loadCustomers(path)
 	return s
 }
 
@@ -75,12 +71,19 @@ func (s *authServer) loadCustomers(filePath string) {
 }
 
 func main() {
+	var(
+		port       = flag.Int("port", 10001, "The server port")
+		jsonDBFile = flag.String("json_db_path", "data/customers.json", "A json file containing a list of customers")
+	
+	)
 	flag.Parse()
+	
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+	
 	grpcServer := grpc.NewServer()
-	pb.RegisterAuthServer(grpcServer, newServer())
+	pb.RegisterAuthServer(grpcServer, newServer(*jsonDBFile))
 	grpcServer.Serve(lis)
 }
