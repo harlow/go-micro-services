@@ -24,6 +24,15 @@ var (
 	serverName = "service.auth"
 )
 
+// newServer creates a new authServer and loads the customers from
+// JSON file into customers map
+func newServer() *authServer {
+	s := new(authServer)
+	s.loadCustomers(*jsonDBFile)
+	return s
+}
+
+// authServer struct w/ customers map
 type authServer struct {
 	customers map[string]*pb.Customer
 }
@@ -63,12 +72,6 @@ func (s *authServer) loadCustomers(filePath string) {
 	for _, c := range customers {
 		s.customers[c.AuthToken] = c
 	}
-}
-
-func newServer() *authServer {
-	s := new(authServer)
-	s.loadCustomers(*jsonDBFile)
-	return s
 }
 
 func main() {
