@@ -14,6 +14,9 @@ import (
 	profile "github.com/harlow/go-micro-services/service.profile/lib"
 	rate "github.com/harlow/go-micro-services/service.rate/lib"
 
+	profile_pb "github.com/harlow/go-micro-services/service.profile/proto"
+	rate_plan_pb "github.com/harlow/go-micro-services/service.rate/proto"
+
 	"github.com/harlow/auth_token"
 	"github.com/harlow/go-micro-services/trace"
 	"golang.org/x/net/context"
@@ -21,17 +24,12 @@ import (
 )
 
 type inventory struct {
-	Hotels    []*profile.Hotel `json:"hotels"`
-	RatePlans []*rate.RatePlan `json:"ratePlans"`
-}
-
-type rateResults struct {
-	ratePlans []*rate.RatePlan
-	err       error
+	Hotels    []*profile_pb.Hotel      `json:"hotels"`
+	RatePlans []*rate_plan_pb.RatePlan `json:"ratePlans"`
 }
 
 type profileResults struct {
-	hotels []*profile.Hotel
+	hotels []*profile_pb.Hotel
 	err    error
 }
 
@@ -85,7 +83,7 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	rateCh := s.getRatePlans(ctx, hotelIDs, inDate, outDate)
 
 	profileReply := <-profileCh
-	if err := profileReply.err; err != nil {
+	if err := profileReply.Err; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -97,7 +95,7 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inventory := inventory{
-		Hotels:    profileReply.hotels,
+		Hotels:    profileReply.Hotels,
 		RatePlans: rateReply.RatePlans,
 	}
 
@@ -120,16 +118,11 @@ func (s apiServer) getRatePlans(ctx context.Context, hotelIDs []int32, inDate st
 	return ch
 }
 
-func (s apiServer) getHotels(ctx context.Context, hotelIDs []int32) chan profileResults {
-	ch := make(chan profileResults, 1)
+func (s apiServer) getHotels(ctx context.Context, hotelIDs []int32) chan profile.ProfileReply {
+	ch := make(chan profile.ProfileReply, 1)
 
 	go func() {
-		hotels, err := s.profileClient.GetHotels(ctx, hotelIDs)
-
-		ch <- profileResults{
-			hotels: hotels,
-			err:    err,
-		}
+		ch <- s.profileClient.GetHotels(ctx, hotelIDs)
 	}()
 
 	return ch
