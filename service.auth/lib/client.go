@@ -34,17 +34,14 @@ func (c Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c Client) VerifyToken(ctx context.Context, serverName string, authToken string) error {
+func (c Client) VerifyToken(ctx context.Context, authToken string) error {
 	md, _ := metadata.FromContext(ctx)
+
 	t := trace.Tracer{TraceID: md["traceID"]}
 	t.Req(md["from"], "service.auth", "VerifyToken")
 	defer t.Rep("service.auth", md["from"], time.Now())
 
-	args := &auth.Args{
-		From:      serverName,
-		AuthToken: authToken,
-	}
-
+	args := &auth.Args{AuthToken: authToken}
 	if _, err := c.client.VerifyToken(ctx, args); err != nil {
 		return err
 	}

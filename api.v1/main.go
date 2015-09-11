@@ -22,11 +22,6 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var (
-	serverName = "api.v1"
-	port       = flag.String("port", "5000", "The server port")
-)
-
 type inventory struct {
 	Hotels    []*profile_pb.Hotel `json:"hotels"`
 	RatePlans []*rate_pb.RatePlan `json:"ratePlans"`
@@ -45,7 +40,7 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	defer t.Out("api.v1", "www", time.Now())
 
 	// context and metadata
-	md := metadata.Pairs("traceID", t.TraceID, "from", serverName)
+	md := metadata.Pairs("traceID", t.TraceID, "from", "api.v1")
 	ctx := context.Background()
 	ctx = metadata.NewContext(ctx, md)
 
@@ -57,7 +52,7 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify auth token
-	err = api.authClient.VerifyToken(ctx, serverName, authToken)
+	err = api.authClient.VerifyToken(ctx, authToken)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
@@ -149,12 +144,12 @@ func (api api) getHotels(ctx context.Context, hotelIDs []int32) chan profileResu
 
 func main() {
 	var (
+		port              = flag.String("port", "5000", "The server port")
 		authServerAddr    = flag.String("auth_server_addr", "127.0.0.1:10001", "The Auth server address in the format of host:port")
 		geoServerAddr     = flag.String("geo_server_addr", "127.0.0.1:10002", "The Geo server address in the format of host:port")
 		profileServerAddr = flag.String("profile_server_addr", "127.0.0.1:10003", "The Pofile server address in the format of host:port")
 		rateServerAddr    = flag.String("rate_server_addr", "127.0.0.1:10004", "The Rate Code server address in the format of host:port")
 	)
-
 	flag.Parse()
 
 	authClient, err := auth.NewClient(*authServerAddr)
