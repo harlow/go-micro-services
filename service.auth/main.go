@@ -18,19 +18,18 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var serverName = "service.auth"
-
 // newServer creates a new authServer and loads the customers from
 // JSON file into customers map
-func newServer(path string) *authServer {
-	s := new(authServer)
-	s.loadCustomers(path)
+func newServer(dataPath string) *authServer {
+	s := &authServer{serverName: "service.auth"}
+	s.loadCustomers(dataPath)
 	return s
 }
 
 // authServer struct w/ customers map
 type authServer struct {
-	customers map[string]*pb.Customer
+	serverName string
+	customers  map[string]*pb.Customer
 }
 
 // VerifyToken finds a customer by authentication token.
@@ -38,8 +37,8 @@ func (s *authServer) VerifyToken(ctx context.Context, args *pb.Args) (*pb.Custom
 	md, _ := metadata.FromContext(ctx)
 
 	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(serverName, args.From)
-	defer t.Out(args.From, serverName, time.Now())
+	t.In(s.serverName, args.From)
+	defer t.Out(args.From, s.serverName, time.Now())
 
 	customer := s.customers[args.AuthToken]
 	if customer == nil {
@@ -71,19 +70,19 @@ func (s *authServer) loadCustomers(filePath string) {
 }
 
 func main() {
-	var(
-		port       = flag.Int("port", 10001, "The server port")
-		jsonDBFile = flag.String("json_db_path", "data/customers.json", "A json file containing a list of customers")
-	
+	var (
+		port     = flag.Int("port", 10001, "The server port")
+		dataPath = flag.String("data_path", "data/customers.json", "A json file containing a list of customers")
 	)
+
 	flag.Parse()
-	
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	
+
 	grpcServer := grpc.NewServer()
-	pb.RegisterAuthServer(grpcServer, newServer(*jsonDBFile))
+	pb.RegisterAuthServer(grpcServer, newServer(*dataPath))
 	grpcServer.Serve(lis)
 }
