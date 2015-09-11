@@ -12,9 +12,7 @@ import (
 	auth "github.com/harlow/go-micro-services/service.auth/lib"
 	geo "github.com/harlow/go-micro-services/service.geo/lib"
 	profile "github.com/harlow/go-micro-services/service.profile/lib"
-	profile_pb "github.com/harlow/go-micro-services/service.profile/proto"
 	rate "github.com/harlow/go-micro-services/service.rate/lib"
-	rate_pb "github.com/harlow/go-micro-services/service.rate/proto"
 
 	"github.com/harlow/auth_token"
 	"github.com/harlow/go-micro-services/trace"
@@ -23,17 +21,17 @@ import (
 )
 
 type inventory struct {
-	Hotels    []*profile_pb.Hotel `json:"hotels"`
-	RatePlans []*rate_pb.RatePlan `json:"ratePlans"`
+	Hotels    []*profile.Hotel `json:"hotels"`
+	RatePlans []*rate.RatePlan `json:"ratePlans"`
 }
 
 type rateResults struct {
-	ratePlans []*rate_pb.RatePlan
+	ratePlans []*rate.RatePlan
 	err       error
 }
 
 type profileResults struct {
-	hotels []*profile_pb.Hotel
+	hotels []*profile.Hotel
 	err    error
 }
 

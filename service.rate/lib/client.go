@@ -11,6 +11,8 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+type RatePlan pb.RatePlan
+
 type RatePlanReply struct {
 	RatePlans []*pb.RatePlan
 	Err       error
@@ -37,6 +39,7 @@ func NewClient(addr string) (*Client, error) {
 
 func (c Client) GetRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) RatePlanReply {
 	md, _ := metadata.FromContext(ctx)
+
 	t := trace.Tracer{TraceID: md["traceID"]}
 	t.Req(md["from"], "service.rate", "GetRatePlans")
 	defer t.Rep("service.rate", md["from"], time.Now())

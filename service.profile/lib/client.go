@@ -11,6 +11,8 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+type Hotel pb.Hotel
+
 type Client struct {
 	conn   *grpc.ClientConn
 	client pb.ProfileClient
