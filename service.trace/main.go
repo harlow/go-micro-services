@@ -16,34 +16,32 @@ import (
 	"google.golang.org/grpc"
 )
 
-var (
-	port       = flag.Int("port", 10005, "The server port")
-	serverName = "service.trace"
-)
+// newServer returns a server.
+func newServer() *rateServer {
+	s := &rateServer{serverName: "service.trace"}
+	s.events = make(map[string]*pb.Event)
+	return s
+}
 
 type traceServer struct {
 	events map[string]*pb.Trace
 }
 
-// GetRates gets rates for hotels for specific date range.
+// Track takes a pb.Trace message and stores the results
 func (s *traceServer) Track(ctx context.Context, trace *pb.Trace) (*pb.Reply, error) {
 	trace.events[trace.TraceId] = trace
 	return *pb.Reply{}, nil
 }
 
-// newServer returns a server.
-func newServer() *rateServer {
-	s := new(rateServer)
-	s.events = make(map[string]*pb.Event)
-	return s
-}
-
 func main() {
+	var port = flag.Int("port", 10005, "The server port")
 	flag.Parse()
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	grpcServer := grpc.NewServer()
 	pb.RegisterTrackServer(grpcServer, newServer())
 	grpcServer.Serve(lis)
