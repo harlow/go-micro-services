@@ -18,11 +18,13 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var (
-	port       = flag.Int("port", 10002, "The server port")
-	jsonDBFile = flag.String("json_db_file", "data/locations.json", "A json file containing hotel locations")
-	serverName = "service.geo"
-)
+// newServer creates a new geoServer
+// loads the locations from JSON data file
+func newServer(dataPath string) *geoServer {
+	s := &geoServer{serverName: "service.geo"}
+	s.loadLocations(dataPath)
+	return s
+}
 
 type location struct {
 	HotelID int32
@@ -30,15 +32,17 @@ type location struct {
 }
 
 type geoServer struct {
-	locations []location
+	serverName string
+	locations  []location
 }
 
 // BoundedBox returns all hotels contained within a given rectangle.
 func (s *geoServer) BoundedBox(ctx context.Context, rect *pb.Rectangle) (*pb.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
+
 	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(serverName, md["from"])
-	defer t.Out(md["from"], serverName, time.Now())
+	t.In(s.serverName, md["from"])
+	defer t.Out(md["from"], s.serverName, time.Now())
 
 	reply := new(pb.Reply)
 	for _, loc := range s.locations {
@@ -77,19 +81,19 @@ func inRange(point *pb.Point, rect *pb.Rectangle) bool {
 	return false
 }
 
-func newServer() *geoServer {
-	s := new(geoServer)
-	s.loadLocations(*jsonDBFile)
-	return s
-}
-
 func main() {
+	var (
+		port     = flag.Int("port", 10002, "The server port")
+		dataPath = flag.String("data_path", "data/locations.json", "A json file containing hotel locations")
+	)
 	flag.Parse()
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	grpcServer := grpc.NewServer()
-	pb.RegisterGeoServer(grpcServer, newServer())
+	pb.RegisterGeoServer(grpcServer, newServer(*dataPath))
 	grpcServer.Serve(lis)
 }
