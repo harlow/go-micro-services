@@ -27,14 +27,24 @@ type inventory struct {
 	RatePlans []*rate_pb.RatePlan `json:"ratePlans"`
 }
 
-type api struct {
+type rateResults struct {
+	ratePlans []*rate_pb.RatePlan
+	err       error
+}
+
+type profileResults struct {
+	hotels []*profile_pb.Hotel
+	err    error
+}
+
+type apiServer struct {
 	authClient    *auth.Client
 	geoClient     *geo.Client
 	profileClient *profile.Client
 	rateClient    *rate.Client
 }
 
-func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
+func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	t := trace.NewTracer()
 	t.In("www", "api.v1")
 	defer t.Out("api.v1", "www", time.Now())
@@ -52,7 +62,7 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify auth token
-	err = api.authClient.VerifyToken(ctx, authToken)
+	err = s.authClient.VerifyToken(ctx, authToken)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
@@ -67,14 +77,14 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get hotels within geo box
-	hotelIDs, err := api.geoClient.HotelsWithinBoundedBox(ctx, 100, 100)
+	hotelIDs, err := s.geoClient.HotelsWithinBoundedBox(ctx, 100, 100)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	profileCh := api.getHotels(ctx, hotelIDs)
-	rateCh := api.getRatePlans(ctx, hotelIDs, inDate, outDate)
+	profileCh := s.getHotels(ctx, hotelIDs)
+	rateCh := s.getRatePlans(ctx, hotelIDs, inDate, outDate)
 
 	profileReply := <-profileCh
 	if err := profileReply.err; err != nil {
@@ -102,16 +112,11 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 }
 
-type rateResults struct {
-	ratePlans []*rate_pb.RatePlan
-	err       error
-}
-
-func (api api) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) chan rateResults {
+func (s apiServer) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) chan rateResults {
 	ch := make(chan rateResults, 1)
 
 	go func() {
-		ratePlans, err := api.rateClient.GetRatePlans(ctx, hotelIDs, inDate, outDate)
+		ratePlans, err := s.rateClient.GetRatePlans(ctx, hotelIDs, inDate, outDate)
 
 		ch <- rateResults{
 			ratePlans: ratePlans,
@@ -122,16 +127,11 @@ func (api api) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string
 	return ch
 }
 
-type profileResults struct {
-	hotels []*profile_pb.Hotel
-	err    error
-}
-
-func (api api) getHotels(ctx context.Context, hotelIDs []int32) chan profileResults {
+func (s apiServer) getHotels(ctx context.Context, hotelIDs []int32) chan profileResults {
 	ch := make(chan profileResults, 1)
 
 	go func() {
-		hotels, err := api.profileClient.GetHotels(ctx, hotelIDs)
+		hotels, err := s.profileClient.GetHotels(ctx, hotelIDs)
 
 		ch <- profileResults{
 			hotels: hotels,
@@ -176,13 +176,13 @@ func main() {
 	}
 	defer rateClient.Close()
 
-	api := api{
+	s := apiServer{
 		authClient:    authClient,
 		geoClient:     geoClient,
 		profileClient: profileClient,
 		rateClient:    rateClient,
 	}
 
-	http.HandleFunc("/", api.requestHandler)
+	http.HandleFunc("/", s.requestHandler)
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
