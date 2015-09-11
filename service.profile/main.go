@@ -17,22 +17,18 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var (
-	port       = flag.Int("port", 10003, "The server port")
-	jsonDBFile = flag.String("json_db_file", "data/profiles.json", "A json file containing a list of customers")
-	serverName = "service.profile"
-)
-
 type profileServer struct {
-	hotels map[int32]*pb.Hotel
+	serverName string
+	hotels     map[int32]*pb.Hotel
 }
 
 // VerifyToken finds a customer by authentication token.
 func (s *profileServer) GetHotels(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
+
 	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(serverName, md["from"])
-	defer t.Out(md["from"], serverName, time.Now())
+	t.In(s.serverName, md["from"])
+	defer t.Out(md["from"], s.serverName, time.Now())
 
 	reply := new(pb.Reply)
 	for _, i := range args.HotelIds {
@@ -48,10 +44,12 @@ func (s *profileServer) loadProfiles(filePath string) {
 	if err != nil {
 		log.Fatalf("Failed to load file: %v", err)
 	}
+
 	hotels := []*pb.Hotel{}
 	if err := json.Unmarshal(file, &hotels); err != nil {
 		log.Fatalf("Failed to load json: %v", err)
 	}
+
 	s.hotels = make(map[int32]*pb.Hotel)
 	for _, hotel := range hotels {
 		s.hotels[hotel.Id] = hotel
@@ -59,19 +57,25 @@ func (s *profileServer) loadProfiles(filePath string) {
 }
 
 // newServer returns a server with initialization data loaded.
-func newServer() *profileServer {
-	s := new(profileServer)
-	s.loadProfiles(*jsonDBFile)
+func newServer(dataPath string) *profileServer {
+	s := &profileServer{serverName: "service.profile"}
+	s.loadProfiles(dataPath)
 	return s
 }
 
 func main() {
+	var (
+		port     = flag.Int("port", 10003, "The server port")
+		dataPath = flag.String("data_path", "data/profiles.json", "A json file containing a list of customers")
+	)
 	flag.Parse()
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	grpcServer := grpc.NewServer()
-	pb.RegisterProfileServer(grpcServer, newServer())
+	pb.RegisterProfileServer(grpcServer, newServer(*dataPath))
 	grpcServer.Serve(lis)
 }
