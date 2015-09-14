@@ -8,10 +8,10 @@ import (
 	"log"
 	"math"
 	"net"
-	"time"
+	// "time"
 
 	pb "github.com/harlow/go-micro-services/service.geo/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	// trace "github.com/harlow/go-micro-services/api.trace/client"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -21,7 +21,7 @@ import (
 // newServer creates a new geoServer
 // loads the locations from JSON data file
 func newServer(dataPath string) *geoServer {
-	s := &geoServer{serverName: "service.geo"}
+	s := &geoServer{}
 	s.loadLocations(dataPath)
 	return s
 }
@@ -32,17 +32,13 @@ type location struct {
 }
 
 type geoServer struct {
-	serverName string
 	locations  []location
 }
 
 // BoundedBox returns all hotels contained within a given rectangle.
 func (s *geoServer) BoundedBox(ctx context.Context, rect *pb.Rectangle) (*pb.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
-
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(s.serverName, md["from"])
-	defer t.Out(md["from"], s.serverName, time.Now())
+	log.Printf("traceID=%s", md["traceID"])
 
 	reply := new(pb.Reply)
 	for _, loc := range s.locations {

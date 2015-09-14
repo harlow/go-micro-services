@@ -14,7 +14,7 @@ _Note:_ Data for each of the services is stored in JSON flat files under the `/d
 Protobuf v3 are required:
 
     $ brew install protobuf --devel
-    
+
 Install the protoc-gen libraries:
 
     $ go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
@@ -83,6 +83,20 @@ The JSON response:
     ]
 }
 ```
+
+### Tracing the requests
+
+To help visualize the request/response patterns between services there is an additional trace server that will boot w/ the services.
+
+The web service generates the first trace ID. It prints to the logs:
+
+```
+18:43:05 web.1     | 2015/09/13 18:43:05 traceId=baec5498-2f4f-439c-629b-18b57d974888
+```
+
+When can then take the trace ID and view the sequence diagram here:
+
+http://localhost:5001/?traceId=[TRACE_ID]
 
 ### Credits
 

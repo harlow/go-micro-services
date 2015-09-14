@@ -7,10 +7,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"time"
+	// "time"
 
 	pb "github.com/harlow/go-micro-services/service.rate/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	// trace "github.com/harlow/go-micro-services/api.trace/client"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -19,7 +19,7 @@ import (
 
 // newServer returns a server with initialization data loaded.
 func newServer(dataPath string) *rateServer {
-	s := &rateServer{serverName: "service.rate"}
+	s := &rateServer{}
 	s.loadRates(dataPath)
 	return s
 }
@@ -38,10 +38,7 @@ type rateServer struct {
 // GetRates gets rates for hotels for specific date range.
 func (s *rateServer) GetRates(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
-
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(s.serverName, md["from"])
-	defer t.Out(md["from"], s.serverName, time.Now())
+	log.Printf("traceID=%s", md["traceID"])
 
 	reply := new(pb.Reply)
 	for _, hotelID := range args.HotelIds {

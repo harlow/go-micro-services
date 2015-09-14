@@ -4,7 +4,7 @@ import (
 	"time"
 
 	pb "github.com/harlow/go-micro-services/service.geo/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	trace "github.com/harlow/go-micro-services/api.trace/client"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -30,15 +30,11 @@ func NewClient(addr string) (*Client, error) {
 	}, nil
 }
 
-func (c Client) Close() error {
-	return c.conn.Close()
-}
-
 func (c Client) HotelsWithinBoundedBox(ctx context.Context, latitude int32, longitude int32) ([]int32, error) {
 	md, _ := metadata.FromContext(ctx)
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.Req(md["from"], "service.geo", "BoundedBox")
-	defer t.Rep("service.geo", md["from"], time.Now())
+
+	trace.Req(md["traceID"], md["from"], "service.geo", "HotelsWithinBoundedBox")
+	defer trace.Rep(md["traceID"], "service.geo", md["from"], time.Now())
 
 	rect := &pb.Rectangle{
 		Lo: &pb.Point{Latitude: 400000000, Longitude: -750000000},
@@ -52,4 +48,8 @@ func (c Client) HotelsWithinBoundedBox(ctx context.Context, latitude int32, long
 	}
 
 	return reply.HotelIds, nil
+}
+
+func (c Client) Close() error {
+	return c.conn.Close()
 }

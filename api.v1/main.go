@@ -13,12 +13,12 @@ import (
 	geo "github.com/harlow/go-micro-services/service.geo/lib"
 	profile "github.com/harlow/go-micro-services/service.profile/lib"
 	rate "github.com/harlow/go-micro-services/service.rate/lib"
+	trace "github.com/harlow/go-micro-services/api.trace/client"
 
 	profile_pb "github.com/harlow/go-micro-services/service.profile/proto"
 	rate_plan_pb "github.com/harlow/go-micro-services/service.rate/proto"
 
 	"github.com/harlow/auth_token"
-	"github.com/harlow/go-micro-services/trace"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 )
@@ -41,12 +41,14 @@ type apiServer struct {
 }
 
 func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
-	t := trace.NewTracer()
-	t.In("www", "api.v1")
-	defer t.Out("api.v1", "www", time.Now())
+	// trace call to request handler
+	traceID := trace.NewTraceID()
+	trace.Req(traceID, "www", "api.v1", "")
+	defer trace.Rep(traceID, "api.v1", "www", time.Now())
+	log.Printf("traceId=%s", traceID)
 
 	// context and metadata
-	md := metadata.Pairs("traceID", t.TraceID, "from", "api.v1")
+	md := metadata.Pairs("traceID", traceID, "from", "api.v1")
 	ctx := context.Background()
 	ctx = metadata.NewContext(ctx, md)
 

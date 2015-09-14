@@ -7,28 +7,33 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"time"
+	// "time"
 
 	pb "github.com/harlow/go-micro-services/service.profile/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	// trace "github.com/harlow/go-micro-services/api.trace/client"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
+// newServer returns a server with initialization data loaded.
+func newServer(dataPath string) *profileServer {
+	s := &profileServer{}
+	s.loadProfiles(dataPath)
+	return s
+}
+
 type profileServer struct {
-	serverName string
-	hotels     map[int32]*pb.Hotel
+	hotels map[int32]*pb.Hotel
 }
 
 // VerifyToken finds a customer by authentication token.
 func (s *profileServer) GetHotels(ctx context.Context, args *pb.Args) (*pb.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
-
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(s.serverName, md["from"])
-	defer t.Out(md["from"], s.serverName, time.Now())
+	log.Printf("traceID=%s", md["traceID"])
+	// trace.Req(md["traceID"], "service.profile", md["from"], "")
+	// defer trace.Rep(md["traceID"], md["from"], "service.profile", time.Now())
 
 	reply := new(pb.Reply)
 	for _, i := range args.HotelIds {
@@ -54,13 +59,6 @@ func (s *profileServer) loadProfiles(filePath string) {
 	for _, hotel := range hotels {
 		s.hotels[hotel.Id] = hotel
 	}
-}
-
-// newServer returns a server with initialization data loaded.
-func newServer(dataPath string) *profileServer {
-	s := &profileServer{serverName: "service.profile"}
-	s.loadProfiles(dataPath)
-	return s
 }
 
 func main() {

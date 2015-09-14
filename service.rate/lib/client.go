@@ -4,7 +4,7 @@ import (
 	"time"
 
 	pb "github.com/harlow/go-micro-services/service.rate/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	trace "github.com/harlow/go-micro-services/api.trace/client"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -40,9 +40,8 @@ func NewClient(addr string) (*Client, error) {
 func (c Client) GetRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) RatePlanReply {
 	md, _ := metadata.FromContext(ctx)
 
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.Req(md["from"], "service.rate", "GetRatePlans")
-	defer t.Rep("service.rate", md["from"], time.Now())
+	trace.Req(md["traceID"], md["from"], "service.rate", "GetRatePlans")
+	defer trace.Rep(md["traceID"], "service.rate", md["from"], time.Now())
 
 	args := &pb.Args{
 		HotelIds: hotelIDs,

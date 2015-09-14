@@ -8,10 +8,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"time"
+	// "time"
 
 	pb "github.com/harlow/go-micro-services/service.auth/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	// trace "github.com/harlow/go-micro-services/api.trace/client"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -21,7 +21,7 @@ import (
 // newServer creates a new authServer and loads the customers from
 // JSON file into customers map
 func newServer(dataPath string) *authServer {
-	s := &authServer{serverName: "service.auth"}
+	s := &authServer{}
 	s.loadCustomers(dataPath)
 	return s
 }
@@ -35,10 +35,7 @@ type authServer struct {
 // VerifyToken finds a customer by authentication token.
 func (s *authServer) VerifyToken(ctx context.Context, args *pb.Args) (*pb.Customer, error) {
 	md, _ := metadata.FromContext(ctx)
-
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(s.serverName, md["from"])
-	defer t.Out(md["from"], s.serverName, time.Now())
+	log.Printf("traceID=%s", md["traceID"])
 
 	customer := s.customers[args.AuthToken]
 	if customer == nil {

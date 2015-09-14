@@ -4,7 +4,7 @@ import (
 	"time"
 
 	pb "github.com/harlow/go-micro-services/service.profile/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	trace "github.com/harlow/go-micro-services/api.trace/client"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -16,11 +16,6 @@ type Hotel pb.Hotel
 type ProfileReply struct {
 	Hotels []*pb.Hotel
 	Err       error
-}
-
-type Client struct {
-	conn   *grpc.ClientConn
-	client pb.ProfileClient
 }
 
 func NewClient(addr string) (*Client, error) {
@@ -37,12 +32,16 @@ func NewClient(addr string) (*Client, error) {
 	}, nil
 }
 
+type Client struct {
+	conn   *grpc.ClientConn
+	client pb.ProfileClient
+}
+
 func (c Client) GetHotels(ctx context.Context, hotelIDs []int32) ProfileReply {
 	md, _ := metadata.FromContext(ctx)
 
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.Req(md["from"], "service.profile", "GetHotels")
-	defer t.Rep("service.profile", md["from"], time.Now())
+	trace.Req(md["traceID"], md["from"], "service.profile", "GetHotels")
+	defer trace.Rep(md["traceID"], "service.profile", md["from"], time.Now())
 
 	args := &pb.Args{HotelIds: hotelIDs}
 	reply, err := c.client.GetHotels(ctx, args)

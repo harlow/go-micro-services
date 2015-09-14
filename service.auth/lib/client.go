@@ -3,8 +3,8 @@ package lib
 import (
 	"time"
 
-	auth "github.com/harlow/go-micro-services/service.auth/proto"
-	trace "github.com/harlow/go-micro-services/trace"
+	pb "github.com/harlow/go-micro-services/service.auth/proto"
+	trace "github.com/harlow/go-micro-services/api.trace/client"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -13,7 +13,7 @@ import (
 
 type Client struct {
 	conn   *grpc.ClientConn
-	client auth.AuthClient
+	client pb.AuthClient
 }
 
 func NewClient(addr string) (*Client, error) {
@@ -22,7 +22,7 @@ func NewClient(addr string) (*Client, error) {
 		return nil, err
 	}
 
-	client := auth.NewAuthClient(conn)
+	client := pb.NewAuthClient(conn)
 
 	return &Client{
 		conn:   conn,
@@ -30,21 +30,20 @@ func NewClient(addr string) (*Client, error) {
 	}, nil
 }
 
-func (c Client) Close() error {
-	return c.conn.Close()
-}
-
 func (c Client) VerifyToken(ctx context.Context, authToken string) error {
 	md, _ := metadata.FromContext(ctx)
 
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.Req(md["from"], "service.auth", "VerifyToken")
-	defer t.Rep("service.auth", md["from"], time.Now())
+	trace.Req(md["traceID"], md["from"], "service.auth", "VerifyToken")
+	defer trace.Rep(md["traceID"], "service.auth", md["from"], time.Now())
 
-	args := &auth.Args{AuthToken: authToken}
+	args := &pb.Args{AuthToken: authToken}
 	if _, err := c.client.VerifyToken(ctx, args); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (c Client) Close() error {
+	return c.conn.Close()
 }
