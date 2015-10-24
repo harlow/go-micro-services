@@ -9,16 +9,14 @@ import (
 	_ "net/http/pprof"
 	"time"
 
-	auth "github.com/harlow/go-micro-services/service.auth/lib"
+	trace "github.com/harlow/go-micro-services/api.trace/client"
 	geo "github.com/harlow/go-micro-services/service.geo/lib"
 	profile "github.com/harlow/go-micro-services/service.profile/lib"
 	rate "github.com/harlow/go-micro-services/service.rate/lib"
-	trace "github.com/harlow/go-micro-services/api.trace/client"
 
 	profile_pb "github.com/harlow/go-micro-services/service.profile/proto"
 	rate_plan_pb "github.com/harlow/go-micro-services/service.rate/proto"
 
-	"github.com/harlow/auth_token"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 )
@@ -34,7 +32,6 @@ type profileResults struct {
 }
 
 type apiServer struct {
-	authClient    *auth.Client
 	geoClient     *geo.Client
 	profileClient *profile.Client
 	rateClient    *rate.Client
@@ -51,20 +48,6 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	md := metadata.Pairs("traceID", traceID, "from", "api.v1")
 	ctx := context.Background()
 	ctx = metadata.NewContext(ctx, md)
-
-	// parse token from Authorization header
-	authToken, err := auth_token.Parse(r.Header.Get("Authorization"))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
-	// verify auth token
-	err = s.authClient.VerifyToken(ctx, authToken)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
-		return
-	}
 
 	// read and validate in/out arguments
 	inDate := r.URL.Query().Get("inDate")
@@ -138,13 +121,8 @@ func main() {
 		profileServerAddr = flag.String("profile_server_addr", "127.0.0.1:10003", "The Pofile server address in the format of host:port")
 		rateServerAddr    = flag.String("rate_server_addr", "127.0.0.1:10004", "The Rate Code server address in the format of host:port")
 	)
-	flag.Parse()
 
-	authClient, err := auth.NewClient(*authServerAddr)
-	if err != nil {
-		log.Fatal("AuthClient error:", err)
-	}
-	defer authClient.Close()
+	flag.Parse()
 
 	geoClient, err := geo.NewClient(*geoServerAddr)
 	if err != nil {
@@ -165,12 +143,13 @@ func main() {
 	defer rateClient.Close()
 
 	s := apiServer{
-		authClient:    authClient,
 		geoClient:     geoClient,
 		profileClient: profileClient,
 		rateClient:    rateClient,
 	}
 
-	http.HandleFunc("/", s.requestHandler)
+	authHandler := NewAuthMiddleware(*authServerAddr)
+	finalHandler := http.HandlerFunc(s.requestHandler)
+	http.Handle("/", authHandler(finalHandler))
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }

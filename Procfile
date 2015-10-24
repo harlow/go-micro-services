@@ -1,4 +1,4 @@
-web: go run api.v1/main.go
+web: go run api.v1/main.go api.v1/authentication.go
 trace: go run api.trace/main.go
 auth: go run service.auth/main.go
 geo: go run service.geo/main.go
