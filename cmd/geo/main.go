@@ -20,7 +20,7 @@ import (
 
 // newServer returns a server with initialization data loaded.
 func newServer() *geoServer {
-	s := &geoServer{sererName: "service.geo"}
+	s := &geoServer{serverName: "service.geo"}
 	s.loadLocations(data.MustAsset("data/locations.json"))
 	return s
 }
