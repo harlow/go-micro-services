@@ -1,7 +1,7 @@
 .env
 cmd/*/data
-cmd/rate/rate
-cmd/profile/profile
 cmd/api/api
+cmd/auth/auth
 cmd/geo/geo
-cmd/trace/trace
+cmd/profile/profile
+cmd/rate/rate
