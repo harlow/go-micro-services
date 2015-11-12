@@ -17,10 +17,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var (
-	port       = flag.Int("port", 8080, "The server port")
-	serverName = "service.profile"
-)
+var serverName = "service.profile"
 
 type profileServer struct {
 	hotels map[int32]*profile.Hotel
@@ -29,7 +26,7 @@ type profileServer struct {
 // VerifyToken finds a customer by authentication token.
 func (s *profileServer) GetHotels(ctx context.Context, args *profile.Args) (*profile.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
-	t := trace.Tracer{TraceID: md["traceID"] }
+	t := trace.Tracer{TraceID: md["traceID"]}
 	t.In(serverName, md["from"])
 	defer t.Out(md["from"], serverName, time.Now())
 
@@ -61,11 +58,14 @@ func newServer() *profileServer {
 }
 
 func main() {
+	var port = flag.Int("port", 8080, "The server port")
 	flag.Parse()
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	grpcServer := grpc.NewServer()
 	profile.RegisterProfileServer(grpcServer, newServer())
 	grpcServer.Serve(lis)

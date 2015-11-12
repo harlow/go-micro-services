@@ -18,10 +18,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var (
-	port       = flag.Int("port", 8080, "The server port")
-	serverName = "service.geo"
-)
+var serverName = "service.geo"
 
 type location struct {
 	HotelID int32
@@ -79,11 +76,14 @@ func newServer() *geoServer {
 }
 
 func main() {
+	var port = flag.Int("port", 8080, "The server port")
 	flag.Parse()
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	grpcServer := grpc.NewServer()
 	geo.RegisterGeoServer(grpcServer, newServer())
 	grpcServer.Serve(lis)

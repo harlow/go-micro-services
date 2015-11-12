@@ -17,10 +17,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var (
-	port       = flag.Int("port", 8080, "The server port")
-	serverName = "service.rate"
-)
+var serverName = "service.rate"
 
 type stay struct {
 	HotelID int32
@@ -72,11 +69,14 @@ func newServer() *rateServer {
 }
 
 func main() {
+	var port = flag.Int("port", 8080, "The server port")
 	flag.Parse()
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	grpcServer := grpc.NewServer()
 	rate.RegisterRateServer(grpcServer, newServer())
 	grpcServer.Serve(lis)

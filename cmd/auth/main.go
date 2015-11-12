@@ -18,10 +18,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var (
-	port       = flag.Int("port", 8080, "The server port")
-	serverName = "service.auth"
-)
+var serverName = "service.auth"
 
 type authServer struct {
 	customers map[string]*auth.Customer
@@ -65,11 +62,14 @@ func newServer() *authServer {
 }
 
 func main() {
+	var port = flag.Int("port", 8080, "The server port")
 	flag.Parse()
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	grpcServer := grpc.NewServer()
 	auth.RegisterAuthServer(grpcServer, newServer())
 	grpcServer.Serve(lis)
