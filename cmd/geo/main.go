@@ -18,7 +18,12 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var serverName = "service.geo"
+// newServer returns a server with initialization data loaded.
+func newServer() *geoServer {
+	s := &geoServer{sererName: "service.geo"}
+	s.loadLocations(data.MustAsset("data/locations.json"))
+	return s
+}
 
 type location struct {
 	HotelID int32
@@ -26,15 +31,16 @@ type location struct {
 }
 
 type geoServer struct {
-	locations []location
+	serverName string
+	locations  []location
 }
 
 // BoundedBox returns all hotels contained within a given rectangle.
 func (s *geoServer) BoundedBox(ctx context.Context, rect *geo.Rectangle) (*geo.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
 	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(serverName, md["from"])
-	defer t.Out(md["from"], serverName, time.Now())
+	t.In(s.serverName, md["from"])
+	defer t.Out(md["from"], s.serverName, time.Now())
 
 	reply := new(geo.Reply)
 	for _, loc := range s.locations {
@@ -67,12 +73,6 @@ func inRange(point *geo.Point, rect *geo.Rectangle) bool {
 		return true
 	}
 	return false
-}
-
-func newServer() *geoServer {
-	s := new(geoServer)
-	s.loadLocations(data.MustAsset("data/locations.json"))
-	return s
 }
 
 func main() {

@@ -18,10 +18,16 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var serverName = "service.auth"
+// newServer returns a server with initialization data loaded.
+func newServer() *authServer {
+	s := &authServer{serverName: "service.auth"}
+	s.loadCustomers(data.MustAsset("data/customers.json"))
+	return s
+}
 
 type authServer struct {
-	customers map[string]*auth.Customer
+	serverName string
+	customers  map[string]*auth.Customer
 }
 
 // VerifyToken finds a customer by authentication token.
@@ -29,8 +35,8 @@ func (s *authServer) VerifyToken(ctx context.Context, args *auth.Args) (*auth.Cu
 	md, _ := metadata.FromContext(ctx)
 
 	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(serverName, args.From)
-	defer t.Out(args.From, serverName, time.Now())
+	t.In(s.serverName, args.From)
+	defer t.Out(args.From, s.serverName, time.Now())
 
 	customer := s.customers[args.AuthToken]
 	if customer == nil {
@@ -53,12 +59,6 @@ func (s *authServer) loadCustomers(file []byte) {
 	for _, c := range customers {
 		s.customers[c.AuthToken] = c
 	}
-}
-
-func newServer() *authServer {
-	s := new(authServer)
-	s.loadCustomers(data.MustAsset("data/customers.json"))
-	return s
 }
 
 func main() {

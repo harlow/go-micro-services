@@ -17,7 +17,12 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var serverName = "service.rate"
+// newServer returns a server with initialization data loaded.
+func newServer() *rateServer {
+	s := &rateServer{serverName: "service.rate"}
+	s.loadRates(data.MustAsset("data/rates.json"))
+	return s
+}
 
 type stay struct {
 	HotelID int32
@@ -26,15 +31,16 @@ type stay struct {
 }
 
 type rateServer struct {
-	rates map[stay]*rate.RatePlan
+	serverName string
+	rates      map[stay]*rate.RatePlan
 }
 
 // GetRates gets rates for hotels for specific date range.
 func (s *rateServer) GetRates(ctx context.Context, args *rate.Args) (*rate.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
 	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(serverName, md["from"])
-	defer t.Out(md["from"], serverName, time.Now())
+	t.In(s.serverName, md["from"])
+	defer t.Out(md["from"], s.serverName, time.Now())
 
 	reply := new(rate.Reply)
 	for _, hotelID := range args.HotelIds {
@@ -59,13 +65,6 @@ func (s *rateServer) loadRates(file []byte) {
 		k := stay{ratePlan.HotelId, ratePlan.InDate, ratePlan.OutDate}
 		s.rates[k] = ratePlan
 	}
-}
-
-// newServer returns a server with initialization data loaded.
-func newServer() *rateServer {
-	s := new(rateServer)
-	s.loadRates(data.MustAsset("data/rates.json"))
-	return s
 }
 
 func main() {

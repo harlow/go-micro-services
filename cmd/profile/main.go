@@ -17,18 +17,24 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var serverName = "service.profile"
+// newServer returns a server with initialization data loaded.
+func newServer() *profileServer {
+	s := &profileServer{serverName: "service.profile"}
+	s.loadProfiles(data.MustAsset("data/profiles.json"))
+	return s
+}
 
 type profileServer struct {
-	hotels map[int32]*profile.Hotel
+	serverName string
+	hotels     map[int32]*profile.Hotel
 }
 
 // VerifyToken finds a customer by authentication token.
 func (s *profileServer) GetHotels(ctx context.Context, args *profile.Args) (*profile.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
 	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(serverName, md["from"])
-	defer t.Out(md["from"], serverName, time.Now())
+	t.In(s.serverName, md["from"])
+	defer t.Out(md["from"], s.serverName, time.Now())
 
 	reply := new(profile.Reply)
 	for _, i := range args.HotelIds {
@@ -48,13 +54,6 @@ func (s *profileServer) loadProfiles(file []byte) {
 	for _, hotel := range hotels {
 		s.hotels[hotel.Id] = hotel
 	}
-}
-
-// newServer returns a server with initialization data loaded.
-func newServer() *profileServer {
-	s := new(profileServer)
-	s.loadProfiles(data.MustAsset("data/profiles.json"))
-	return s
 }
 
 func main() {

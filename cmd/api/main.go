@@ -21,16 +21,13 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var (
-	serverName = "api.v1"
-)
-
 type inventory struct {
 	Hotels    []*profile.Hotel `json:"hotels"`
 	RatePlans []*rate.RatePlan `json:"ratePlans"`
 }
 
 type api struct {
+	serverName string
 	auth.AuthClient
 	geo.GeoClient
 	profile.ProfileClient
@@ -39,11 +36,11 @@ type api struct {
 
 func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	t := trace.NewTracer()
-	t.In("www", "api.v1")
-	defer t.Out("api.v1", "www", time.Now())
+	t.In("www", api.serverName)
+	defer t.Out(api.serverName, "www", time.Now())
 
 	// context and metadata
-	md := metadata.Pairs("traceID", t.TraceID, "from", serverName)
+	md := metadata.Pairs("traceID", t.TraceID, "from", api.serverName)
 	ctx := context.Background()
 	ctx = metadata.NewContext(ctx, md)
 
@@ -56,7 +53,7 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// verify auth token
 	_, err = api.VerifyToken(ctx, &auth.Args{
-		From:      serverName,
+		From:      api.serverName,
 		AuthToken: authToken,
 	})
 	if err != nil {
@@ -99,6 +96,7 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 			inventory.RatePlans = rateReply.ratePlans
 		}
 	}
+
 	encoder := json.NewEncoder(w)
 	if err = encoder.Encode(inventory); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -165,6 +163,16 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
 
+func newAPI(authAddr, geoAddr, profileAddr, rateAddr *string) api {
+	return api{
+		serverName:    "api.v1",
+		AuthClient:    auth.NewAuthClient(mustDial(authAddr)),
+		GeoClient:     geo.NewGeoClient(mustDial(geoAddr)),
+		ProfileClient: profile.NewProfileClient(mustDial(profileAddr)),
+		RateClient:    rate.NewRateClient(mustDial(rateAddr)),
+	}
+}
+
 func mustDial(addr *string) *grpc.ClientConn {
 	conn, err := grpc.Dial(*addr)
 	if err != nil {
@@ -172,13 +180,4 @@ func mustDial(addr *string) *grpc.ClientConn {
 		panic(err)
 	}
 	return conn
-}
-
-func newAPI(authAddr, geoAddr, profileAddr, rateAddr *string) api {
-	return api{
-		AuthClient:    auth.NewAuthClient(mustDial(authAddr)),
-		GeoClient:     geo.NewGeoClient(mustDial(geoAddr)),
-		ProfileClient: profile.NewProfileClient(mustDial(profileAddr)),
-		RateClient:    rate.NewRateClient(mustDial(rateAddr)),
-	}
 }
