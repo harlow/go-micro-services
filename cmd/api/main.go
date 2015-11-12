@@ -26,7 +26,7 @@ type inventory struct {
 	RatePlans []*rate.RatePlan `json:"ratePlans"`
 }
 
-type api struct {
+type apiServer struct {
 	serverName string
 	auth.AuthClient
 	geo.GeoClient
@@ -34,13 +34,13 @@ type api struct {
 	rate.RateClient
 }
 
-func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
+func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	t := trace.NewTracer()
-	t.In("www", api.serverName)
-	defer t.Out(api.serverName, "www", time.Now())
+	t.In("www", s.serverName)
+	defer t.Out(s.serverName, "www", time.Now())
 
 	// context and metadata
-	md := metadata.Pairs("traceID", t.TraceID, "from", api.serverName)
+	md := metadata.Pairs("traceID", t.TraceID, "from", s.serverName)
 	ctx := context.Background()
 	ctx = metadata.NewContext(ctx, md)
 
@@ -52,8 +52,8 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify auth token
-	_, err = api.VerifyToken(ctx, &auth.Args{
-		From:      api.serverName,
+	_, err = s.VerifyToken(ctx, &auth.Args{
+		From:      s.serverName,
 		AuthToken: authToken,
 	})
 	if err != nil {
@@ -70,7 +70,7 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get hotels within geo box
-	reply, err := api.BoundedBox(ctx, &geo.Rectangle{
+	reply, err := s.BoundedBox(ctx, &geo.Rectangle{
 		Lo: &geo.Point{Latitude: 400000000, Longitude: -750000000},
 		Hi: &geo.Point{Latitude: 420000000, Longitude: -730000000},
 	})
@@ -82,13 +82,13 @@ func (api api) requestHandler(w http.ResponseWriter, r *http.Request) {
 	inventory := &inventory{}
 	for i := 0; i < 2; i++ {
 		select {
-		case profileReply := <-api.getHotels(ctx, reply.HotelIds):
+		case profileReply := <-s.getHotels(ctx, reply.HotelIds):
 			if err := profileReply.err; err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			inventory.Hotels = profileReply.hotels
-		case rateReply := <-api.getRatePlans(ctx, reply.HotelIds, inDate, outDate):
+		case rateReply := <-s.getRatePlans(ctx, reply.HotelIds, inDate, outDate):
 			if err := rateReply.err; err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -108,11 +108,11 @@ type rateResults struct {
 	err       error
 }
 
-func (api api) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) chan rateResults {
+func (s apiServer) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) chan rateResults {
 	ch := make(chan rateResults, 1)
 
 	go func() {
-		reply, err := api.GetRates(ctx,
+		reply, err := s.GetRates(ctx,
 			&rate.Args{
 				HotelIds: hotelIDs,
 				InDate:   inDate,
@@ -133,11 +133,11 @@ type profileResults struct {
 	err    error
 }
 
-func (api api) getHotels(ctx context.Context, hotelIDs []int32) chan profileResults {
+func (s apiServer) getHotels(ctx context.Context, hotelIDs []int32) chan profileResults {
 	ch := make(chan profileResults, 1)
 
 	go func() {
-		reply, err := api.GetHotels(ctx, &profile.Args{HotelIds: hotelIDs})
+		reply, err := s.GetHotels(ctx, &profile.Args{HotelIds: hotelIDs})
 
 		ch <- profileResults{
 			hotels: reply.Hotels,
@@ -158,13 +158,13 @@ func main() {
 	)
 	flag.Parse()
 
-	api := newAPI(authServerAddr, geoServerAddr, profileServerAddr, rateServerAddr)
-	http.HandleFunc("/", api.requestHandler)
+	s := newServer(authServerAddr, geoServerAddr, profileServerAddr, rateServerAddr)
+	http.HandleFunc("/", s.requestHandler)
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
 
-func newAPI(authAddr, geoAddr, profileAddr, rateAddr *string) api {
-	return api{
+func newServer(authAddr, geoAddr, profileAddr, rateAddr *string) apiServer {
+	return apiServer{
 		serverName:    "api.v1",
 		AuthClient:    auth.NewAuthClient(mustDial(authAddr)),
 		GeoClient:     geo.NewGeoClient(mustDial(geoAddr)),
