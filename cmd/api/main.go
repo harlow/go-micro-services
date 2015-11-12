@@ -9,10 +9,10 @@ import (
 	_ "net/http/pprof"
 	"time"
 
-	"github.com/harlow/go-micro-services/protos/auth"
-	"github.com/harlow/go-micro-services/protos/geo"
-	"github.com/harlow/go-micro-services/protos/profile"
-	"github.com/harlow/go-micro-services/protos/rate"
+	"github.com/harlow/go-micro-services/proto/auth"
+	"github.com/harlow/go-micro-services/proto/geo"
+	"github.com/harlow/go-micro-services/proto/profile"
+	"github.com/harlow/go-micro-services/proto/rate"
 	"github.com/harlow/go-micro-services/trace"
 
 	"github.com/harlow/auth_token"

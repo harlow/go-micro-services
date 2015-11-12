@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/harlow/go-micro-services/data"
-	"github.com/harlow/go-micro-services/protos/profile"
+	"github.com/harlow/go-micro-services/proto/profile"
 	"github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
