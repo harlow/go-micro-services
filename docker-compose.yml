@@ -7,7 +7,6 @@ api:
     - geo
     - profile
     - rate
-    - trace
 auth:
   build: ./cmd/auth
 geo:
@@ -16,5 +15,3 @@ profile:
   build: ./cmd/profile
 rate:
   build: ./cmd/rate
-trace:
-  build: ./cmd/trace
