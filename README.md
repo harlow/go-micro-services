@@ -1,10 +1,3 @@
-# Attention
-
-This is a fork, so it's not go get-able, you'll have to setup the project structure as the original,
-e.g.
-
-    git clone https://github.com/isaiah/go-micro-services.git $GOPATH/src/github.com/harlow/
-
 # HTTP up front, Protobufs in the rear.
 
 An demonstration of Golang micro-services that accept HTTP/JSON requests at API level and then
@@ -21,7 +14,7 @@ _Note:_ Data for each of the services is stored in JSON flat files under the `/d
 Protobuf v3 are required:
 
     $ brew install protobuf --devel
-    
+
 Install the protoc-gen libraries:
 
     $ go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
@@ -36,7 +29,7 @@ If changes are made to the Protocol Buffers a Make file can be used to regenerat
 
 ### Bootstrap the services
 
-To make the demo as straigforward as possible; docker is used to run all the services. In a production environment each of the services would be run (and scaled) independently.
+To make the demo as straigforward as possible; Docker is used to run all the services. In a production environment each of the services would be run (and scaled) independently.
 
     make build
     docker-compose up
@@ -94,7 +87,7 @@ The JSON response:
 
 ### Credits
 
-This example codebase was heavily inspired by the following talks/repositories:
+Thanks to all the [contributors][6]. This codebase was heavily inspired by the following talks and repositories:
 
 * [Scaling microservices in Go][3]
 * [gRPC Example Service][4]
@@ -105,3 +98,4 @@ This example codebase was heavily inspired by the following talks/repositories:
 [3]: https://speakerdeck.com/mattheath/scaling-microservices-in-go-high-load-strategy-2015
 [4]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
 [5]: https://github.com/go-kit/kit
+[6]: https://github.com/harlow/go-micro-services/graphs/contributors
