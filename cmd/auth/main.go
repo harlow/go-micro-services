@@ -9,14 +9,13 @@ import (
 	"net"
 	"time"
 
-	"github.com/harlow/go-micro-services/auth"
 	"github.com/harlow/go-micro-services/data"
+	"github.com/harlow/go-micro-services/protos/auth"
 	"github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"strings"
 )
 
 var (
@@ -32,7 +31,7 @@ type authServer struct {
 func (s *authServer) VerifyToken(ctx context.Context, args *auth.Args) (*auth.Customer, error) {
 	md, _ := metadata.FromContext(ctx)
 
-	t := trace.Tracer{TraceID: strings.Join(md["traceID"], ",")}
+	t := trace.Tracer{TraceID: md["traceID"]}
 	t.In(serverName, args.From)
 	defer t.Out(args.From, serverName, time.Now())
 

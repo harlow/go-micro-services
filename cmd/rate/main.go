@@ -8,14 +8,13 @@ import (
 	"net"
 	"time"
 
-	"github.com/harlow/go-micro-services/rate"
+	"github.com/harlow/go-micro-services/data"
+	"github.com/harlow/go-micro-services/protos/rate"
 	"github.com/harlow/go-micro-services/trace"
 
-	"github.com/harlow/go-micro-services/data"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"strings"
 )
 
 var (
@@ -36,9 +35,9 @@ type rateServer struct {
 // GetRates gets rates for hotels for specific date range.
 func (s *rateServer) GetRates(ctx context.Context, args *rate.Args) (*rate.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
-	t := trace.Tracer{TraceID: strings.Join(md["traceID"], ",")}
-	t.In(serverName, strings.Join(md["from"], ","))
-	defer t.Out(strings.Join(md["from"], ","), serverName, time.Now())
+	t := trace.Tracer{TraceID: md["traceID"]}
+	t.In(serverName, md["from"])
+	defer t.Out(md["from"], serverName, time.Now())
 
 	reply := new(rate.Reply)
 	for _, hotelID := range args.HotelIds {

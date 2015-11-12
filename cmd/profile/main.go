@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/harlow/go-micro-services/data"
-	"github.com/harlow/go-micro-services/profile"
+	"github.com/harlow/go-micro-services/protos/profile"
 	"github.com/harlow/go-micro-services/trace"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"strings"
 )
 
 var (
@@ -29,9 +29,9 @@ type profileServer struct {
 // VerifyToken finds a customer by authentication token.
 func (s *profileServer) GetHotels(ctx context.Context, args *profile.Args) (*profile.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
-	t := trace.Tracer{TraceID: strings.Join(md["traceID"], ",")}
-	t.In(serverName, strings.Join(md["from"], ","))
-	defer t.Out(strings.Join(md["from"], ","), serverName, time.Now())
+	t := trace.Tracer{TraceID: md["traceID"] }
+	t.In(serverName, md["from"])
+	defer t.Out(md["from"], serverName, time.Now())
 
 	reply := new(profile.Reply)
 	for _, i := range args.HotelIds {

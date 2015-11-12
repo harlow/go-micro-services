@@ -9,13 +9,13 @@ import (
 	_ "net/http/pprof"
 	"time"
 
-	"github.com/harlow/go-micro-services/auth"
-	"github.com/harlow/go-micro-services/geo"
-	"github.com/harlow/go-micro-services/profile"
-	"github.com/harlow/go-micro-services/rate"
+	"github.com/harlow/go-micro-services/protos/auth"
+	"github.com/harlow/go-micro-services/protos/geo"
+	"github.com/harlow/go-micro-services/protos/profile"
+	"github.com/harlow/go-micro-services/protos/rate"
+	"github.com/harlow/go-micro-services/trace"
 
 	"github.com/harlow/auth_token"
-	"github.com/harlow/go-micro-services/trace"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
