@@ -15,7 +15,6 @@ import (
 	"github.com/harlow/go-micro-services/proto/rate"
 	"github.com/harlow/go-micro-services/trace"
 
-	"github.com/harlow/auth_token"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -26,9 +25,28 @@ type inventory struct {
 	RatePlans []*rate.RatePlan `json:"ratePlans"`
 }
 
+// newServer returns a server with initialization data loaded.
+func newServer(geoAddr, profileAddr, rateAddr *string) apiServer {
+	return apiServer{
+		serverName:    "api.v1",
+		GeoClient:     geo.NewGeoClient(mustDial(geoAddr)),
+		ProfileClient: profile.NewProfileClient(mustDial(profileAddr)),
+		RateClient:    rate.NewRateClient(mustDial(rateAddr)),
+	}
+}
+
+// mustDial ensures the tcp connection to specified address.
+func mustDial(addr *string) *grpc.ClientConn {
+	conn, err := grpc.Dial(*addr)
+	if err != nil {
+		log.Fatalf("dial failed: %s", err)
+		panic(err)
+	}
+	return conn
+}
+
 type apiServer struct {
 	serverName string
-	auth.AuthClient
 	geo.GeoClient
 	profile.ProfileClient
 	rate.RateClient
@@ -44,22 +62,22 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	ctx = metadata.NewContext(ctx, md)
 
-	// parse token from Authorization header
-	authToken, err := auth_token.Parse(r.Header.Get("Authorization"))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
+	// // parse token from Authorization header
+	// authToken, err := authtoken.FromRequest(r)
+	// if err != nil {
+	// 	http.Error(w, err.Error(), http.StatusForbidden)
+	// 	return
+	// }
 
-	// verify auth token
-	_, err = s.VerifyToken(ctx, &auth.Args{
-		From:      s.serverName,
-		AuthToken: authToken,
-	})
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
-		return
-	}
+	// // verify auth token
+	// _, err = s.VerifyToken(ctx, &auth.Args{
+	// 	From:      s.serverName,
+	// 	AuthToken: authToken,
+	// })
+	// if err != nil {
+	// 	http.Error(w, "Unauthorized", http.StatusForbidden)
+	// 	return
+	// }
 
 	// read and validate in/out arguments
 	inDate := r.URL.Query().Get("inDate")
@@ -79,27 +97,35 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inventory := &inventory{}
-	for i := 0; i < 2; i++ {
-		select {
-		case profileReply := <-s.getHotels(ctx, reply.HotelIds):
-			if err := profileReply.err; err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			inventory.Hotels = profileReply.hotels
-		case rateReply := <-s.getRatePlans(ctx, reply.HotelIds, inDate, outDate):
-			if err := rateReply.err; err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			inventory.RatePlans = rateReply.ratePlans
-		}
+	// make reqeusts for profiles and rates
+	profileCh := s.getHotels(ctx, reply.HotelIds)
+	rateCh := s.getRatePlans(ctx, reply.HotelIds, inDate, outDate)
+
+	// wait on profiles reply
+	profileReply := <-profileCh
+	if err := profileReply.err; err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
+	// wait on rates reply
+	rateReply := <-rateCh
+	if err := rateReply.err; err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// build the final inventory response
+	inventory := inventory{
+		Hotels:    profileReply.hotels,
+		RatePlans: rateReply.ratePlans,
+	}
+
+	// encode JSON for rendering
 	encoder := json.NewEncoder(w)
 	if err = encoder.Encode(inventory); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -150,34 +176,18 @@ func (s apiServer) getHotels(ctx context.Context, hotelIDs []int32) chan profile
 
 func main() {
 	var (
-		port              = flag.String("port", "8080", "The server port")
-		authServerAddr    = flag.String("auth", "auth:8080", "The Auth server address in the format of host:port")
-		geoServerAddr     = flag.String("geo", "geo:8080", "The Geo server address in the format of host:port")
-		profileServerAddr = flag.String("profile", "profile:8080", "The Pofile server address in the format of host:port")
-		rateServerAddr    = flag.String("rate", "rate:8080", "The Rate Code server address in the format of host:port")
+		port        = flag.String("port", "8080", "The server port")
+		authAddr    = flag.String("auth", "auth:8080", "The Auth server address in the format of host:port")
+		geoAddr     = flag.String("geo", "geo:8080", "The Geo server address in the format of host:port")
+		profileAddr = flag.String("profile", "profile:8080", "The Pofile server address in the format of host:port")
+		rateAddr    = flag.String("rate", "rate:8080", "The Rate Code server address in the format of host:port")
 	)
 	flag.Parse()
 
-	s := newServer(authServerAddr, geoServerAddr, profileServerAddr, rateServerAddr)
-	http.HandleFunc("/", s.requestHandler)
+	server := newServer(geoAddr, profileAddr, rateAddr)
+	authClient := auth.NewAuthClient(mustDial(authAddr))
+	authHandler := NewAuthHandler(authClient)
+	requesHandler := http.HandlerFunc(server.requestHandler)
+	http.Handle("/", authHandler(requesHandler))
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
-}
-
-func newServer(authAddr, geoAddr, profileAddr, rateAddr *string) apiServer {
-	return apiServer{
-		serverName:    "api.v1",
-		AuthClient:    auth.NewAuthClient(mustDial(authAddr)),
-		GeoClient:     geo.NewGeoClient(mustDial(geoAddr)),
-		ProfileClient: profile.NewProfileClient(mustDial(profileAddr)),
-		RateClient:    rate.NewRateClient(mustDial(rateAddr)),
-	}
-}
-
-func mustDial(addr *string) *grpc.ClientConn {
-	conn, err := grpc.Dial(*addr)
-	if err != nil {
-		log.Fatalf("dial failed: %s", err)
-		panic(err)
-	}
-	return conn
 }

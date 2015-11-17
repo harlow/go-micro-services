@@ -35,8 +35,8 @@ func (s *authServer) VerifyToken(ctx context.Context, args *auth.Args) (*auth.Cu
 	md, _ := metadata.FromContext(ctx)
 
 	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(s.serverName, args.From)
-	defer t.Out(args.From, s.serverName, time.Now())
+	t.In(s.serverName, md["fromName"])
+	defer t.Out(md["fromName"], s.serverName, time.Now())
 
 	customer := s.customers[args.AuthToken]
 	if customer == nil {

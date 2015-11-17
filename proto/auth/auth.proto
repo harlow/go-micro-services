@@ -7,8 +7,7 @@ service Auth {
 }
 
 message Args {
-  string from = 1;
-  string authToken = 2;
+  string authToken = 1;
 }
 
 message Customer {
