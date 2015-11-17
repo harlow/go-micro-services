@@ -62,23 +62,6 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	ctx = metadata.NewContext(ctx, md)
 
-	// // parse token from Authorization header
-	// authToken, err := authtoken.FromRequest(r)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusForbidden)
-	// 	return
-	// }
-
-	// // verify auth token
-	// _, err = s.VerifyToken(ctx, &auth.Args{
-	// 	From:      s.serverName,
-	// 	AuthToken: authToken,
-	// })
-	// if err != nil {
-	// 	http.Error(w, "Unauthorized", http.StatusForbidden)
-	// 	return
-	// }
-
 	// read and validate in/out arguments
 	inDate := r.URL.Query().Get("inDate")
 	outDate := r.URL.Query().Get("outDate")
