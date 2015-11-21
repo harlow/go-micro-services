@@ -37,7 +37,7 @@ type geoServer struct {
 }
 
 // BoundedBox returns all hotels contained within a given rectangle.
-func (s *geoServer) BoundedBox(ctx context.Context, rect *geo.Rectangle) (*geo.Reply, error) {
+func (s *geoServer) BoundedBox(ctx context.Context, rect *geo.GeoRequest) (*geo.GeoReply, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
 	fromName := strings.Join(md["fromName"], ",")
@@ -46,7 +46,7 @@ func (s *geoServer) BoundedBox(ctx context.Context, rect *geo.Rectangle) (*geo.R
 	t.In(s.serverName, fromName)
 	defer t.Out(fromName, s.serverName, time.Now())
 
-	reply := new(geo.Reply)
+	reply := new(geo.GeoReply)
 	for _, loc := range s.locations {
 		if inRange(loc.Point, rect) {
 			reply.HotelIds = append(reply.HotelIds, loc.HotelID)
@@ -64,7 +64,7 @@ func (s *geoServer) loadLocations(file []byte) {
 }
 
 // inRange calculates if a point appears within a BoundingBox.
-func inRange(point *geo.Point, rect *geo.Rectangle) bool {
+func inRange(point *geo.Point, rect *geo.GeoRequest) bool {
 	left := math.Min(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
 	right := math.Max(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
 	top := math.Max(float64(rect.Lo.Latitude), float64(rect.Hi.Latitude))

@@ -3,15 +3,15 @@ syntax = "proto3";
 package profile;
 
 service Profile {
-  rpc GetHotels(Args) returns (Reply);
+  rpc GetProfiles(ProfileRequest) returns (ProfileReply);
 }
 
-message Args {
+message ProfileRequest {
   repeated int32 hotelIds = 1;
   string locale = 2;
 }
 
-message Reply {
+message ProfileReply {
   repeated Hotel hotels = 1;
 }
 

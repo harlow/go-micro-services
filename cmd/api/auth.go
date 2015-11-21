@@ -35,7 +35,7 @@ func (m authMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
   ctx = metadata.NewContext(ctx, md)
 
   // verify token w/ auth service
-  _, err = m.VerifyToken(ctx, &auth.Args{
+  _, err = m.VerifyToken(ctx, &auth.AuthRequest{
     AuthToken: authToken,
   })
 

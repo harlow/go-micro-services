@@ -37,7 +37,7 @@ type rateServer struct {
 }
 
 // GetRates gets rates for hotels for specific date range.
-func (s *rateServer) GetRates(ctx context.Context, args *rate.Args) (*rate.Reply, error) {
+func (s *rateServer) GetRates(ctx context.Context, args *rate.RateRequest) (*rate.RateReply, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
 	fromName := strings.Join(md["fromName"], ",")
@@ -46,7 +46,7 @@ func (s *rateServer) GetRates(ctx context.Context, args *rate.Args) (*rate.Reply
 	t.In(s.serverName, fromName)
 	defer t.Out(fromName, s.serverName, time.Now())
 
-	reply := new(rate.Reply)
+	reply := new(rate.RateReply)
 	for _, hotelID := range args.HotelIds {
 		k := stay{hotelID, args.InDate, args.OutDate}
 		if s.rates[k] == nil {

@@ -4,16 +4,16 @@ package rate;
 
 service Rate {
   // GetRates returns rate codes for hotels for a given date range
-  rpc GetRates(Args) returns (Reply);
+  rpc GetRates(RateRequest) returns (RateReply);
 }
 
-message Args {
+message RateRequest {
   repeated int32 hotelIds = 1;
   string inDate = 2;
   string outDate = 3;
 }
 
-message Reply {
+message RateReply {
   repeated RatePlan ratePlans = 1;
 }
 

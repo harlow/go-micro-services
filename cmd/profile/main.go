@@ -31,7 +31,7 @@ type profileServer struct {
 }
 
 // VerifyToken finds a customer by authentication token.
-func (s *profileServer) GetHotels(ctx context.Context, args *profile.Args) (*profile.Reply, error) {
+func (s *profileServer) GetProfiles(ctx context.Context, args *profile.ProfileRequest) (*profile.ProfileReply, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
 	fromName := strings.Join(md["fromName"], ",")
@@ -40,7 +40,7 @@ func (s *profileServer) GetHotels(ctx context.Context, args *profile.Args) (*pro
 	t.In(s.serverName, fromName)
 	defer t.Out(fromName, s.serverName, time.Now())
 
-	reply := new(profile.Reply)
+	reply := new(profile.ProfileReply)
 	for _, i := range args.HotelIds {
 		reply.Hotels = append(reply.Hotels, s.hotels[i])
 	}

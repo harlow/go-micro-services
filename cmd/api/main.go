@@ -75,7 +75,7 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get hotels within geo box
-	reply, err := s.BoundedBox(ctx, &geo.Rectangle{
+	reply, err := s.BoundedBox(ctx, &geo.GeoRequest{
 		Lo: &geo.Point{Latitude: 400000000, Longitude: -750000000},
 		Hi: &geo.Point{Latitude: 420000000, Longitude: -730000000},
 	})
@@ -85,7 +85,7 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make reqeusts for profiles and rates
-	profileCh := s.getHotels(ctx, reply.HotelIds)
+	profileCh := s.getProfiles(ctx, reply.HotelIds)
 	rateCh := s.getRatePlans(ctx, reply.HotelIds, inDate, outDate)
 
 	// wait on profiles reply
@@ -125,12 +125,11 @@ func (s apiServer) getRatePlans(ctx context.Context, hotelIDs []int32, inDate st
 	ch := make(chan rateResults, 1)
 
 	go func() {
-		reply, err := s.GetRates(ctx,
-			&rate.Args{
-				HotelIds: hotelIDs,
-				InDate:   inDate,
-				OutDate:  outDate,
-			})
+		reply, err := s.GetRates(ctx, &rate.RateRequest{
+			HotelIds: hotelIDs,
+			InDate:   inDate,
+			OutDate:  outDate,
+		})
 
 		ch <- rateResults{
 			ratePlans: reply.RatePlans,
@@ -146,11 +145,13 @@ type profileResults struct {
 	err    error
 }
 
-func (s apiServer) getHotels(ctx context.Context, hotelIDs []int32) chan profileResults {
+func (s apiServer) getProfiles(ctx context.Context, hotelIDs []int32) chan profileResults {
 	ch := make(chan profileResults, 1)
 
 	go func() {
-		reply, err := s.GetHotels(ctx, &profile.Args{HotelIds: hotelIDs})
+		reply, err := s.GetProfiles(ctx, &profile.ProfileRequest{
+			HotelIds: hotelIDs,
+		})
 
 		ch <- profileResults{
 			hotels: reply.Hotels,

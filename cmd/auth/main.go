@@ -32,7 +32,7 @@ type authServer struct {
 }
 
 // VerifyToken finds a customer by authentication token.
-func (s *authServer) VerifyToken(ctx context.Context, args *auth.Args) (*auth.Customer, error) {
+func (s *authServer) VerifyToken(ctx context.Context, args *auth.AuthRequest) (*auth.AuthReply, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
 	fromName := strings.Join(md["fromName"], ",")
@@ -43,10 +43,12 @@ func (s *authServer) VerifyToken(ctx context.Context, args *auth.Args) (*auth.Cu
 
 	customer := s.customers[args.AuthToken]
 	if customer == nil {
-		return &auth.Customer{}, errors.New("Invalid Token")
+		return &auth.AuthReply{}, errors.New("Invalid Token")
 	}
 
-	return customer, nil
+	reply := new(auth.AuthReply)
+	reply.Customer = customer
+	return reply, nil
 }
 
 // loadCustomers loads customers from a JSON file.
