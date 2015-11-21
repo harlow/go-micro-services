@@ -38,19 +38,21 @@ Grab the Docker IP address:
 
     docker-machine ls
 
+_Note: in the examples below `docker.dev` is aliased to the docker IP address._
+
 Curl the endpoint with an invalid auth token:
 
-    $ curl http://{$DOCKER_IP}:8080 -H "Authorization: Bearer INVALID_TOKEN"
+    $ curl http://docker.dev:8080 -H "Authorization: Bearer INVALID_TOKEN"
     Unauthorized
 
 Curl the endpoint without checkin or checkout dates:
 
-    $ curl "http://{$DOCKER_IP}:8080?inDate=2015-04-09" -H "Authorization: Bearer VALID_TOKEN"
+    $ curl "http://docker.dev:8080?inDate=2015-04-09" -H "Authorization: Bearer VALID_TOKEN"
     Please specify outDate
 
 Curl the API endpoint with a valid auth token:
 
-    $ curl "http://{$DOCKER_IP}:8080?inDate=2015-04-09&outDate=2015-04-10" -H "Authorization: Bearer VALID_TOKEN"
+    $ curl "http://docker.dev:8080?inDate=2015-04-09&outDate=2015-04-10" -H "Authorization: Bearer VALID_TOKEN"
 
 The JSON response:
 
