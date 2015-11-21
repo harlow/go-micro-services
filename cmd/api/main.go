@@ -37,11 +37,15 @@ func newServer(geoAddr, profileAddr, rateAddr *string) apiServer {
 
 // mustDial ensures the tcp connection to specified address.
 func mustDial(addr *string) *grpc.ClientConn {
-	conn, err := grpc.Dial(*addr)
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithInsecure())
+
+	conn, err := grpc.Dial(*addr, opts...)
 	if err != nil {
 		log.Fatalf("dial failed: %s", err)
 		panic(err)
 	}
+
 	return conn
 }
 
