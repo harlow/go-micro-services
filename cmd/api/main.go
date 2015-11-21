@@ -58,7 +58,7 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	defer t.Out(s.serverName, "www", time.Now())
 
 	// context and metadata
-	md := metadata.Pairs("traceID", t.TraceID, "from", s.serverName)
+	md := metadata.Pairs("traceID", t.TraceID, "fromName", s.serverName)
 	ctx := context.Background()
 	ctx = metadata.NewContext(ctx, md)
 

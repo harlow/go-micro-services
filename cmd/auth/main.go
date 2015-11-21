@@ -35,7 +35,7 @@ type authServer struct {
 func (s *authServer) VerifyToken(ctx context.Context, args *auth.Args) (*auth.Customer, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
-	fromName := strings.Join(md["traceID"], ",")
+	fromName := strings.Join(md["fromName"], ",")
 
 	t := trace.Tracer{TraceID: traceID}
 	t.In(s.serverName, fromName)

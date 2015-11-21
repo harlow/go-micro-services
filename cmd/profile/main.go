@@ -34,7 +34,7 @@ type profileServer struct {
 func (s *profileServer) GetHotels(ctx context.Context, args *profile.Args) (*profile.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
-	fromName := strings.Join(md["traceID"], ",")
+	fromName := strings.Join(md["fromName"], ",")
 
 	t := trace.Tracer{TraceID: traceID}
 	t.In(s.serverName, fromName)
