@@ -9,7 +9,6 @@ import (
 	_ "net/http/pprof"
 	"time"
 
-	"github.com/harlow/go-micro-services/proto/auth"
 	"github.com/harlow/go-micro-services/proto/geo"
 	"github.com/harlow/go-micro-services/proto/profile"
 	"github.com/harlow/go-micro-services/proto/rate"
@@ -173,8 +172,7 @@ func main() {
 	flag.Parse()
 
 	server := newServer(geoAddr, profileAddr, rateAddr)
-	authClient := auth.NewAuthClient(mustDial(authAddr))
-	authHandler := NewAuthHandler(authClient)
+	authHandler := NewAuthHandler(authAddr)
 	requesHandler := http.HandlerFunc(server.requestHandler)
 	http.Handle("/", authHandler(requesHandler))
 	log.Fatal(http.ListenAndServe(":"+*port, nil))

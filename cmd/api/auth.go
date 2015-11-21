@@ -10,9 +10,11 @@ import (
   "google.golang.org/grpc/metadata"
 )
 
-func NewAuthHandler(client auth.AuthClient) func(http.Handler) http.Handler {
+func NewAuthHandler(authAddr *string) func(http.Handler) http.Handler {
+  authClient := auth.NewAuthClient(mustDial(authAddr))
+
   return func(handler http.Handler) http.Handler {
-    return authMiddleware{handler, client}
+    return authMiddleware{handler, authClient}
   }
 }
 
