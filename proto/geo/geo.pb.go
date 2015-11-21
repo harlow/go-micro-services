@@ -16,6 +16,8 @@ It has these top-level messages:
 package geo
 
 import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
 
 import (
 	context "golang.org/x/net/context"
@@ -23,11 +25,9 @@ import (
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
 
 // A latitude-longitude bounding box, represented as two diagonally opposite
 // points "lo" and "hi".
@@ -36,9 +36,10 @@ type Rectangle struct {
 	Hi *Point `protobuf:"bytes,3,opt,name=hi" json:"hi,omitempty"`
 }
 
-func (m *Rectangle) Reset()         { *m = Rectangle{} }
-func (m *Rectangle) String() string { return proto.CompactTextString(m) }
-func (*Rectangle) ProtoMessage()    {}
+func (m *Rectangle) Reset()                    { *m = Rectangle{} }
+func (m *Rectangle) String() string            { return proto.CompactTextString(m) }
+func (*Rectangle) ProtoMessage()               {}
+func (*Rectangle) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 func (m *Rectangle) GetLo() *Point {
 	if m != nil {
@@ -63,17 +64,29 @@ type Point struct {
 	Longitude int32 `protobuf:"varint,2,opt,name=longitude" json:"longitude,omitempty"`
 }
 
-func (m *Point) Reset()         { *m = Point{} }
-func (m *Point) String() string { return proto.CompactTextString(m) }
-func (*Point) ProtoMessage()    {}
+func (m *Point) Reset()                    { *m = Point{} }
+func (m *Point) String() string            { return proto.CompactTextString(m) }
+func (*Point) ProtoMessage()               {}
+func (*Point) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
 type Reply struct {
 	HotelIds []int32 `protobuf:"varint,1,rep,name=hotelIds" json:"hotelIds,omitempty"`
 }
 
-func (m *Reply) Reset()         { *m = Reply{} }
-func (m *Reply) String() string { return proto.CompactTextString(m) }
-func (*Reply) ProtoMessage()    {}
+func (m *Reply) Reset()                    { *m = Reply{} }
+func (m *Reply) String() string            { return proto.CompactTextString(m) }
+func (*Reply) ProtoMessage()               {}
+func (*Reply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func init() {
+	proto.RegisterType((*Rectangle)(nil), "geo.Rectangle")
+	proto.RegisterType((*Point)(nil), "geo.Point")
+	proto.RegisterType((*Reply)(nil), "geo.Reply")
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
 
 // Client API for Geo service
 
@@ -110,9 +123,9 @@ func RegisterGeoServer(s *grpc.Server, srv GeoServer) {
 	s.RegisterService(&_Geo_serviceDesc, srv)
 }
 
-func _Geo_BoundedBox_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
+func _Geo_BoundedBox_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
 	in := new(Rectangle)
-	if err := codec.Unmarshal(buf, in); err != nil {
+	if err := dec(in); err != nil {
 		return nil, err
 	}
 	out, err := srv.(GeoServer).BoundedBox(ctx, in)
@@ -132,4 +145,20 @@ var _Geo_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams: []grpc.StreamDesc{},
+}
+
+var fileDescriptor0 = []byte{
+	// 182 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0x12, 0x2e, 0x28, 0xca, 0x2f,
+	0xc9, 0xd7, 0x4f, 0x4f, 0x05, 0x63, 0x3d, 0x30, 0x4f, 0x88, 0x19, 0xc8, 0x54, 0xb2, 0xe6, 0xe2,
+	0x0c, 0x4a, 0x4d, 0x2e, 0x49, 0xcc, 0x4b, 0xcf, 0x49, 0x15, 0x12, 0xe3, 0x62, 0xca, 0xc9, 0x97,
+	0x60, 0x52, 0x60, 0xd4, 0xe0, 0x36, 0xe2, 0xd2, 0x03, 0xa9, 0x0c, 0xc8, 0xcf, 0xcc, 0x2b, 0x01,
+	0x89, 0x67, 0x64, 0x4a, 0x30, 0xa3, 0x8b, 0x2b, 0xe9, 0x70, 0xb1, 0x42, 0x14, 0x08, 0x70, 0x71,
+	0xe4, 0x24, 0x96, 0x64, 0x96, 0x94, 0xa6, 0xa4, 0x4a, 0x30, 0x02, 0x95, 0xb1, 0x0a, 0x09, 0x72,
+	0x71, 0xe6, 0xe4, 0xe7, 0xa5, 0x43, 0x84, 0x40, 0x26, 0xb2, 0x2a, 0x49, 0x72, 0xb1, 0x06, 0xa5,
+	0x16, 0xe4, 0x54, 0x82, 0x54, 0x67, 0xe4, 0x97, 0xa4, 0xe6, 0x78, 0xa6, 0x14, 0x03, 0x55, 0x33,
+	0x6b, 0xb0, 0x1a, 0xe9, 0x73, 0x31, 0xbb, 0xa7, 0xe6, 0x0b, 0x69, 0x70, 0x71, 0x39, 0xe5, 0x97,
+	0xe6, 0xa5, 0xa4, 0xa6, 0x38, 0xe5, 0x57, 0x08, 0xf1, 0x81, 0x6d, 0x82, 0xbb, 0x4e, 0x8a, 0x0b,
+	0xca, 0x07, 0x1a, 0x91, 0xc4, 0x06, 0xf6, 0x82, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x0b, 0xde,
+	0x71, 0xb9, 0xd9, 0x00, 0x00, 0x00,
 }

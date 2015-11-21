@@ -17,6 +17,8 @@ It has these top-level messages:
 package rate
 
 import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
 
 import (
 	context "golang.org/x/net/context"
@@ -24,11 +26,9 @@ import (
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
 
 type Args struct {
 	HotelIds []int32 `protobuf:"varint,1,rep,name=hotelIds" json:"hotelIds,omitempty"`
@@ -36,17 +36,19 @@ type Args struct {
 	OutDate  string  `protobuf:"bytes,3,opt,name=outDate" json:"outDate,omitempty"`
 }
 
-func (m *Args) Reset()         { *m = Args{} }
-func (m *Args) String() string { return proto.CompactTextString(m) }
-func (*Args) ProtoMessage()    {}
+func (m *Args) Reset()                    { *m = Args{} }
+func (m *Args) String() string            { return proto.CompactTextString(m) }
+func (*Args) ProtoMessage()               {}
+func (*Args) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 type Reply struct {
 	RatePlans []*RatePlan `protobuf:"bytes,1,rep,name=ratePlans" json:"ratePlans,omitempty"`
 }
 
-func (m *Reply) Reset()         { *m = Reply{} }
-func (m *Reply) String() string { return proto.CompactTextString(m) }
-func (*Reply) ProtoMessage()    {}
+func (m *Reply) Reset()                    { *m = Reply{} }
+func (m *Reply) String() string            { return proto.CompactTextString(m) }
+func (*Reply) ProtoMessage()               {}
+func (*Reply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
 func (m *Reply) GetRatePlans() []*RatePlan {
 	if m != nil {
@@ -63,9 +65,10 @@ type RatePlan struct {
 	RoomType *RoomType `protobuf:"bytes,5,opt,name=roomType" json:"roomType,omitempty"`
 }
 
-func (m *RatePlan) Reset()         { *m = RatePlan{} }
-func (m *RatePlan) String() string { return proto.CompactTextString(m) }
-func (*RatePlan) ProtoMessage()    {}
+func (m *RatePlan) Reset()                    { *m = RatePlan{} }
+func (m *RatePlan) String() string            { return proto.CompactTextString(m) }
+func (*RatePlan) ProtoMessage()               {}
+func (*RatePlan) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
 func (m *RatePlan) GetRoomType() *RoomType {
 	if m != nil {
@@ -77,15 +80,27 @@ func (m *RatePlan) GetRoomType() *RoomType {
 type RoomType struct {
 	BookableRate       float64 `protobuf:"fixed64,1,opt,name=bookableRate" json:"bookableRate,omitempty"`
 	TotalRate          float64 `protobuf:"fixed64,2,opt,name=totalRate" json:"totalRate,omitempty"`
-	TotalRateInclusive float64 `protobuf:"fixed64,3,opt" json:"TotalRateInclusive,omitempty"`
+	TotalRateInclusive float64 `protobuf:"fixed64,3,opt,name=TotalRateInclusive" json:"TotalRateInclusive,omitempty"`
 	Code               string  `protobuf:"bytes,4,opt,name=code" json:"code,omitempty"`
 	Currency           string  `protobuf:"bytes,5,opt,name=currency" json:"currency,omitempty"`
 	RoomDescription    string  `protobuf:"bytes,6,opt,name=roomDescription" json:"roomDescription,omitempty"`
 }
 
-func (m *RoomType) Reset()         { *m = RoomType{} }
-func (m *RoomType) String() string { return proto.CompactTextString(m) }
-func (*RoomType) ProtoMessage()    {}
+func (m *RoomType) Reset()                    { *m = RoomType{} }
+func (m *RoomType) String() string            { return proto.CompactTextString(m) }
+func (*RoomType) ProtoMessage()               {}
+func (*RoomType) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func init() {
+	proto.RegisterType((*Args)(nil), "rate.Args")
+	proto.RegisterType((*Reply)(nil), "rate.Reply")
+	proto.RegisterType((*RatePlan)(nil), "rate.RatePlan")
+	proto.RegisterType((*RoomType)(nil), "rate.RoomType")
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
 
 // Client API for Rate service
 
@@ -122,9 +137,9 @@ func RegisterRateServer(s *grpc.Server, srv RateServer) {
 	s.RegisterService(&_Rate_serviceDesc, srv)
 }
 
-func _Rate_GetRates_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
+func _Rate_GetRates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
 	in := new(Args)
-	if err := codec.Unmarshal(buf, in); err != nil {
+	if err := dec(in); err != nil {
 		return nil, err
 	}
 	out, err := srv.(RateServer).GetRates(ctx, in)
@@ -144,4 +159,27 @@ var _Rate_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams: []grpc.StreamDesc{},
+}
+
+var fileDescriptor0 = []byte{
+	// 290 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x5c, 0x91, 0xc1, 0x4a, 0xc3, 0x40,
+	0x10, 0x86, 0x59, 0x9b, 0xc6, 0x64, 0x5a, 0x5a, 0x1d, 0x14, 0x43, 0x4f, 0x31, 0x5e, 0x8a, 0x42,
+	0x85, 0x7a, 0xf2, 0x28, 0x14, 0xa4, 0x37, 0x09, 0x7d, 0x81, 0x24, 0x5d, 0x34, 0xb8, 0x66, 0xc2,
+	0x66, 0x23, 0xe4, 0x0d, 0x7c, 0x6c, 0x77, 0x36, 0x89, 0x05, 0x2f, 0x61, 0xf6, 0xcf, 0x64, 0xbe,
+	0x2f, 0xb3, 0x70, 0x5d, 0x6b, 0x32, 0xf4, 0xa8, 0x33, 0x23, 0xdd, 0x63, 0xe3, 0xce, 0xe8, 0x71,
+	0x9d, 0x3c, 0x83, 0xf7, 0xa2, 0xdf, 0x1b, 0xbc, 0x80, 0xe0, 0x83, 0x8c, 0x54, 0xfb, 0x63, 0x13,
+	0x89, 0x78, 0xb2, 0x9e, 0xe2, 0x02, 0xfc, 0xb2, 0xda, 0xd9, 0x9e, 0xe8, 0x2c, 0x16, 0xeb, 0x10,
+	0x97, 0x70, 0x4e, 0xad, 0x71, 0xc1, 0x84, 0x83, 0xe4, 0x1e, 0xa6, 0xa9, 0xac, 0x55, 0x87, 0xb7,
+	0x10, 0xf2, 0xac, 0x37, 0x95, 0x55, 0xfd, 0xc7, 0xb3, 0xed, 0x62, 0xe3, 0x48, 0xe9, 0x10, 0x27,
+	0x0a, 0x82, 0xb1, 0xe6, 0x41, 0x03, 0xca, 0x36, 0x0b, 0x4b, 0x9a, 0x83, 0x57, 0xd0, 0x71, 0xe4,
+	0x9c, 0xb8, 0x93, 0xff, 0x5c, 0xcf, 0x05, 0x31, 0x04, 0x9a, 0xe8, 0xeb, 0xd0, 0xd5, 0x32, 0x9a,
+	0xda, 0xe4, 0x44, 0x1b, 0xd2, 0xe4, 0x47, 0x58, 0xdc, 0x70, 0xc0, 0x2b, 0x98, 0xe7, 0x44, 0x9f,
+	0x59, 0xae, 0x24, 0x2b, 0x38, 0xa6, 0xc0, 0x4b, 0x08, 0x0d, 0x99, 0x4c, 0xa5, 0xe3, 0x0f, 0x0a,
+	0x5c, 0x01, 0x1e, 0xc6, 0x68, 0x5f, 0x15, 0xaa, 0x6d, 0xca, 0xef, 0x5e, 0x42, 0xfc, 0x29, 0xf6,
+	0x06, 0x76, 0x59, 0x45, 0xab, 0xb5, 0xac, 0x8a, 0xce, 0x19, 0x84, 0x78, 0x03, 0x4b, 0x76, 0xda,
+	0xc9, 0xa6, 0xd0, 0x65, 0x6d, 0x4a, 0xaa, 0x22, 0x9f, 0x5f, 0x6c, 0x1f, 0xc0, 0xe3, 0x79, 0x78,
+	0x07, 0xc1, 0xab, 0x34, 0x5c, 0x36, 0x08, 0xbd, 0x2e, 0xef, 0x7d, 0x35, 0x1b, 0xd4, 0x79, 0x91,
+	0xb9, 0xef, 0x6e, 0xe6, 0xe9, 0x37, 0x00, 0x00, 0xff, 0xff, 0xd5, 0x71, 0x87, 0x23, 0xb2, 0x01,
+	0x00, 0x00,
 }

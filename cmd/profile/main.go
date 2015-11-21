@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/harlow/go-micro-services/data"
@@ -32,9 +33,12 @@ type profileServer struct {
 // VerifyToken finds a customer by authentication token.
 func (s *profileServer) GetHotels(ctx context.Context, args *profile.Args) (*profile.Reply, error) {
 	md, _ := metadata.FromContext(ctx)
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(s.serverName, md["from"])
-	defer t.Out(md["from"], s.serverName, time.Now())
+	traceID := strings.Join(md["traceID"], ",")
+	fromName := strings.Join(md["traceID"], ",")
+
+	t := trace.Tracer{TraceID: traceID}
+	t.In(s.serverName, fromName)
+	defer t.Out(fromName, s.serverName, time.Now())
 
 	reply := new(profile.Reply)
 	for _, i := range args.HotelIds {

@@ -15,6 +15,8 @@ It has these top-level messages:
 package auth
 
 import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
 
 import (
 	context "golang.org/x/net/context"
@@ -22,28 +24,37 @@ import (
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
 
 type Args struct {
 	AuthToken string `protobuf:"bytes,1,opt,name=authToken" json:"authToken,omitempty"`
 }
 
-func (m *Args) Reset()         { *m = Args{} }
-func (m *Args) String() string { return proto.CompactTextString(m) }
-func (*Args) ProtoMessage()    {}
+func (m *Args) Reset()                    { *m = Args{} }
+func (m *Args) String() string            { return proto.CompactTextString(m) }
+func (*Args) ProtoMessage()               {}
+func (*Args) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 type Customer struct {
 	Id        int32  `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
 	AuthToken string `protobuf:"bytes,2,opt,name=authToken" json:"authToken,omitempty"`
 }
 
-func (m *Customer) Reset()         { *m = Customer{} }
-func (m *Customer) String() string { return proto.CompactTextString(m) }
-func (*Customer) ProtoMessage()    {}
+func (m *Customer) Reset()                    { *m = Customer{} }
+func (m *Customer) String() string            { return proto.CompactTextString(m) }
+func (*Customer) ProtoMessage()               {}
+func (*Customer) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func init() {
+	proto.RegisterType((*Args)(nil), "auth.Args")
+	proto.RegisterType((*Customer)(nil), "auth.Customer")
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
 
 // Client API for Auth service
 
@@ -78,9 +89,9 @@ func RegisterAuthServer(s *grpc.Server, srv AuthServer) {
 	s.RegisterService(&_Auth_serviceDesc, srv)
 }
 
-func _Auth_VerifyToken_Handler(srv interface{}, ctx context.Context, codec grpc.Codec, buf []byte) (interface{}, error) {
+func _Auth_VerifyToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
 	in := new(Args)
-	if err := codec.Unmarshal(buf, in); err != nil {
+	if err := dec(in); err != nil {
 		return nil, err
 	}
 	out, err := srv.(AuthServer).VerifyToken(ctx, in)
@@ -100,4 +111,17 @@ var _Auth_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams: []grpc.StreamDesc{},
+}
+
+var fileDescriptor0 = []byte{
+	// 133 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0x12, 0x2d, 0x28, 0xca, 0x2f,
+	0xc9, 0xd7, 0x4f, 0x2c, 0x2d, 0xc9, 0x00, 0x13, 0x7a, 0x60, 0xbe, 0x10, 0x0b, 0x88, 0xad, 0x24,
+	0xc9, 0xc5, 0xe2, 0x58, 0x94, 0x5e, 0x2c, 0x24, 0xc8, 0xc5, 0x09, 0xe2, 0x87, 0xe4, 0x67, 0xa7,
+	0xe6, 0x49, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x2a, 0x69, 0x72, 0x71, 0x38, 0x97, 0x16, 0x97, 0xe4,
+	0xe7, 0xa6, 0x16, 0x09, 0x71, 0x71, 0x31, 0x65, 0xa6, 0x80, 0xc5, 0x59, 0x51, 0x95, 0x32, 0x81,
+	0x94, 0x1a, 0x19, 0x03, 0x4d, 0x01, 0x0a, 0x09, 0x69, 0x73, 0x71, 0x87, 0xa5, 0x16, 0x65, 0xa6,
+	0x55, 0x82, 0x25, 0x85, 0xb8, 0xf4, 0xc0, 0xf6, 0x81, 0x2c, 0x90, 0xe2, 0x83, 0xb0, 0x61, 0x26,
+	0x2a, 0x31, 0x24, 0xb1, 0x81, 0xdd, 0x61, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x10, 0x86, 0xe4,
+	0x21, 0xa0, 0x00, 0x00, 0x00,
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/harlow/go-micro-services/data"
@@ -33,10 +34,12 @@ type authServer struct {
 // VerifyToken finds a customer by authentication token.
 func (s *authServer) VerifyToken(ctx context.Context, args *auth.Args) (*auth.Customer, error) {
 	md, _ := metadata.FromContext(ctx)
+	traceID := strings.Join(md["traceID"], ",")
+	fromName := strings.Join(md["traceID"], ",")
 
-	t := trace.Tracer{TraceID: md["traceID"]}
-	t.In(s.serverName, md["fromName"])
-	defer t.Out(md["fromName"], s.serverName, time.Now())
+	t := trace.Tracer{TraceID: traceID}
+	t.In(s.serverName, fromName)
+	defer t.Out(fromName, s.serverName, time.Now())
 
 	customer := s.customers[args.AuthToken]
 	if customer == nil {
