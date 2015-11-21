@@ -24,6 +24,16 @@ type inventory struct {
 	RatePlans []*rate.RatePlan `json:"ratePlans"`
 }
 
+type profileResults struct {
+	hotels []*profile.Hotel
+	err    error
+}
+
+type rateResults struct {
+	ratePlans []*rate.RatePlan
+	err       error
+}
+
 // newServer returns a server with initialization data loaded.
 func newServer(geoAddr, profileAddr, rateAddr *string) apiServer {
 	return apiServer{
@@ -115,11 +125,6 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type rateResults struct {
-	ratePlans []*rate.RatePlan
-	err       error
-}
-
 func (s apiServer) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) chan rateResults {
 	ch := make(chan rateResults, 1)
 
@@ -137,11 +142,6 @@ func (s apiServer) getRatePlans(ctx context.Context, hotelIDs []int32, inDate st
 	}()
 
 	return ch
-}
-
-type profileResults struct {
-	hotels []*profile.Hotel
-	err    error
 }
 
 func (s apiServer) getProfiles(ctx context.Context, hotelIDs []int32) chan profileResults {

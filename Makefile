@@ -6,6 +6,9 @@ proto:
 		echo compiled: $$f; \
 	done
 
+lint:
+	./lint.sh
+
 build:
 	./build.sh
 
