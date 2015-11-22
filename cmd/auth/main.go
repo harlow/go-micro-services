@@ -46,8 +46,8 @@ func (s *authServer) VerifyToken(ctx context.Context, req *auth.Request) (*auth.
 	traceID := strings.Join(md["traceID"], ",")
 
 	if tr, ok := trace.FromContext(ctx); ok {
-  	tr.LazyPrintf("traceID %s", traceID)
-  }
+		tr.LazyPrintf("traceID %s", traceID)
+	}
 
 	customer := s.customers[req.AuthToken]
 	if customer == nil {

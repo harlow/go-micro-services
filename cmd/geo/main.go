@@ -40,10 +40,10 @@ func (s *geoServer) BoundedBox(ctx context.Context, req *geo.Request) (*geo.Resu
 	traceID := strings.Join(md["traceID"], ",")
 
 	if tr, ok := trace.FromContext(ctx); ok {
-  	tr.LazyPrintf("traceID %s", traceID)
-  }
+		tr.LazyPrintf("traceID %s", traceID)
+	}
 
-  res := new(geo.Result)
+	res := new(geo.Result)
 	for _, loc := range s.locations {
 		if inRange(loc.Point, req) {
 			res.HotelIds = append(res.HotelIds, loc.HotelID)

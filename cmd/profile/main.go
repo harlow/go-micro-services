@@ -34,8 +34,8 @@ func (s *profileServer) GetProfiles(ctx context.Context, req *profile.Request) (
 	traceID := strings.Join(md["traceID"], ",")
 
 	if tr, ok := trace.FromContext(ctx); ok {
-  	tr.LazyPrintf("traceID %s", traceID)
-  }
+		tr.LazyPrintf("traceID %s", traceID)
+	}
 
 	res := new(profile.Result)
 	for _, i := range req.HotelIds {

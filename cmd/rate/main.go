@@ -40,8 +40,8 @@ func (s *rateServer) GetRates(ctx context.Context, req *rate.Request) (*rate.Res
 	traceID := strings.Join(md["traceID"], ",")
 
 	if tr, ok := trace.FromContext(ctx); ok {
-  	tr.LazyPrintf("traceID %s", traceID)
-  }
+		tr.LazyPrintf("traceID %s", traceID)
+	}
 
 	res := new(rate.Result)
 	for _, hotelID := range req.HotelIds {
