@@ -93,7 +93,7 @@ The JSON response:
 
 ### Tracing Information
 
-<img width="885" alt="screen shot 2015-11-22 at 2 12 59 pm" src="https://cloud.githubusercontent.com/assets/739782/11326635/33441f78-9123-11e5-81a1-53fe173f950a.png">
+<img width="885" alt="apitrace" src="https://cloud.githubusercontent.com/assets/739782/11326691/7ffb5a92-9124-11e5-8818-1d5b3c0b1e51.png">
 
 gRPC tracing information:
 
