@@ -7,19 +7,22 @@ import (
 	"log"
 	"net/http"
 	_ "net/http/pprof"
-	"time"
 
 	"github.com/harlow/go-micro-services/proto/auth"
 	"github.com/harlow/go-micro-services/proto/geo"
 	"github.com/harlow/go-micro-services/proto/profile"
 	"github.com/harlow/go-micro-services/proto/rate"
-	"github.com/harlow/go-micro-services/trace"
 
 	"github.com/harlow/authtoken"
 	"golang.org/x/net/context"
+	"golang.org/x/net/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
+
+// "github.com/nu7hatch/gouuid"
+// 	traceID, _ := uuid.NewV4()
+// 	traceID.String()
 
 type inventory struct {
 	Hotels    []*profile.Hotel `json:"hotels"`
@@ -56,13 +59,16 @@ func mustDial(addr *string) *grpc.ClientConn {
 }
 
 func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
-	t := trace.NewTracer()
-	t.In("www", s.serverName)
-	defer t.Out(s.serverName, "www", time.Now())
+	// tracing
+	tr := trace.New(s.serverName, "URL PATH!")
+	defer tr.Finish()
 
-	// context and metadata
-	md := metadata.Pairs("traceID", t.TraceID, "fromName", s.serverName)
+	// metadata
+	md := metadata.Pairs("traceID", "TRACEID", "fromName", s.serverName)
+
+	// context
 	ctx := context.Background()
+	ctx = trace.NewContext(ctx, tr)
 	ctx = metadata.NewContext(ctx, md)
 
 	// grab auth token from request
@@ -164,6 +170,13 @@ type profileResults struct {
 }
 
 func main() {
+	// trace library patched for demo purposes.
+	// https://github.com/golang/net/blob/master/trace/trace.go#L94
+	trace.AuthRequest = func(req *http.Request) (any, sensitive bool) {
+		return true, true
+	}
+
+	// fetch service addresses/ports
 	var (
 		port        = flag.String("port", "8080", "The server port")
 		authAddr    = flag.String("auth", "auth:8080", "The Auth server address in the format of host:port")
@@ -173,6 +186,7 @@ func main() {
 	)
 	flag.Parse()
 
+	// create new server
 	s := newServer(authAddr, geoAddr, profileAddr, rateAddr)
 	http.HandleFunc("/", s.requestHandler)
 	log.Fatal(http.ListenAndServe(":"+*port, nil))

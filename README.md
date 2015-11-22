@@ -83,13 +83,22 @@ The JSON response:
             "roomType": {
                 "bookableRate": 109,
                 "totalRate": 109,
-                "TotalRateInclusive": 123.17,
+                "totalRateInclusive": 123.17,
                 "code": "KNG"
             }
         }
     ]
 }
 ```
+
+### Tracing Information
+
+<img width="885" alt="screen shot 2015-11-22 at 2 12 59 pm" src="https://cloud.githubusercontent.com/assets/739782/11326635/33441f78-9123-11e5-81a1-53fe173f950a.png">
+
+gRPC tracing information:
+
+    http://docker.dev:8080/debug/requests
+    http://docker.dev:8080/debug/events
 
 ### Credits
 
@@ -100,7 +109,6 @@ Thanks to all the [contributors][6]. This codebase was heavily inspired by the f
 * [go-kit][5]
 
 [1]: http://www.grpc.io/
-[2]: https://github.com/ddollar/foreman
 [3]: https://speakerdeck.com/mattheath/scaling-microservices-in-go-high-load-strategy-2015
 [4]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
 [5]: https://github.com/go-kit/kit

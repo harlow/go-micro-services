@@ -7,20 +7,19 @@ import (
 	"log"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/proto/rate"
-	"github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
+	"golang.org/x/net/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
 // newServer returns a server with initialization data loaded.
 func newServer() *rateServer {
-	s := &rateServer{serverName: "service.rate"}
+	s := new(rateServer)
 	s.loadRates(data.MustAsset("data/rates.json"))
 	return s
 }
@@ -32,30 +31,28 @@ type stay struct {
 }
 
 type rateServer struct {
-	serverName string
-	rates      map[stay]*rate.RatePlan
+	rates map[stay]*rate.RatePlan
 }
 
 // GetRates gets rates for hotels for specific date range.
-func (s *rateServer) GetRates(ctx context.Context, args *rate.Request) (*rate.Result, error) {
+func (s *rateServer) GetRates(ctx context.Context, req *rate.Request) (*rate.Result, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
-	fromName := strings.Join(md["fromName"], ",")
 
-	t := trace.Tracer{TraceID: traceID}
-	t.In(s.serverName, fromName)
-	defer t.Out(fromName, s.serverName, time.Now())
+	if tr, ok := trace.FromContext(ctx); ok {
+  	tr.LazyPrintf("traceID %s", traceID)
+  }
 
-	reply := new(rate.Result)
-	for _, hotelID := range args.HotelIds {
-		k := stay{hotelID, args.InDate, args.OutDate}
+	res := new(rate.Result)
+	for _, hotelID := range req.HotelIds {
+		k := stay{hotelID, req.InDate, req.OutDate}
 		if s.rates[k] == nil {
 			continue
 		}
-		reply.RatePlans = append(reply.RatePlans, s.rates[k])
+		res.RatePlans = append(res.RatePlans, s.rates[k])
 	}
 
-	return reply, nil
+	return res, nil
 }
 
 // loadRates loads rate codes from JSON file.

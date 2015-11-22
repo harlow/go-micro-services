@@ -8,20 +8,19 @@ import (
 	"math"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/proto/geo"
-	"github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
+	"golang.org/x/net/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
 // newServer returns a server with initialization data loaded.
 func newServer() *geoServer {
-	s := &geoServer{serverName: "service.geo"}
+	s := new(geoServer)
 	s.loadLocations(data.MustAsset("data/locations.json"))
 	return s
 }
@@ -32,28 +31,26 @@ type location struct {
 }
 
 type geoServer struct {
-	serverName string
-	locations  []location
+	locations []location
 }
 
 // BoundedBox returns all hotels contained within a given rectangle.
-func (s *geoServer) BoundedBox(ctx context.Context, rect *geo.Request) (*geo.Result, error) {
+func (s *geoServer) BoundedBox(ctx context.Context, req *geo.Request) (*geo.Result, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
-	fromName := strings.Join(md["fromName"], ",")
 
-	t := trace.Tracer{TraceID: traceID}
-	t.In(s.serverName, fromName)
-	defer t.Out(fromName, s.serverName, time.Now())
+	if tr, ok := trace.FromContext(ctx); ok {
+  	tr.LazyPrintf("traceID %s", traceID)
+  }
 
-	reply := new(geo.Result)
+  res := new(geo.Result)
 	for _, loc := range s.locations {
-		if inRange(loc.Point, rect) {
-			reply.HotelIds = append(reply.HotelIds, loc.HotelID)
+		if inRange(loc.Point, req) {
+			res.HotelIds = append(res.HotelIds, loc.HotelID)
 		}
 	}
 
-	return reply, nil
+	return res, nil
 }
 
 // loadLocations loads hotel locations from a JSON file.
@@ -64,11 +61,11 @@ func (s *geoServer) loadLocations(file []byte) {
 }
 
 // inRange calculates if a point appears within a BoundingBox.
-func inRange(point *geo.Point, rect *geo.Request) bool {
-	left := math.Min(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
-	right := math.Max(float64(rect.Lo.Longitude), float64(rect.Hi.Longitude))
-	top := math.Max(float64(rect.Lo.Latitude), float64(rect.Hi.Latitude))
-	bottom := math.Min(float64(rect.Lo.Latitude), float64(rect.Hi.Latitude))
+func inRange(point *geo.Point, req *geo.Request) bool {
+	left := math.Min(float64(req.Lo.Longitude), float64(req.Hi.Longitude))
+	right := math.Max(float64(req.Lo.Longitude), float64(req.Hi.Longitude))
+	top := math.Max(float64(req.Lo.Latitude), float64(req.Hi.Latitude))
+	bottom := math.Min(float64(req.Lo.Latitude), float64(req.Hi.Latitude))
 
 	if float64(point.Longitude) >= left &&
 		float64(point.Longitude) <= right &&

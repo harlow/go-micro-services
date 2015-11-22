@@ -7,45 +7,42 @@ import (
 	"log"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/proto/profile"
-	"github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
+	"golang.org/x/net/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
 // newServer returns a server with initialization data loaded.
 func newServer() *profileServer {
-	s := &profileServer{serverName: "service.profile"}
+	s := new(profileServer)
 	s.loadProfiles(data.MustAsset("data/profiles.json"))
 	return s
 }
 
 type profileServer struct {
-	serverName string
-	hotels     map[int32]*profile.Hotel
+	hotels map[int32]*profile.Hotel
 }
 
 // VerifyToken finds a customer by authentication token.
-func (s *profileServer) GetProfiles(ctx context.Context, args *profile.Request) (*profile.Result, error) {
+func (s *profileServer) GetProfiles(ctx context.Context, req *profile.Request) (*profile.Result, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
-	fromName := strings.Join(md["fromName"], ",")
 
-	t := trace.Tracer{TraceID: traceID}
-	t.In(s.serverName, fromName)
-	defer t.Out(fromName, s.serverName, time.Now())
+	if tr, ok := trace.FromContext(ctx); ok {
+  	tr.LazyPrintf("traceID %s", traceID)
+  }
 
-	reply := new(profile.Result)
-	for _, i := range args.HotelIds {
-		reply.Hotels = append(reply.Hotels, s.hotels[i])
+	res := new(profile.Result)
+	for _, i := range req.HotelIds {
+		res.Hotels = append(res.Hotels, s.hotels[i])
 	}
 
-	return reply, nil
+	return res, nil
 }
 
 // loadProfiles loads hotel profiles from a JSON file.

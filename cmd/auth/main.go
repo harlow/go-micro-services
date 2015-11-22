@@ -8,40 +8,48 @@ import (
 	"log"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/proto/auth"
-	"github.com/harlow/go-micro-services/trace"
 
 	"golang.org/x/net/context"
+	"golang.org/x/net/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
 // newServer returns a server with initialization data loaded.
 func newServer() *authServer {
-	s := &authServer{serverName: "service.auth"}
+	s := new(authServer)
 	s.loadCustomers(data.MustAsset("data/customers.json"))
 	return s
 }
 
+func logRequest(ctx context.Context) {
+	md, _ := metadata.FromContext(ctx)
+	traceID := strings.Join(md["traceID"], ",")
+
+	if tr, ok := trace.FromContext(ctx); ok {
+		tr.LazyPrintf("traceID %s", traceID)
+	}
+
+	log.Printf("traceID %s", traceID)
+}
+
 type authServer struct {
-	serverName string
-	customers  map[string]*auth.Customer
+	customers map[string]*auth.Customer
 }
 
 // VerifyToken finds a customer by authentication token.
-func (s *authServer) VerifyToken(ctx context.Context, args *auth.Request) (*auth.Result, error) {
+func (s *authServer) VerifyToken(ctx context.Context, req *auth.Request) (*auth.Result, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
-	fromName := strings.Join(md["fromName"], ",")
 
-	t := trace.Tracer{TraceID: traceID}
-	t.In(s.serverName, fromName)
-	defer t.Out(fromName, s.serverName, time.Now())
+	if tr, ok := trace.FromContext(ctx); ok {
+  	tr.LazyPrintf("traceID %s", traceID)
+  }
 
-	customer := s.customers[args.AuthToken]
+	customer := s.customers[req.AuthToken]
 	if customer == nil {
 		return &auth.Result{}, errors.New("Invalid Token")
 	}
