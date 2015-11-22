@@ -5,7 +5,7 @@ leverage [gRPC][1] for inter-service communication.
 
 ![new_sequence](https://cloud.githubusercontent.com/assets/739782/7439604/d1f324c2-f036-11e4-958a-6f6913049946.png)
 
-The API Endpoint accepts HTTP requests on port `5000` and then spawns a number of RPC requests to the backend services.
+The API Endpoint accepts HTTP requests at `micro.demo:8080` and then spawns a number of RPC requests to the backend services.
 
 _Note:_ Data for each of the services is stored in JSON flat files under the `/data/` directory. In reality each of the services could choose their own specialty datastore. The Geo service for example could use PostGis or any other database specializing in geospacial queries.
 
@@ -25,34 +25,34 @@ Clone the repository:
 
 If changes are made to the Protocol Buffers a Make file can be used to regenerate:
 
-    $ make -s
+    $ make proto
 
 ### Bootstrap the services
 
 To make the demo as straigforward as possible; Docker is used to run all the services. In a production environment each of the services would be run (and scaled) independently.
 
-    make build
-    make run
+    $ make build
+    $ make run
 
-Grab the Docker IP address:
+Grab the Docker IP Address:
 
     docker-machine ls
 
-_Note: in the examples below `docker.dev` is aliased to the Docker IP address._
+_Note: in the examples below `http://micro.demo` is aliased to the Docker IP Address._
 
 Curl the endpoint with an invalid auth token:
 
-    $ curl http://docker.dev:8080 -H "Authorization: Bearer INVALID_TOKEN"
+    $ curl http://micro.demo:8080 -H "Authorization: Bearer INVALID_TOKEN"
     Unauthorized
 
 Curl the endpoint without checkin or checkout dates:
 
-    $ curl "http://docker.dev:8080?inDate=2015-04-09" -H "Authorization: Bearer VALID_TOKEN"
+    $ curl "http://micro.demo:8080?inDate=2015-04-09" -H "Authorization: Bearer VALID_TOKEN"
     Please specify outDate
 
 Curl the API endpoint with a valid auth token:
 
-    $ curl "http://docker.dev:8080?inDate=2015-04-09&outDate=2015-04-10" -H "Authorization: Bearer VALID_TOKEN"
+    $ curl "http://micro.demo:8080?inDate=2015-04-09&outDate=2015-04-10" -H "Authorization: Bearer VALID_TOKEN"
 
 The JSON response:
 
@@ -97,8 +97,8 @@ The JSON response:
 
 gRPC tracing information:
 
-    http://docker.dev:8080/debug/requests
-    http://docker.dev:8080/debug/events
+    http://micro.demo:8080/debug/requests
+    http://micro.demo:8080/debug/events
 
 ### Credits
 
