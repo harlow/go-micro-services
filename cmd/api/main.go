@@ -73,10 +73,7 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify token w/ auth service
-	_, err = s.VerifyToken(ctx, &auth.AuthRequest{
-		AuthToken: token,
-	})
-
+	_, err = s.VerifyToken(ctx, &auth.Request{token})
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
@@ -91,7 +88,7 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get hotels within geo box
-	geoReply, err := s.BoundedBox(ctx, &geo.GeoRequest{
+	geoRes, err := s.BoundedBox(ctx, &geo.Request{
 		Lo: &geo.Point{Latitude: 400000000, Longitude: -750000000},
 		Hi: &geo.Point{Latitude: 420000000, Longitude: -730000000},
 	})
@@ -101,8 +98,8 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make reqeusts for profiles and rates
-	profileCh := s.getProfiles(ctx, geoReply.HotelIds)
-	rateCh := s.getRatePlans(ctx, geoReply.HotelIds, inDate, outDate)
+	profileCh := s.getProfiles(ctx, geoRes.HotelIds)
+	rateCh := s.getRatePlans(ctx, geoRes.HotelIds, inDate, outDate)
 
 	// wait on profiles reply
 	profileReply := <-profileCh
@@ -136,7 +133,7 @@ func (s apiServer) getRatePlans(ctx context.Context, hotelIDs []int32, inDate st
 	ch := make(chan rateResults, 1)
 
 	go func() {
-		req := &rate.RateRequest{hotelIDs, inDate, outDate}
+		req := &rate.Request{hotelIDs, inDate, outDate}
 		res, err := s.GetRates(ctx, req)
 		ch <- rateResults{res.RatePlans, err}
 	}()
@@ -153,7 +150,7 @@ func (s apiServer) getProfiles(ctx context.Context, hotelIDs []int32) chan profi
 	ch := make(chan profileResults, 1)
 
 	go func() {
-		req := &profile.ProfileRequest{hotelIDs, "en"}
+		req := &profile.Request{hotelIDs, "en"}
 		res, err := s.GetProfiles(ctx, req)
 		ch <- profileResults{res.Hotels, err}
 	}()

@@ -31,7 +31,7 @@ type profileServer struct {
 }
 
 // VerifyToken finds a customer by authentication token.
-func (s *profileServer) GetProfiles(ctx context.Context, args *profile.ProfileRequest) (*profile.ProfileReply, error) {
+func (s *profileServer) GetProfiles(ctx context.Context, args *profile.Request) (*profile.Result, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
 	fromName := strings.Join(md["fromName"], ",")
@@ -40,7 +40,7 @@ func (s *profileServer) GetProfiles(ctx context.Context, args *profile.ProfileRe
 	t.In(s.serverName, fromName)
 	defer t.Out(fromName, s.serverName, time.Now())
 
-	reply := new(profile.ProfileReply)
+	reply := new(profile.Result)
 	for _, i := range args.HotelIds {
 		reply.Hotels = append(reply.Hotels, s.hotels[i])
 	}
@@ -69,7 +69,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
-	profile.RegisterProfileServer(grpcServer, newServer())
-	grpcServer.Serve(lis)
+	g := grpc.NewServer()
+	profile.RegisterProfileServer(g, newServer())
+	g.Serve(lis)
 }

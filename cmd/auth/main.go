@@ -32,7 +32,7 @@ type authServer struct {
 }
 
 // VerifyToken finds a customer by authentication token.
-func (s *authServer) VerifyToken(ctx context.Context, args *auth.AuthRequest) (*auth.AuthReply, error) {
+func (s *authServer) VerifyToken(ctx context.Context, args *auth.Request) (*auth.Result, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
 	fromName := strings.Join(md["fromName"], ",")
@@ -43,10 +43,10 @@ func (s *authServer) VerifyToken(ctx context.Context, args *auth.AuthRequest) (*
 
 	customer := s.customers[args.AuthToken]
 	if customer == nil {
-		return &auth.AuthReply{}, errors.New("Invalid Token")
+		return &auth.Result{}, errors.New("Invalid Token")
 	}
 
-	reply := new(auth.AuthReply)
+	reply := new(auth.Result)
 	reply.Customer = customer
 	return reply, nil
 }
@@ -74,9 +74,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-
-	s := &authServer{serverName: "service.auth"}
-	s.loadCustomers(data.MustAsset("data/customers.json"))
 
 	g := grpc.NewServer()
 	auth.RegisterAuthServer(g, newServer())

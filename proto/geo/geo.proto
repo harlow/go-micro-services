@@ -4,12 +4,12 @@ package geo;
 
 service Geo {
   // Obtains the Locations contained within the given Rectangle.
-  rpc BoundedBox(GeoRequest) returns (GeoReply);
+  rpc BoundedBox(Request) returns (Result);
 }
 
 // A latitude-longitude bounding box, represented as two diagonally opposite
 // points "lo" and "hi".
-message GeoRequest {
+message Request {
   Point lo = 2;
   Point hi = 3;
 }
@@ -23,6 +23,6 @@ message Point {
   int32 longitude = 2;
 }
 
-message GeoReply {
+message Result {
   repeated int32 hotelIds = 1;
 }

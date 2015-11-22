@@ -32,13 +32,13 @@ If changes are made to the Protocol Buffers a Make file can be used to regenerat
 To make the demo as straigforward as possible; Docker is used to run all the services. In a production environment each of the services would be run (and scaled) independently.
 
     make build
-    docker-compose up
+    make run
 
 Grab the Docker IP address:
 
     docker-machine ls
 
-_Note: in the examples below `docker.dev` is aliased to the docker IP address._
+_Note: in the examples below `docker.dev` is aliased to the Docker IP address._
 
 Curl the endpoint with an invalid auth token:
 
