@@ -14,3 +14,7 @@ build:
 
 data:
 	go-bindata -o data/bindata.go -pkg data data/*.json
+
+up:
+	docker-compose build
+	docker-compose up

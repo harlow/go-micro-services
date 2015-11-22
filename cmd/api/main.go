@@ -9,11 +9,13 @@ import (
 	_ "net/http/pprof"
 	"time"
 
+	"github.com/harlow/go-micro-services/proto/auth"
 	"github.com/harlow/go-micro-services/proto/geo"
 	"github.com/harlow/go-micro-services/proto/profile"
 	"github.com/harlow/go-micro-services/proto/rate"
 	"github.com/harlow/go-micro-services/trace"
 
+	"github.com/harlow/authtoken"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -24,45 +26,33 @@ type inventory struct {
 	RatePlans []*rate.RatePlan `json:"ratePlans"`
 }
 
-type profileResults struct {
-	hotels []*profile.Hotel
-	err    error
-}
-
-type rateResults struct {
-	ratePlans []*rate.RatePlan
-	err       error
-}
-
 // newServer returns a server with initialization data loaded.
-func newServer(geoAddr, profileAddr, rateAddr *string) apiServer {
+func newServer(authAddr, geoAddr, profileAddr, rateAddr *string) apiServer {
 	return apiServer{
 		serverName:    "api.v1",
+		AuthClient:    auth.NewAuthClient(mustDial(authAddr)),
 		GeoClient:     geo.NewGeoClient(mustDial(geoAddr)),
 		ProfileClient: profile.NewProfileClient(mustDial(profileAddr)),
 		RateClient:    rate.NewRateClient(mustDial(rateAddr)),
 	}
 }
 
-// mustDial ensures the tcp connection to specified address.
-func mustDial(addr *string) *grpc.ClientConn {
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithInsecure())
-
-	conn, err := grpc.Dial(*addr, opts...)
-	if err != nil {
-		log.Fatalf("dial failed: %s", err)
-		panic(err)
-	}
-
-	return conn
-}
-
 type apiServer struct {
 	serverName string
+	auth.AuthClient
 	geo.GeoClient
 	profile.ProfileClient
 	rate.RateClient
+}
+
+// mustDial ensures the tcp connection to specified address.
+func mustDial(addr *string) *grpc.ClientConn {
+	conn, err := grpc.Dial(*addr, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("failed to dial: %v", err)
+		panic(err)
+	}
+	return conn
 }
 
 func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
@@ -75,6 +65,23 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	ctx = metadata.NewContext(ctx, md)
 
+	// grab auth token from request
+	token, err := authtoken.FromRequest(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+
+	// verify token w/ auth service
+	_, err = s.VerifyToken(ctx, &auth.AuthRequest{
+		AuthToken: token,
+	})
+
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+
 	// read and validate in/out arguments
 	inDate := r.URL.Query().Get("inDate")
 	outDate := r.URL.Query().Get("outDate")
@@ -84,7 +91,7 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get hotels within geo box
-	reply, err := s.BoundedBox(ctx, &geo.GeoRequest{
+	geoReply, err := s.BoundedBox(ctx, &geo.GeoRequest{
 		Lo: &geo.Point{Latitude: 400000000, Longitude: -750000000},
 		Hi: &geo.Point{Latitude: 420000000, Longitude: -730000000},
 	})
@@ -94,8 +101,8 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make reqeusts for profiles and rates
-	profileCh := s.getProfiles(ctx, reply.HotelIds)
-	rateCh := s.getRatePlans(ctx, reply.HotelIds, inDate, outDate)
+	profileCh := s.getProfiles(ctx, geoReply.HotelIds)
+	rateCh := s.getRatePlans(ctx, geoReply.HotelIds, inDate, outDate)
 
 	// wait on profiles reply
 	profileReply := <-profileCh
@@ -129,36 +136,34 @@ func (s apiServer) getRatePlans(ctx context.Context, hotelIDs []int32, inDate st
 	ch := make(chan rateResults, 1)
 
 	go func() {
-		reply, err := s.GetRates(ctx, &rate.RateRequest{
-			HotelIds: hotelIDs,
-			InDate:   inDate,
-			OutDate:  outDate,
-		})
-
-		ch <- rateResults{
-			ratePlans: reply.RatePlans,
-			err:       err,
-		}
+		req := &rate.RateRequest{hotelIDs, inDate, outDate}
+		res, err := s.GetRates(ctx, req)
+		ch <- rateResults{res.RatePlans, err}
 	}()
 
 	return ch
+}
+
+type rateResults struct {
+	ratePlans []*rate.RatePlan
+	err       error
 }
 
 func (s apiServer) getProfiles(ctx context.Context, hotelIDs []int32) chan profileResults {
 	ch := make(chan profileResults, 1)
 
 	go func() {
-		reply, err := s.GetProfiles(ctx, &profile.ProfileRequest{
-			HotelIds: hotelIDs,
-		})
-
-		ch <- profileResults{
-			hotels: reply.Hotels,
-			err:    err,
-		}
+		req := &profile.ProfileRequest{hotelIDs, "en"}
+		res, err := s.GetProfiles(ctx, req)
+		ch <- profileResults{res.Hotels, err}
 	}()
 
 	return ch
+}
+
+type profileResults struct {
+	hotels []*profile.Hotel
+	err    error
 }
 
 func main() {
@@ -171,9 +176,7 @@ func main() {
 	)
 	flag.Parse()
 
-	server := newServer(geoAddr, profileAddr, rateAddr)
-	authHandler := NewAuthHandler(authAddr)
-	requesHandler := http.HandlerFunc(server.requestHandler)
-	http.Handle("/", authHandler(requesHandler))
+	s := newServer(authAddr, geoAddr, profileAddr, rateAddr)
+	http.HandleFunc("/", s.requestHandler)
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }

@@ -75,7 +75,10 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
-	auth.RegisterAuthServer(grpcServer, newServer())
-	grpcServer.Serve(lis)
+	s := &authServer{serverName: "service.auth"}
+	s.loadCustomers(data.MustAsset("data/customers.json"))
+
+	g := grpc.NewServer()
+	auth.RegisterAuthServer(g, newServer())
+	g.Serve(lis)
 }
