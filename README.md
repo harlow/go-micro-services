@@ -25,7 +25,7 @@ Clone the repository:
 
 If changes are made to the Protocol Buffers a Make file can be used to regenerate:
 
-    $ make proto
+    $ make pb
 
 ### Bootstrap the services
 

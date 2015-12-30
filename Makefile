@@ -1,16 +1,16 @@
-.PHONY: proto data build
+.PHONY: pb data build
 
-proto:
-	for f in proto/**/*.proto; do \
+pb:
+	for f in pb/**/*.proto; do \
 		protoc --go_out=plugins=grpc:. $$f; \
 		echo compiled: $$f; \
 	done
 
 lint:
-	./lint.sh
+	./bin/lint.sh
 
 build:
-	./build.sh
+	./bin/build.sh
 
 data:
 	go-bindata -o data/bindata.go -pkg data data/*.json

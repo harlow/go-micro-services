@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/harlow/go-micro-services/data"
-	"github.com/harlow/go-micro-services/proto/profile"
+	"github.com/harlow/go-micro-services/pb/profile"
 
 	"golang.org/x/net/context"
 	"golang.org/x/net/trace"

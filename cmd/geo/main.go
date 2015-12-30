@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/harlow/go-micro-services/data"
-	"github.com/harlow/go-micro-services/proto/geo"
+	"github.com/harlow/go-micro-services/pb/geo"
 
 	"golang.org/x/net/context"
 	"golang.org/x/net/trace"

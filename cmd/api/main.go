@@ -8,10 +8,10 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"github.com/harlow/go-micro-services/proto/auth"
-	"github.com/harlow/go-micro-services/proto/geo"
-	"github.com/harlow/go-micro-services/proto/profile"
-	"github.com/harlow/go-micro-services/proto/rate"
+	"github.com/harlow/go-micro-services/pb/auth"
+	"github.com/harlow/go-micro-services/pb/geo"
+	"github.com/harlow/go-micro-services/pb/profile"
+	"github.com/harlow/go-micro-services/pb/rate"
 
 	"github.com/harlow/authtoken"
 	"golang.org/x/net/context"
