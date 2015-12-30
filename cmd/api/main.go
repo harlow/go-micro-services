@@ -29,18 +29,7 @@ type inventory struct {
 	RatePlans []*rate.RatePlan `json:"ratePlans"`
 }
 
-// newServer returns a server with initialization data loaded.
-func newServer(authAddr, geoAddr, profileAddr, rateAddr *string) apiServer {
-	return apiServer{
-		serverName:    "api.v1",
-		AuthClient:    auth.NewAuthClient(mustDial(authAddr)),
-		GeoClient:     geo.NewGeoClient(mustDial(geoAddr)),
-		ProfileClient: profile.NewProfileClient(mustDial(profileAddr)),
-		RateClient:    rate.NewRateClient(mustDial(rateAddr)),
-	}
-}
-
-type apiServer struct {
+type service struct {
 	serverName string
 	auth.AuthClient
 	geo.GeoClient
@@ -58,7 +47,7 @@ func mustDial(addr *string) *grpc.ClientConn {
 	return conn
 }
 
-func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
+func (s service) requestHandler(w http.ResponseWriter, r *http.Request) {
 	// tracing
 	tr := trace.New(s.serverName, "URL PATH!")
 	defer tr.Finish()
@@ -135,7 +124,7 @@ func (s apiServer) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s apiServer) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) chan rateResults {
+func (s service) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) chan rateResults {
 	ch := make(chan rateResults, 1)
 
 	go func() {
@@ -152,7 +141,7 @@ type rateResults struct {
 	err       error
 }
 
-func (s apiServer) getProfiles(ctx context.Context, hotelIDs []int32) chan profileResults {
+func (s service) getProfiles(ctx context.Context, hotelIDs []int32) chan profileResults {
 	ch := make(chan profileResults, 1)
 
 	go func() {
@@ -176,7 +165,6 @@ func main() {
 		return true, true
 	}
 
-	// fetch service addresses/ports
 	var (
 		port        = flag.String("port", "8080", "The server port")
 		authAddr    = flag.String("auth", "auth:8080", "The Auth server address in the format of host:port")
@@ -186,8 +174,13 @@ func main() {
 	)
 	flag.Parse()
 
-	// create new server
-	s := newServer(authAddr, geoAddr, profileAddr, rateAddr)
-	http.HandleFunc("/", s.requestHandler)
+	svc := service{
+		serverName:    "api.v1",
+		AuthClient:    auth.NewAuthClient(mustDial(authAddr)),
+		GeoClient:     geo.NewGeoClient(mustDial(geoAddr)),
+		ProfileClient: profile.NewProfileClient(mustDial(profileAddr)),
+		RateClient:    rate.NewRateClient(mustDial(rateAddr)),
+	}
+	http.HandleFunc("/", svc.requestHandler)
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
