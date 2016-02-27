@@ -1,6 +1,6 @@
 [
     {
-        "id": 1,
+        "id": "1",
         "name": "Clift Hotel",
         "phoneNumber": "(415) 775-4700",
         "description": "A 6-minute walk from Union Square and 4 minutes from a Muni Metro station, this luxury hotel designed by Philippe Starck features an artsy furniture collection in the lobby, including work by Salvador Dali.",
@@ -14,7 +14,7 @@
         }
     },
     {
-        "id": 2,
+        "id": "2",
         "name": "W San Francisco",
         "phoneNumber": "(415) 777-5300",
         "description": "Less than a block from the Yerba Buena Center for the Arts, this trendy hotel is a 12-minute walk from Union Square.",
@@ -28,7 +28,7 @@
         }
     },
     {
-        "id": 3,
+        "id": "3",
         "name": "Hotel Zetta",
         "phoneNumber": "(415) 543-8555",
         "description": "A 3-minute walk from the Powell Street cable-car turnaround and BART rail station, this hip hotel 9 minutes from Union Square combines high-tech lodging with artsy touches.",
@@ -42,7 +42,7 @@
         }
     },
     {
-        "id": 4,
+        "id": "4",
         "name": "Hotel Vitale",
         "phoneNumber": "(415) 278-3700",
         "description": "This waterfront hotel with Bay Bridge views is 3 blocks from the Financial District and a 4-minute walk from the Ferry Building.",
@@ -56,7 +56,7 @@
         }
     },
     {
-        "id": 5,
+        "id": "5",
         "name": "Phoenix Hotel",
         "phoneNumber": "(415) 776-1380",
         "description": "Located in the Tenderloin neighborhood, a 10-minute walk from a BART rail station, this retro motor lodge has hosted many rock musicians and other celebrities since the 1950s. It’s a 4-minute walk from the historic Great American Music Hall nightclub.",
@@ -71,7 +71,7 @@
         }
     },
     {
-        "id": 6,
+        "id": "6",
         "name": "The St. Regis San Francisco",
         "phoneNumber": "(415) 284-4000",
         "description": "St. Regis Museum Tower is a 42-story, 484 ft skyscraper in the South of Market district of San Francisco, California, adjacent to Yerba Buena Gardens, Moscone Center, PacBell Building and the San Francisco Museum of Modern Art.",

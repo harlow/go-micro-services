@@ -31,6 +31,7 @@ type inventory struct {
 
 type service struct {
 	serverName string
+
 	auth.AuthClient
 	geo.GeoClient
 	profile.ProfileClient
@@ -84,9 +85,10 @@ func (s service) requestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// get hotels within geo box
 	geoRes, err := s.BoundedBox(ctx, &geo.Request{
-		Lo: &geo.Point{Latitude: 400000000, Longitude: -750000000},
-		Hi: &geo.Point{Latitude: 420000000, Longitude: -730000000},
+		Lat: 51.502973,
+		Lon: -0.114723,
 	})
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -124,7 +126,7 @@ func (s service) requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s service) getRatePlans(ctx context.Context, hotelIDs []int32, inDate string, outDate string) chan rateResults {
+func (s service) getRatePlans(ctx context.Context, hotelIDs []string, inDate string, outDate string) chan rateResults {
 	ch := make(chan rateResults, 1)
 
 	go func() {
@@ -141,7 +143,7 @@ type rateResults struct {
 	err       error
 }
 
-func (s service) getProfiles(ctx context.Context, hotelIDs []int32) chan profileResults {
+func (s service) getProfiles(ctx context.Context, hotelIDs []string) chan profileResults {
 	ch := make(chan profileResults, 1)
 
 	go func() {

@@ -7,22 +7,12 @@ service Geo {
   rpc BoundedBox(Request) returns (Result);
 }
 
-// A latitude-longitude bounding box, represented as two diagonally opposite
-// points "lo" and "hi".
+// The latitude and longitude of the current location.
 message Request {
-  Point lo = 2;
-  Point hi = 3;
-}
-
-// Points are represented as latitude-longitude pairs in the E7 representation
-// (degrees multiplied by 10**7 and rounded to the nearest integer).
-// Latitudes should be in the range +/- 90 degrees and longitude should be in
-// the range +/- 180 degrees (inclusive).
-message Point {
-  int32 latitude = 1;
-  int32 longitude = 2;
+  float lat = 1;
+  float lon = 2;
 }
 
 message Result {
-  repeated int32 hotelIds = 1;
+  repeated string hotelIds = 1;
 }

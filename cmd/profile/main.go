@@ -25,7 +25,7 @@ func newServer() *profileServer {
 }
 
 type profileServer struct {
-	hotels map[int32]*profile.Hotel
+	hotels map[string]*profile.Hotel
 }
 
 // VerifyToken finds a customer by authentication token.
@@ -51,7 +51,7 @@ func (s *profileServer) loadProfiles(file []byte) {
 	if err := json.Unmarshal(file, &hotels); err != nil {
 		log.Fatalf("Failed to load json: %v", err)
 	}
-	s.hotels = make(map[int32]*profile.Hotel)
+	s.hotels = make(map[string]*profile.Hotel)
 	for _, hotel := range hotels {
 		s.hotels[hotel.Id] = hotel
 	}

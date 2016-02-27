@@ -5,10 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math"
 	"net"
 	"strings"
 
+	"github.com/hailocab/go-geoindex"
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/pb/geo"
 
@@ -18,20 +18,32 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+const (
+	maxSearchRadius  = 10
+	maxSearchResults = 5
+)
+
+type point struct {
+	Pid  string  `json:"hotelId"`
+	Plat float64 `json:"lat"`
+	Plon float64 `json:"lon"`
+}
+
+// Implement Point interface
+func (p *point) Lat() float64 { return p.Plat }
+func (p *point) Lon() float64 { return p.Plon }
+func (p *point) Id() string   { return p.Pid }
+
 // newServer returns a server with initialization data loaded.
 func newServer() *geoServer {
 	s := new(geoServer)
+	s.index = geoindex.NewClusteringIndex()
 	s.loadLocations(data.MustAsset("data/locations.json"))
 	return s
 }
 
-type location struct {
-	HotelID int32
-	Point   *geo.Point
-}
-
 type geoServer struct {
-	locations []location
+	index *geoindex.ClusteringIndex
 }
 
 // BoundedBox returns all hotels contained within a given rectangle.
@@ -43,37 +55,28 @@ func (s *geoServer) BoundedBox(ctx context.Context, req *geo.Request) (*geo.Resu
 		tr.LazyPrintf("traceID %s", traceID)
 	}
 
-	res := new(geo.Result)
-	for _, loc := range s.locations {
-		if inRange(loc.Point, req) {
-			res.HotelIds = append(res.HotelIds, loc.HotelID)
-		}
-	}
+	point := &geoindex.GeoPoint{"", float64(req.Lat), float64(req.Lon)}
+	points := s.index.KNearest(point, maxSearchResults, geoindex.Km(maxSearchRadius), func(p geoindex.Point) bool {
+		return true
+	})
 
+	res := new(geo.Result)
+	for _, p := range points {
+		res.HotelIds = append(res.HotelIds, p.Id())
+	}
 	return res, nil
 }
 
 // loadLocations loads hotel locations from a JSON file.
 func (s *geoServer) loadLocations(file []byte) {
-	if err := json.Unmarshal(file, &s.locations); err != nil {
+	var points []*point
+	if err := json.Unmarshal(file, &points); err != nil {
 		log.Fatalf("Failed to load hotels: %v", err)
 	}
-}
 
-// inRange calculates if a point appears within a BoundingBox.
-func inRange(point *geo.Point, req *geo.Request) bool {
-	left := math.Min(float64(req.Lo.Longitude), float64(req.Hi.Longitude))
-	right := math.Max(float64(req.Lo.Longitude), float64(req.Hi.Longitude))
-	top := math.Max(float64(req.Lo.Latitude), float64(req.Hi.Latitude))
-	bottom := math.Min(float64(req.Lo.Latitude), float64(req.Hi.Latitude))
-
-	if float64(point.Longitude) >= left &&
-		float64(point.Longitude) <= right &&
-		float64(point.Latitude) >= bottom &&
-		float64(point.Latitude) <= top {
-		return true
+	for _, point := range points {
+		s.index.Add(point)
 	}
-	return false
 }
 
 func main() {

@@ -7,7 +7,7 @@ service Profile {
 }
 
 message Request {
-  repeated int32 hotelIds = 1;
+  repeated string hotelIds = 1;
   string locale = 2;
 }
 
@@ -16,7 +16,7 @@ message Result {
 }
 
 message Hotel {
-  int32 id = 1;
+  string id = 1;
   string name = 2;
   string phoneNumber = 3;
   string description = 4;

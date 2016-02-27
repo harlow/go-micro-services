@@ -8,7 +8,7 @@ service Rate {
 }
 
 message Request {
-  repeated int32 hotelIds = 1;
+  repeated string hotelIds = 1;
   string inDate = 2;
   string outDate = 3;
 }
@@ -18,7 +18,7 @@ message Result {
 }
 
 message RatePlan {
-  int32 hotelId = 1;
+  string hotelId = 1;
   string code = 2;
   string inDate = 3;
   string outDate = 4;

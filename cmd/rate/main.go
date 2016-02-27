@@ -25,7 +25,7 @@ func newServer() *rateServer {
 }
 
 type stay struct {
-	HotelID int32
+	HotelID string
 	InDate  string
 	OutDate string
 }
