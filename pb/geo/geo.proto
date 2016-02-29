@@ -3,8 +3,8 @@ syntax = "proto3";
 package geo;
 
 service Geo {
-  // Obtains the Locations contained within the given Rectangle.
-  rpc BoundedBox(Request) returns (Result);
+  // Finds the hotels contained nearby the current lat/lon.
+  rpc Nearby(Request) returns (Result);
 }
 
 // The latitude and longitude of the current location.

@@ -83,8 +83,8 @@ func (s service) requestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get hotels within geo box
-	geoRes, err := s.BoundedBox(ctx, &geo.Request{
+	// finds nearby hotels
+	geoRes, err := s.Nearby(ctx, &geo.Request{
 		Lat: 51.502973,
 		Lon: -0.114723,
 	})

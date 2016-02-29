@@ -38,7 +38,7 @@ func (p *point) Id() string   { return p.Pid }
 func newServer() *geoServer {
 	s := new(geoServer)
 	s.index = geoindex.NewClusteringIndex()
-	s.loadLocations(data.MustAsset("data/locations.json"))
+	s.loadHotels(data.MustAsset("data/locations.json"))
 	return s
 }
 
@@ -46,8 +46,8 @@ type geoServer struct {
 	index *geoindex.ClusteringIndex
 }
 
-// BoundedBox returns all hotels contained within a given rectangle.
-func (s *geoServer) BoundedBox(ctx context.Context, req *geo.Request) (*geo.Result, error) {
+// Nearby returns all hotels within a given distance.
+func (s *geoServer) Nearby(ctx context.Context, req *geo.Request) (*geo.Result, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
 
@@ -67,8 +67,8 @@ func (s *geoServer) BoundedBox(ctx context.Context, req *geo.Request) (*geo.Resu
 	return res, nil
 }
 
-// loadLocations loads hotel locations from a JSON file.
-func (s *geoServer) loadLocations(file []byte) {
+// loadHotels loads geo points of Hotels from JSON data file.
+func (s *geoServer) loadHotels(file []byte) {
 	var points []*point
 	if err := json.Unmarshal(file, &points); err != nil {
 		log.Fatalf("Failed to load hotels: %v", err)
