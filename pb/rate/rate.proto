@@ -28,7 +28,7 @@ message RatePlan {
 message RoomType {
   double bookableRate = 1;
   double totalRate = 2;
-  double TotalRateInclusive = 3;
+  double totalRateInclusive = 3;
   string code = 4;
   string currency = 5;
   string roomDescription = 6;
