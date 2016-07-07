@@ -9,7 +9,7 @@ The API Endpoint accepts HTTP requests at `micro.demo:8080` and then spawns a nu
 
 _Note:_ Data for each of the services is stored in JSON flat files under the `/data/` directory. In reality each of the services could choose their own specialty datastore. The Geo service for example could use PostGis or any other database specializing in geospacial queries.
 
-### Installation
+### Setup
 
 Protobuf v3 are required:
 
@@ -27,9 +27,9 @@ If changes are made to the Protocol Buffers a Make file can be used to regenerat
 
     $ make pb
 
-### Bootstrap the services
+### Run
 
-To make the demo as straigforward as possible; Docker is used to run all the services. In a production environment each of the services would be run (and scaled) independently.
+To make the demo as straigforward as possible; [Docker Compose](https://docs.docker.com/compose/) is used to run all the services at once (In a production environment each of the services would be run (and scaled) independently).
 
     $ make build
     $ make run
