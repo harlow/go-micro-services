@@ -18,29 +18,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// newServer returns a server with initialization data loaded.
-func newServer() *authServer {
-	s := new(authServer)
-	s.loadCustomers(data.MustAsset("data/customers.json"))
-	return s
-}
-
-func logRequest(ctx context.Context) {
-	md, _ := metadata.FromContext(ctx)
-	traceID := strings.Join(md["traceID"], ",")
-
-	if tr, ok := trace.FromContext(ctx); ok {
-		tr.LazyPrintf("traceID %s", traceID)
-	}
-
-	log.Printf("traceID %s", traceID)
-}
-
 type authServer struct {
 	customers map[string]*auth.Customer
 }
 
-// VerifyToken finds a customer by authentication token.
+// VerifyToken returns a customer from authentication token.
 func (s *authServer) VerifyToken(ctx context.Context, req *auth.Request) (*auth.Result, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
@@ -60,30 +42,37 @@ func (s *authServer) VerifyToken(ctx context.Context, req *auth.Request) (*auth.
 }
 
 // loadCustomers loads customers from a JSON file.
-func (s *authServer) loadCustomers(file []byte) {
-	// unmarshal JSON
+func loadCustomerData(path string) map[string]*auth.Customer {
+	file := data.MustAsset(path)
 	customers := []*auth.Customer{}
+
+	// unmarshal JSON
 	if err := json.Unmarshal(file, &customers); err != nil {
 		log.Fatalf("Failed to unmarshal json: %v", err)
 	}
 
 	// create customer lookup map
-	s.customers = make(map[string]*auth.Customer)
+	cache := make(map[string]*auth.Customer)
 	for _, c := range customers {
-		s.customers[c.AuthToken] = c
+		cache[c.AuthToken] = c
 	}
+	return cache
 }
 
 func main() {
 	var port = flag.Int("port", 8080, "The server port")
 	flag.Parse()
 
+	// listen on port
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	g := grpc.NewServer()
-	auth.RegisterAuthServer(g, newServer())
-	g.Serve(lis)
+	// grpc server
+	srv := grpc.NewServer()
+	auth.RegisterAuthServer(srv, &authServer{
+		customers: loadCustomerData("data/customers.json"),
+	})
+	srv.Serve(lis)
 }
