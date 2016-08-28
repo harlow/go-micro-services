@@ -5,11 +5,15 @@ leverage [gRPC][1] for inter-service communication.
 
 ![new_sequence](https://cloud.githubusercontent.com/assets/739782/7439604/d1f324c2-f036-11e4-958a-6f6913049946.png)
 
-The API Endpoint accepts HTTP requests at `micro.demo:8080` and then spawns a number of RPC requests to the backend services.
+The API Endpoint accepts HTTP requests at `localhost:8080` and then spawns a number of RPC requests to the backend services.
 
 _Note:_ Data for each of the services is stored in JSON flat files under the `/data/` directory. In reality each of the services could choose their own specialty datastore. The Geo service for example could use PostGis or any other database specializing in geospacial queries.
 
 ### Setup
+
+Docker is used for bootstrapping the services:
+
+    https://docs.docker.com/engine/installation/
 
 Protobuf v3 are required:
 
