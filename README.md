@@ -11,9 +11,7 @@ _Note:_ Data for each of the services is stored in JSON flat files under the `/d
 
 ### Setup
 
-Docker is used for bootstrapping the services:
-
-    https://docs.docker.com/engine/installation/
+Docker is required for running the services https://docs.docker.com/engine/installation.
 
 Protobuf v3 are required:
 
