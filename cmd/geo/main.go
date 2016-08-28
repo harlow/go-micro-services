@@ -34,14 +34,6 @@ func (p *point) Lat() float64 { return p.Plat }
 func (p *point) Lon() float64 { return p.Plon }
 func (p *point) Id() string   { return p.Pid }
 
-// newServer returns a server with initialization data loaded.
-func newServer() *geoServer {
-	s := new(geoServer)
-	s.index = geoindex.NewClusteringIndex()
-	s.loadHotels(data.MustAsset("data/locations.json"))
-	return s
-}
-
 type geoServer struct {
 	index *geoindex.ClusteringIndex
 }
@@ -55,40 +47,58 @@ func (s *geoServer) Nearby(ctx context.Context, req *geo.Request) (*geo.Result, 
 		tr.LazyPrintf("traceID %s", traceID)
 	}
 
-	point := &geoindex.GeoPoint{"", float64(req.Lat), float64(req.Lon)}
-	points := s.index.KNearest(point, maxSearchResults, geoindex.Km(maxSearchRadius), func(p geoindex.Point) bool {
+	// create center point for query
+	center := &geoindex.GeoPoint{
+		Pid:  "",
+		Plat: float64(req.Lat),
+		Plon: float64(req.Lon),
+	}
+
+	// find points around center point
+	points := s.index.KNearest(center, maxSearchResults, geoindex.Km(maxSearchRadius), func(p geoindex.Point) bool {
 		return true
 	})
 
-	res := new(geo.Result)
+	res := &geo.Result{}
 	for _, p := range points {
 		res.HotelIds = append(res.HotelIds, p.Id())
 	}
 	return res, nil
 }
 
-// loadHotels loads geo points of Hotels from JSON data file.
-func (s *geoServer) loadHotels(file []byte) {
+// newGeoIndex returns a geo index with points loaded
+func newGeoIndex(path string) *geoindex.ClusteringIndex {
+	file := data.MustAsset(path)
+
+	// unmarshal json points
 	var points []*point
 	if err := json.Unmarshal(file, &points); err != nil {
 		log.Fatalf("Failed to load hotels: %v", err)
 	}
 
+	// add points to index
+	index := geoindex.NewClusteringIndex()
 	for _, point := range points {
-		s.index.Add(point)
+		index.Add(point)
 	}
+	return index
 }
 
 func main() {
+	// port number
 	var port = flag.Int("port", 8080, "The server port")
 	flag.Parse()
 
+	// tcp listener
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	g := grpc.NewServer()
-	geo.RegisterGeoServer(g, newServer())
-	g.Serve(lis)
+	// grpc server
+	srv := grpc.NewServer()
+	geo.RegisterGeoServer(srv, &geoServer{
+		index: newGeoIndex("data/locations.json"),
+	})
+	srv.Serve(lis)
 }
