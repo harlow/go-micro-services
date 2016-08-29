@@ -43,12 +43,13 @@ func requestHandler(c client, w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	ctx = trace.NewContext(ctx, tr)
 
-	// add metadata to context for grpc calls
-	traceID, _ := uuid.NewV4()
-	ctx = metadata.NewContext(ctx, metadata.Pairs(
-		"traceID", traceID.String(),
-		"fromName", "api.v1",
-	))
+	// add a unique request id to context
+	if traceID, err := uuid.NewV4(); err == nil {
+		ctx = metadata.NewContext(ctx, metadata.Pairs(
+			"traceID", traceID.String(),
+			"fromName", "api.v1",
+		))
+	}
 
 	// token from request headers
 	token, err := authtoken.FromRequest(r)
@@ -58,25 +59,21 @@ func requestHandler(c client, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify token w/ auth service
-	_, err = c.VerifyToken(ctx, &auth.Request{
-		AuthToken: token,
-	})
-	if err != nil {
+	if _, err = c.VerifyToken(ctx, &auth.Request{AuthToken: token}); err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	// query params
-	inDate := r.URL.Query().Get("inDate")
-	outDate := r.URL.Query().Get("outDate")
+	// checkin and checkout date query params
+	inDate, outDate := r.URL.Query().Get("inDate"), r.URL.Query().Get("outDate")
 	if inDate == "" || outDate == "" {
-		http.Error(w, "Please specify inDate / outDate", http.StatusBadRequest)
+		http.Error(w, "Please specify inDate/outDate params", http.StatusBadRequest)
 		return
 	}
 
 	// finds nearby hotels
 	// TODO(hw): use lat/lon from request params
-	geoRes, err := c.Nearby(ctx, &geo.Request{
+	nearby, err := c.Nearby(ctx, &geo.Request{
 		Lat: 51.502973,
 		Lon: -0.114723,
 	})
@@ -86,8 +83,8 @@ func requestHandler(c client, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make reqeusts for profiles and rates
-	profileCh := getHotelProfiles(c, ctx, geoRes.HotelIds)
-	rateCh := getRatePlans(c, ctx, geoRes.HotelIds, inDate, outDate)
+	profileCh := getHotelProfiles(c, ctx, nearby.HotelIds)
+	rateCh := getRatePlans(c, ctx, nearby.HotelIds, inDate, outDate)
 
 	// wait on profiles reply
 	profileReply := <-profileCh
@@ -103,12 +100,11 @@ func requestHandler(c client, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// render inventory response
-	p := inventory{
+	// render response
+	json.NewEncoder(w).Encode(inventory{
 		Hotels:    profileReply.hotels,
 		RatePlans: rateReply.ratePlans,
-	}
-	json.NewEncoder(w).Encode(p)
+	})
 }
 
 type rateResults struct {

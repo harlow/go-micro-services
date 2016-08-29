@@ -17,22 +17,14 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// newServer returns a server with initialization data loaded.
-func newServer() *profileServer {
-	s := new(profileServer)
-	s.loadProfiles(data.MustAsset("data/profiles.json"))
-	return s
-}
-
-type profileServer struct {
+type server struct {
 	hotels map[string]*profile.Hotel
 }
 
-// VerifyToken finds a customer by authentication token.
-func (s *profileServer) GetProfiles(ctx context.Context, req *profile.Request) (*profile.Result, error) {
+// GetProfiles returns hotel profiles for requested IDs
+func (s *server) GetProfiles(ctx context.Context, req *profile.Request) (*profile.Result, error) {
 	md, _ := metadata.FromContext(ctx)
 	traceID := strings.Join(md["traceID"], ",")
-
 	if tr, ok := trace.FromContext(ctx); ok {
 		tr.LazyPrintf("traceID %s", traceID)
 	}
@@ -41,32 +33,41 @@ func (s *profileServer) GetProfiles(ctx context.Context, req *profile.Request) (
 	for _, i := range req.HotelIds {
 		res.Hotels = append(res.Hotels, s.hotels[i])
 	}
-
 	return res, nil
 }
 
 // loadProfiles loads hotel profiles from a JSON file.
-func (s *profileServer) loadProfiles(file []byte) {
+func loadProfiles(path string) map[string]*profile.Hotel {
+	file := data.MustAsset(path)
+
+	// unmarshal json profiles
 	hotels := []*profile.Hotel{}
 	if err := json.Unmarshal(file, &hotels); err != nil {
 		log.Fatalf("Failed to load json: %v", err)
 	}
-	s.hotels = make(map[string]*profile.Hotel)
+
+	profiles := make(map[string]*profile.Hotel)
 	for _, hotel := range hotels {
-		s.hotels[hotel.Id] = hotel
+		profiles[hotel.Id] = hotel
 	}
+	return profiles
 }
 
 func main() {
+	// service port
 	var port = flag.Int("port", 8080, "The server port")
 	flag.Parse()
 
+	// tcp listener
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	g := grpc.NewServer()
-	profile.RegisterProfileServer(g, newServer())
-	g.Serve(lis)
+	// grpc server with profiles endpoint
+	srv := grpc.NewServer()
+	profile.RegisterProfileServer(srv, &server{
+		hotels: loadProfiles("data/profiles.json"),
+	})
+	srv.Serve(lis)
 }

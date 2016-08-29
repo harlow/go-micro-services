@@ -95,8 +95,8 @@ The JSON response:
 
 gRPC tracing information:
 
-    http://micro.demo:8080/debug/requests
-    http://micro.demo:8080/debug/events
+    http://localhost:8080/debug/requests
+    http://localhost:8080/debug/events
 
 ### Credits
 
