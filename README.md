@@ -1,4 +1,4 @@
-# HTTP up front, Protobufs in the rear.
+# Golang Microservices Example
 
 An demonstration of Golang micro-services that accept HTTP/JSON requests at API level and then
 leverage [gRPC][1] for inter-service communication.
