@@ -9,7 +9,6 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"github.com/harlow/go-micro-services/pb/auth"
 	"github.com/harlow/go-micro-services/pb/geo"
 	"github.com/harlow/go-micro-services/pb/profile"
 	"github.com/harlow/go-micro-services/pb/rate"
@@ -40,7 +39,6 @@ type feature struct {
 }
 
 type client struct {
-	auth.AuthClient
 	geo.GeoClient
 	profile.ProfileClient
 	rate.RateClient
@@ -189,7 +187,6 @@ func main() {
 	// ports for grpc connections (default uses docker-compose links)
 	var (
 		port        = flag.String("port", "8080", "The server port")
-		authAddr    = flag.String("auth", "auth:8080", "The Auth server address in the format of host:port")
 		geoAddr     = flag.String("geo", "geo:8080", "The Geo server address in the format of host:port")
 		profileAddr = flag.String("profile", "profile:8080", "The Pofile server address in the format of host:port")
 		rateAddr    = flag.String("rate", "rate:8080", "The Rate Code server address in the format of host:port")
@@ -198,7 +195,6 @@ func main() {
 
 	// client with all grpc connections
 	c := client{
-		AuthClient:    auth.NewAuthClient(mustDial(authAddr)),
 		GeoClient:     geo.NewGeoClient(mustDial(geoAddr)),
 		ProfileClient: profile.NewProfileClient(mustDial(profileAddr)),
 		RateClient:    rate.NewRateClient(mustDial(rateAddr)),
