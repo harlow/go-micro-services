@@ -3,9 +3,13 @@
 An demonstration of Golang micro-services that accept HTTP/JSON requests at API level and then
 leverage [gRPC][1] for inter-service communication.
 
-![new_sequence](https://cloud.githubusercontent.com/assets/739782/7439604/d1f324c2-f036-11e4-958a-6f6913049946.png)
+The example application plots Hotel locations on a Google map:
 
-The API Endpoint accepts HTTP requests at `localhost:8080` and then spawns a number of RPC requests to the backend services.
+<img width="865" alt="screen shot 2016-11-07 at 9 31 12 pm" src="https://cloud.githubusercontent.com/assets/739782/20087958/de0ef9b4-a531-11e6-953a-4425fe445883.png">
+
+The map makes an HTTP request to the API Endpoint, which in turn spawns a number of RPC requests to the backend services and returns a GeoJSON payload.
+ 
+![new_sequence](https://cloud.githubusercontent.com/assets/739782/7439604/d1f324c2-f036-11e4-958a-6f6913049946.png)
 
 _Note:_ Data for each of the services is stored in JSON flat files under the `/data/` directory. In reality each of the services could choose their own specialty datastore. The Geo service for example could use PostGis or any other database specializing in geospacial queries.
 
@@ -38,54 +42,42 @@ To make the demo as straigforward as possible; [Docker Compose](https://docs.doc
     $ make build
     $ make run
 
-Curl the endpoint with an invalid auth token:
+Vist the web page in a browser:
 
-    $ curl http://localhost:8080 -H "Authorization: Bearer INVALID_TOKEN"
-    Unauthorized
+[http://localhost:5000/](http://localhost:5000/)
 
-Curl the endpoint without checkin or checkout dates:
+cURL the API endpoint and receive GeoJSON response:
 
-    $ curl "http://localhost:8080?inDate=2015-04-09" -H "Authorization: Bearer VALID_TOKEN"
-    Please specify outDate
-
-Curl the API endpoint with a valid auth token:
-
-    $ curl "http://localhost:8080?inDate=2015-04-09&outDate=2015-04-10" -H "Authorization: Bearer VALID_TOKEN"
+    $ curl "http://localhost:8080?inDate=2015-04-09&outDate=2015-04-10" 
 
 The JSON response:
 
 ```json
 {
-    "hotels": [
-        {
-            "id": 1,
-            "name": "Clift Hotel",
-            "phoneNumber": "(415) 775-4700",
-            "description": "A 6-minute walk from Union Square and 4 minutes from a Muni Metro station, this luxury hotel designed by Philippe Starck features an artsy furniture collection in the lobby, including work by Salvador Dali.",
-            "address": {
-                "streetNumber": "495",
-                "streetName": "Geary St",
-                "city": "San Francisco",
-                "state": "CA",
-                "country": "United States",
-                "postalCode": "94102"
-            }
-        }
-    ],
-    "ratePlans": [
-        {
-            "hotelId": 1,
-            "code": "RACK",
-            "inDate": "2015-04-09",
-            "outDate": "2015-04-10",
-            "roomType": {
-                "bookableRate": 109,
-                "totalRate": 109,
-                "totalRateInclusive": 123.17,
-                "code": "KNG"
-            }
-        }
-    ]
+	"type": "FeatureCollection",
+	"features": [{
+		"id": "5",
+		"type": "Feature",
+		"properties": {
+			"name": "Phoenix Hotel",
+			"phone_number": "(415) 776-1380"
+		},
+		"geometry": {
+			"type": "Point",
+			"coordinates": [-122.4181, 37.7831]
+		}
+	}, {
+		"id": "3",
+		"type": "Feature",
+		"properties": {
+			"name": "Hotel Zetta",
+			"phone_number": "(415) 543-8555"
+		},
+		"geometry": {
+			"type": "Point",
+			"coordinates": [-122.4071, 37.7834]
+		}
+	}]
 }
 ```
 

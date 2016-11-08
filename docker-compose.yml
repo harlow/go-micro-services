@@ -1,3 +1,7 @@
+www:
+  build: ./cmd/www
+  ports: 
+    - "5000:5000"
 api:
   build: ./cmd/api
   ports:

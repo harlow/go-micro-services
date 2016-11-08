@@ -16,15 +16,27 @@ import (
 
 	uuid "github.com/nu7hatch/gouuid"
 
-	"github.com/harlow/authtoken"
 	"golang.org/x/net/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
-type inventory struct {
-	Hotels    []*profile.Hotel `json:"hotels"`
-	RatePlans []*rate.RatePlan `json:"ratePlans"`
+type response struct {
+	Type     string    `json:"type"`
+	Features []feature `json:"features"`
+}
+
+type feature struct {
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	Properties struct {
+		Name        string `json:"name"`
+		PhoneNumber string `json:"phone_number"`
+	} `json:"properties"`
+	Geometry struct {
+		Type        string    `json:"type"`
+		Coordinates []float32 `json:"coordinates"`
+	} `json:"geometry"`
 }
 
 type client struct {
@@ -34,7 +46,32 @@ type client struct {
 	rate.RateClient
 }
 
+func geoJSONResponse(hotels []*profile.Hotel) response {
+	r := response{
+		Type: "FeatureCollection",
+	}
+
+	for _, hotel := range hotels {
+		f := feature{
+			Type: "Feature",
+			ID:   hotel.Id,
+		}
+		f.Properties.Name = hotel.Name
+		f.Properties.PhoneNumber = hotel.PhoneNumber
+		f.Geometry.Type = "Point"
+		f.Geometry.Coordinates = []float32{
+			hotel.Address.Lon,
+			hotel.Address.Lat,
+		}
+		r.Features = append(r.Features, f)
+	}
+
+	return r
+}
+
 func requestHandler(c client, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	// tracing
 	tr := trace.New("api.v1", r.URL.Path)
 	defer tr.Finish()
@@ -51,19 +88,6 @@ func requestHandler(c client, w http.ResponseWriter, r *http.Request) {
 		))
 	}
 
-	// token from request headers
-	token, err := authtoken.FromRequest(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
-	// verify token w/ auth service
-	if _, err = c.VerifyToken(ctx, &auth.Request{AuthToken: token}); err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
 	// checkin and checkout date query params
 	inDate, outDate := r.URL.Query().Get("inDate"), r.URL.Query().Get("outDate")
 	if inDate == "" || outDate == "" {
@@ -74,8 +98,8 @@ func requestHandler(c client, w http.ResponseWriter, r *http.Request) {
 	// finds nearby hotels
 	// TODO(hw): use lat/lon from request params
 	nearby, err := c.Nearby(ctx, &geo.Request{
-		Lat: 51.502973,
-		Lon: -0.114723,
+		Lat: 37.7749,
+		Lon: -122.4194,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -100,11 +124,10 @@ func requestHandler(c client, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// render response
-	json.NewEncoder(w).Encode(inventory{
-		Hotels:    profileReply.hotels,
-		RatePlans: rateReply.ratePlans,
-	})
+	// GeoJSON response
+	json.NewEncoder(w).Encode(
+		geoJSONResponse(profileReply.hotels),
+	)
 }
 
 type rateResults struct {
@@ -149,12 +172,10 @@ func getHotelProfiles(c client, ctx context.Context, hotelIDs []string) chan pro
 // mustDial ensures a tcp connection to specified address.
 func mustDial(addr *string) *grpc.ClientConn {
 	conn, err := grpc.Dial(*addr, grpc.WithInsecure())
-
 	if err != nil {
 		log.Fatalf("failed to dial: %v", err)
 		panic(err)
 	}
-
 	return conn
 }
 

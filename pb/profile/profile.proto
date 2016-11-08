@@ -31,6 +31,8 @@ message Address {
   string state = 4;
   string country = 5;
   string postalCode = 6;
+  float lat = 7;
+  float lon = 8;
 }
 
 message Image {

@@ -10,7 +10,9 @@
             "city": "San Francisco",
             "state": "CA",
             "country": "United States",
-            "postalCode": "94102"
+            "postalCode": "94102",
+            "lat": 37.7867,
+            "lon": -122.4112
         }
     },
     {
@@ -24,7 +26,9 @@
             "city": "San Francisco",
             "state": "CA",
             "country": "United States",
-            "postalCode": "94103"
+            "postalCode": "94103",
+            "lat": 37.7854,
+            "lon": -122.4005
         }
     },
     {
@@ -38,7 +42,9 @@
             "city": "San Francisco",
             "state": "CA",
             "country": "United States",
-            "postalCode": "94103"
+            "postalCode": "94103",
+            "lat": 37.7834,
+            "lon": -122.4071
         }
     },
     {
@@ -52,7 +58,9 @@
             "city": "San Francisco",
             "state": "CA",
             "country": "United States",
-            "postalCode": "94105"
+            "postalCode": "94105",
+            "lat": 37.7936,
+            "lon": -122.3930
         }
     },
     {
@@ -66,22 +74,25 @@
             "city": "San Francisco",
             "state": "CA",
             "country": "United States",
-            "postalCode": "94109"
-
+            "postalCode": "94109",
+            "lat": 37.7831,
+            "lon": -122.4181
         }
     },
     {
         "id": "6",
-        "name": "The St. Regis San Francisco",
+        "name": "St. Regis San Francisco",
         "phoneNumber": "(415) 284-4000",
         "description": "St. Regis Museum Tower is a 42-story, 484 ft skyscraper in the South of Market district of San Francisco, California, adjacent to Yerba Buena Gardens, Moscone Center, PacBell Building and the San Francisco Museum of Modern Art.",
         "address": {
             "streetNumber": "125",
-            "streetName": "3rd",
+            "streetName": "3rd St",
             "city": "San Francisco",
             "state": "CA",
             "country": "United States",
-            "postalCode": "94109"
+            "postalCode": "94109",
+            "lat": 37.7863,
+            "lon": -122.4015
         }
     }
 ]
