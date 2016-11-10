@@ -19,7 +19,7 @@ Docker is required for running the services https://docs.docker.com/engine/insta
 
 Protobuf v3 are required:
 
-    $ brew install protobuf --devel
+    $ brew install protobuf
 
 Install the protoc-gen libraries:
 
