@@ -2,6 +2,8 @@ www:
   build: ./cmd/www
   ports: 
     - "5000:5000"
+  env_file:
+    - .env
 api:
   build: ./cmd/api
   ports:
@@ -10,9 +12,17 @@ api:
     - geo
     - profile
     - rate
+  env_file:
+    - .env
 geo:
   build: ./cmd/geo
+  env_file:
+    - .env
 profile:
   build: ./cmd/profile
+  env_file:
+    - .env
 rate:
   build: ./cmd/rate
+  env_file:
+    - .env
