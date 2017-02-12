@@ -1,4 +1,4 @@
-.PHONY: pb data build
+.PHONY: pb data lint run
 
 pb:
 	for f in pb/**/*.proto; do \
@@ -6,13 +6,10 @@ pb:
 		echo compiled: $$f; \
 	done
 
-lint:
+vet:
 	./bin/lint.sh
 
-build:
-	go-bindata -o data/bindata.go -pkg data data/*.json
-	./bin/build.sh
-
 run:
+	go-bindata -o data/bindata.go -pkg data data/*.json
 	docker-compose build
 	docker-compose up

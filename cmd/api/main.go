@@ -3,18 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
-	_ "expvar"
 	"flag"
 	"log"
 	"net/http"
-	_ "net/http/pprof"
 
 	"github.com/harlow/go-micro-services/pb/geo"
 	"github.com/harlow/go-micro-services/pb/profile"
 	"github.com/harlow/go-micro-services/pb/rate"
-
 	uuid "github.com/nu7hatch/gouuid"
-
 	"golang.org/x/net/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -105,8 +101,8 @@ func requestHandler(c client, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make reqeusts for profiles and rates
-	profileCh := getHotelProfiles(c, ctx, nearby.HotelIds)
-	rateCh := getRatePlans(c, ctx, nearby.HotelIds, inDate, outDate)
+	profileCh := c.getHotelProfiles(ctx, nearby.HotelIds)
+	rateCh := c.getRatePlans(ctx, nearby.HotelIds, inDate, outDate)
 
 	// wait on profiles reply
 	profileReply := <-profileCh
@@ -133,7 +129,7 @@ type rateResults struct {
 	err       error
 }
 
-func getRatePlans(c client, ctx context.Context, hotelIDs []string, inDate string, outDate string) chan rateResults {
+func (c *client) getRatePlans(ctx context.Context, hotelIDs []string, inDate string, outDate string) chan rateResults {
 	ch := make(chan rateResults, 1)
 
 	go func() {
@@ -153,7 +149,7 @@ type profileResults struct {
 	err    error
 }
 
-func getHotelProfiles(c client, ctx context.Context, hotelIDs []string) chan profileResults {
+func (c *client) getHotelProfiles(ctx context.Context, hotelIDs []string) chan profileResults {
 	ch := make(chan profileResults, 1)
 
 	go func() {
@@ -165,16 +161,6 @@ func getHotelProfiles(c client, ctx context.Context, hotelIDs []string) chan pro
 	}()
 
 	return ch
-}
-
-// mustDial ensures a tcp connection to specified address.
-func mustDial(addr *string) *grpc.ClientConn {
-	conn, err := grpc.Dial(*addr, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("failed to dial: %v", err)
-		panic(err)
-	}
-	return conn
 }
 
 func main() {
@@ -205,4 +191,14 @@ func main() {
 		requestHandler(c, w, r)
 	}))
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
+}
+
+// mustDial ensures a tcp connection to specified address.
+func mustDial(addr *string) *grpc.ClientConn {
+	conn, err := grpc.Dial(*addr, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("failed to dial: %v", err)
+		panic(err)
+	}
+	return conn
 }

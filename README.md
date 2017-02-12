@@ -37,7 +37,6 @@ If changes are made to the Protocol Buffer files use the Makefile to regenerate:
 
 To make the demo as straigforward as possible; [Docker Compose](https://docs.docker.com/compose/) is used to run all the services at once (In a production environment each of the services would be run (and scaled) independently).
 
-    $ make build
     $ make run
 
 Vist the web page in a browser:
