@@ -5,3 +5,4 @@ cmd/auth/auth
 cmd/geo/geo
 cmd/profile/profile
 cmd/rate/rate
+cmd/www/www
