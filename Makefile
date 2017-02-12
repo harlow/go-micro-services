@@ -10,10 +10,8 @@ lint:
 	./bin/lint.sh
 
 build:
-	./bin/build.sh
-
-data:
 	go-bindata -o data/bindata.go -pkg data data/*.json
+	./bin/build.sh
 
 run:
 	docker-compose build
