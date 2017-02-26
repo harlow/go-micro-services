@@ -80,11 +80,11 @@ The JSON response:
 
 ### Tracing
 
-Tracing data is pushed to Google Stackdriver.
+Tracing data is pushed to Google Stackdriver. See [Tracing gRPC calls in Golang with Google Stackdriver](https://medium.com/@harlow/tracing-grpc-calls-in-golang-with-google-stackdriver-b22495763a06#.6skzmkwqy) for more detailed information on how tracing was implemented.
 
 <img width="987" alt="screen shot 2017-02-25 at 11 42 02 pm" src="https://cloud.githubusercontent.com/assets/739782/23338017/49e00402-fbb4-11e6-9d89-7b4d7af54315.png">
 
-To enable tracing add the following to `.env`
+To enable tracing add the following to `.env`:
 
 ```
 TRACE_PROJECT_ID=
