@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strings"
 
+	"cloud.google.com/go/trace"
 	"github.com/harlow/go-micro-services/data"
+	"github.com/harlow/go-micro-services/lib"
 	"github.com/harlow/go-micro-services/pb/rate"
-
 	"golang.org/x/net/context"
-	"golang.org/x/net/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -24,17 +25,15 @@ type stay struct {
 }
 
 type rateServer struct {
-	rateTable map[stay]*rate.RatePlan
+	traceClient *trace.Client
+	rateTable   map[stay]*rate.RatePlan
 }
 
 // GetRates gets rates for hotels for specific date range.
 func (s *rateServer) GetRates(ctx context.Context, req *rate.Request) (*rate.Result, error) {
 	md, _ := metadata.FromContext(ctx)
-	traceID := strings.Join(md["traceID"], ",")
-
-	if tr, ok := trace.FromContext(ctx); ok {
-		tr.LazyPrintf("traceID %s", traceID)
-	}
+	span := s.traceClient.SpanFromHeader("/svc.Rate/GetRates", strings.Join(md["trace"], ""))
+	defer span.Finish()
 
 	res := new(rate.Result)
 	for _, hotelID := range req.HotelIds {
@@ -82,10 +81,16 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	traceClient := lib.NewTraceClient(
+		os.Getenv("TRACE_PROJECT_ID"),
+		os.Getenv("TRACE_JSON_CONFIG"),
+	)
+
 	// grpc server with rate endpoint
 	srv := grpc.NewServer()
 	rate.RegisterRateServer(srv, &rateServer{
-		rateTable: loadRateTable("data/rates.json"),
+		rateTable:   loadRateTable("data/rates.json"),
+		traceClient: traceClient,
 	})
 	srv.Serve(lis)
 }

@@ -6,28 +6,28 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strings"
 
+	"cloud.google.com/go/trace"
 	"github.com/harlow/go-micro-services/data"
+	"github.com/harlow/go-micro-services/lib"
 	"github.com/harlow/go-micro-services/pb/profile"
-
 	"golang.org/x/net/context"
-	"golang.org/x/net/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
 type server struct {
-	hotels map[string]*profile.Hotel
+	traceClient *trace.Client
+	hotels      map[string]*profile.Hotel
 }
 
 // GetProfiles returns hotel profiles for requested IDs
 func (s *server) GetProfiles(ctx context.Context, req *profile.Request) (*profile.Result, error) {
 	md, _ := metadata.FromContext(ctx)
-	traceID := strings.Join(md["traceID"], ",")
-	if tr, ok := trace.FromContext(ctx); ok {
-		tr.LazyPrintf("traceID %s", traceID)
-	}
+	span := s.traceClient.SpanFromHeader("/svc.Profile/GetProfiles", strings.Join(md["trace"], ""))
+	defer span.Finish()
 
 	res := new(profile.Result)
 	for _, i := range req.HotelIds {
@@ -64,10 +64,16 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	traceClient := lib.NewTraceClient(
+		os.Getenv("TRACE_PROJECT_ID"),
+		os.Getenv("TRACE_JSON_CONFIG"),
+	)
+
 	// grpc server with profiles endpoint
 	srv := grpc.NewServer()
 	profile.RegisterProfileServer(srv, &server{
-		hotels: loadProfiles("data/profiles.json"),
+		hotels:      loadProfiles("data/profiles.json"),
+		traceClient: traceClient,
 	})
 	srv.Serve(lis)
 }

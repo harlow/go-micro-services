@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strings"
 
+	"cloud.google.com/go/trace"
 	"github.com/hailocab/go-geoindex"
 	"github.com/harlow/go-micro-services/data"
+	"github.com/harlow/go-micro-services/lib"
 	"github.com/harlow/go-micro-services/pb/geo"
-
 	"golang.org/x/net/context"
-	"golang.org/x/net/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -35,17 +36,15 @@ func (p *point) Lon() float64 { return p.Plon }
 func (p *point) Id() string   { return p.Pid }
 
 type geoServer struct {
-	index *geoindex.ClusteringIndex
+	traceClient *trace.Client
+	index       *geoindex.ClusteringIndex
 }
 
 // Nearby returns all hotels within a given distance.
 func (s *geoServer) Nearby(ctx context.Context, req *geo.Request) (*geo.Result, error) {
 	md, _ := metadata.FromContext(ctx)
-	traceID := strings.Join(md["traceID"], ",")
-
-	if tr, ok := trace.FromContext(ctx); ok {
-		tr.LazyPrintf("traceID %s", traceID)
-	}
+	span := s.traceClient.SpanFromHeader("/svc.Geo/Nearby", strings.Join(md["trace"], ""))
+	defer span.Finish()
 
 	// create center point for query
 	center := &geoindex.GeoPoint{
@@ -95,10 +94,16 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	traceClient := lib.NewTraceClient(
+		os.Getenv("TRACE_PROJECT_ID"),
+		os.Getenv("TRACE_JSON_CONFIG"),
+	)
+
 	// grpc server
 	srv := grpc.NewServer()
 	geo.RegisterGeoServer(srv, &geoServer{
-		index: newGeoIndex("data/locations.json"),
+		index:       newGeoIndex("data/locations.json"),
+		traceClient: traceClient,
 	})
 	srv.Serve(lis)
 }

@@ -45,7 +45,7 @@ Vist the web page in a browser:
 
 cURL the API endpoint and receive GeoJSON response:
 
-    $ curl "http://localhost:8080?inDate=2015-04-09&outDate=2015-04-10" 
+    $ curl "http://localhost:8080/inventory?inDate=2015-04-09&outDate=2015-04-10" 
 
 The JSON response:
 
@@ -78,14 +78,18 @@ The JSON response:
 }
 ```
 
-### Tracing Information
+### Tracing
 
-<img width="885" alt="apitrace" src="https://cloud.githubusercontent.com/assets/739782/11326691/7ffb5a92-9124-11e5-8818-1d5b3c0b1e51.png">
+Tracing data is pushed to Google Stackdriver.
 
-gRPC tracing information:
+<img width="987" alt="screen shot 2017-02-25 at 11 42 02 pm" src="https://cloud.githubusercontent.com/assets/739782/23338017/49e00402-fbb4-11e6-9d89-7b4d7af54315.png">
 
-    http://localhost:8080/debug/requests
-    http://localhost:8080/debug/events
+To enable tracing add the following to `.env`
+
+```
+TRACE_PROJECT_ID=
+TRACE_JSON_CONFIG=
+```
 
 ### Credits
 
