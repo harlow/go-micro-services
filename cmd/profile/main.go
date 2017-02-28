@@ -14,7 +14,7 @@ import (
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/lib"
 	"github.com/harlow/go-micro-services/pb/profile"
-	"github.com/harlow/grpc-google-cloud-trace/interceptor"
+	"github.com/harlow/grpc-google-cloud-trace/intercept"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -72,7 +72,7 @@ func main() {
 
 	// grpc server with profiles endpoint
 	srv := grpc.NewServer(
-		grpc.UnaryInterceptor(interceptor.Server(traceClient)),
+		grpc.UnaryInterceptor(intercept.ServerTrace(traceClient)),
 	)
 	profile.RegisterProfileServer(srv, &server{
 		hotels:      loadProfiles("data/profiles.json"),

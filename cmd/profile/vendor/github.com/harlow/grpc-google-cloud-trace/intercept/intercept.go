@@ -1,4 +1,4 @@
-package interceptor
+package intercept
 
 import (
 	"fmt"
@@ -15,9 +15,9 @@ const (
 	headerTmpl = "%s/%d;o=1"
 )
 
-// Server returns a new unary server interceptor used for parsing
+// ServerTrace returns a new unary server interceptor used for parsing
 // the google trace header from metadata and creating new tracing span.
-func Server(traceClient *trace.Client) grpc.UnaryServerInterceptor {
+func ServerTrace(traceClient *trace.Client) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
@@ -38,9 +38,9 @@ func Server(traceClient *trace.Client) grpc.UnaryServerInterceptor {
 	}
 }
 
-// Client returns a new unary client interceptor used for injecting
+// ClientTrace returns a new unary client interceptor used for injecting
 // the google trace header into the context metadata.
-func Client(traceClient *trace.Client) grpc.UnaryClientInterceptor {
+func ClientTrace(traceClient *trace.Client) grpc.UnaryClientInterceptor {
 	return func(
 		ctx context.Context,
 		method string,

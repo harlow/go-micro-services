@@ -62,6 +62,12 @@
 			"revisionTime": "2017-02-12T21:18:50Z"
 		},
 		{
+			"checksumSHA1": "5Ed1MSxF2UMlNKKly0MeYomA19s=",
+			"path": "github.com/harlow/grpc-google-cloud-trace/intercept",
+			"revision": "db2e34674a9e3ae2bc8f3f0b33a7670b3d3767dd",
+			"revisionTime": "2017-02-28T04:32:52Z"
+		},
+		{
 			"checksumSHA1": "EtGcFjhs2hytXMpG2upmGnE3GII=",
 			"path": "github.com/harlow/grpc-google-cloud-trace/interceptor",
 			"revision": ""
