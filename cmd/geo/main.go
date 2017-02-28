@@ -5,18 +5,20 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"os"
-	"strings"
+
+	"time"
 
 	"cloud.google.com/go/trace"
 	"github.com/hailocab/go-geoindex"
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/lib"
 	"github.com/harlow/go-micro-services/pb/geo"
+	"github.com/harlow/grpc-google-cloud-trace/interceptor"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 const (
@@ -42,27 +44,31 @@ type geoServer struct {
 
 // Nearby returns all hotels within a given distance.
 func (s *geoServer) Nearby(ctx context.Context, req *geo.Request) (*geo.Result, error) {
-	md, _ := metadata.FromContext(ctx)
-	span := s.traceClient.SpanFromHeader("/svc.Geo/Nearby", strings.Join(md["trace"], ""))
-	defer span.Finish()
+	points := s.getNearbyPoints(ctx, float64(req.Lat), float64(req.Lon))
 
-	// create center point for query
-	center := &geoindex.GeoPoint{
-		Pid:  "",
-		Plat: float64(req.Lat),
-		Plon: float64(req.Lon),
-	}
-
-	// find points around center point
-	points := s.index.KNearest(center, maxSearchResults, geoindex.Km(maxSearchRadius), func(p geoindex.Point) bool {
-		return true
-	})
+	// add some artifical time so traces display nicely
+	time.Sleep(time.Duration(rand.Int31n(5)) * time.Millisecond)
 
 	res := &geo.Result{}
 	for _, p := range points {
 		res.HotelIds = append(res.HotelIds, p.Id())
 	}
+
 	return res, nil
+}
+
+func (s *geoServer) getNearbyPoints(ctx context.Context, lat, lon float64) []geoindex.Point {
+	span := trace.FromContext(ctx).NewChild("getNearbyPoints")
+	defer span.Finish()
+
+	// add some artifical time so traces display nicely
+	time.Sleep(1 * time.Millisecond)
+
+	center := &geoindex.GeoPoint{Pid: "", Plat: lat, Plon: lon}
+	points := s.index.KNearest(center, maxSearchResults, geoindex.Km(maxSearchRadius), func(p geoindex.Point) bool {
+		return true
+	})
+	return points
 }
 
 // newGeoIndex returns a geo index with points loaded
@@ -100,7 +106,9 @@ func main() {
 	)
 
 	// grpc server
-	srv := grpc.NewServer()
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(interceptor.Server(traceClient)),
+	)
 	geo.RegisterGeoServer(srv, &geoServer{
 		index:       newGeoIndex("data/locations.json"),
 		traceClient: traceClient,

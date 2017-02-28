@@ -9,6 +9,7 @@ import (
 	"github.com/harlow/go-micro-services/pb/geo"
 	"github.com/harlow/go-micro-services/pb/profile"
 	"github.com/harlow/go-micro-services/pb/rate"
+	"github.com/harlow/grpc-google-cloud-trace/interceptor"
 	"github.com/kelseyhightower/envconfig"
 	"google.golang.org/grpc"
 )
@@ -34,9 +35,9 @@ func newEnv() *env {
 	return &env{
 		cfg:           cfg,
 		Tracer:        traceClient,
-		GeoClient:     geo.NewGeoClient(mustDial(cfg.GeoAddr)),
-		ProfileClient: profile.NewProfileClient(mustDial(cfg.ProfileAddr)),
-		RateClient:    rate.NewRateClient(mustDial(cfg.RateAddr)),
+		GeoClient:     geo.NewGeoClient(mustDial(cfg.GeoAddr, traceClient)),
+		ProfileClient: profile.NewProfileClient(mustDial(cfg.ProfileAddr, traceClient)),
+		RateClient:    rate.NewRateClient(mustDial(cfg.RateAddr, traceClient)),
 	}
 }
 
@@ -54,8 +55,13 @@ func (e *env) serviceAddr() string {
 }
 
 // mustDial ensures a tcp connection to specified address.
-func mustDial(addr string) *grpc.ClientConn {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+func mustDial(addr string, traceClient *trace.Client) *grpc.ClientConn {
+	intercept := interceptor.Client(traceClient)
+	conn, err := grpc.Dial(
+		addr,
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(intercept),
+	)
 	if err != nil {
 		log.Fatalf("failed to dial: %v", err)
 		panic(err)

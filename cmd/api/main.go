@@ -2,14 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
 	"cloud.google.com/go/trace"
 	"github.com/harlow/go-micro-services/pb/geo"
 	"github.com/harlow/go-micro-services/pb/profile"
-	"google.golang.org/grpc/metadata"
 )
 
 type response struct {
@@ -57,17 +55,9 @@ func requestHandler(e *env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		// new span for tracing
 		span := e.Tracer.SpanFromRequest(r)
 		defer span.Finish()
-
-		ctx := metadata.NewContext(
-			r.Context(),
-			metadata.Pairs(
-				"trace",
-				fmt.Sprintf("%s/0;o=1", span.TraceID()),
-			),
-		)
+		ctx := trace.NewContext(r.Context(), span)
 
 		// checkin and checkout date query params
 		inDate, outDate := r.URL.Query().Get("inDate"), r.URL.Query().Get("outDate")
@@ -78,12 +68,10 @@ func requestHandler(e *env) http.Handler {
 
 		// finds nearby hotels
 		// TODO(hw): use lat/lon from request params
-		childSpan := trace.FromContext(ctx).NewChild("getNearby")
 		nearby, err := e.GeoClient.Nearby(ctx, &geo.Request{
 			Lat: 37.7749,
 			Lon: -122.4194,
 		})
-		childSpan.Finish()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -94,12 +82,10 @@ func requestHandler(e *env) http.Handler {
 		// rateCh := getRatePlans(ctx, e, nearby.HotelIds, inDate, outDate)
 
 		// wait on profiles reply
-		childSpan = trace.FromContext(ctx).NewChild("getProfiles")
 		profileRes, err := e.ProfileClient.GetProfiles(ctx, &profile.Request{
 			HotelIds: nearby.HotelIds,
 			Locale:   "en",
 		})
-		childSpan.Finish()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

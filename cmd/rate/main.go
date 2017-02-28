@@ -13,6 +13,7 @@ import (
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/lib"
 	"github.com/harlow/go-micro-services/pb/rate"
+	"github.com/harlow/grpc-google-cloud-trace/interceptor"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -87,7 +88,9 @@ func main() {
 	)
 
 	// grpc server with rate endpoint
-	srv := grpc.NewServer()
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(interceptor.Server(traceClient)),
+	)
 	rate.RegisterRateServer(srv, &rateServer{
 		rateTable:   loadRateTable("data/rates.json"),
 		traceClient: traceClient,

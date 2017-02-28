@@ -5,17 +5,18 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"os"
-	"strings"
+	"time"
 
 	"cloud.google.com/go/trace"
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/lib"
 	"github.com/harlow/go-micro-services/pb/profile"
+	"github.com/harlow/grpc-google-cloud-trace/interceptor"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 type server struct {
@@ -25,14 +26,14 @@ type server struct {
 
 // GetProfiles returns hotel profiles for requested IDs
 func (s *server) GetProfiles(ctx context.Context, req *profile.Request) (*profile.Result, error) {
-	md, _ := metadata.FromContext(ctx)
-	span := s.traceClient.SpanFromHeader("/svc.Profile/GetProfiles", strings.Join(md["trace"], ""))
-	defer span.Finish()
-
 	res := new(profile.Result)
 	for _, i := range req.HotelIds {
 		res.Hotels = append(res.Hotels, s.hotels[i])
 	}
+
+	// add some artifical time so traces display nicely
+	time.Sleep(time.Duration(rand.Int31n(10)) * time.Millisecond)
+
 	return res, nil
 }
 
@@ -70,7 +71,9 @@ func main() {
 	)
 
 	// grpc server with profiles endpoint
-	srv := grpc.NewServer()
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(interceptor.Server(traceClient)),
+	)
 	profile.RegisterProfileServer(srv, &server{
 		hotels:      loadProfiles("data/profiles.json"),
 		traceClient: traceClient,

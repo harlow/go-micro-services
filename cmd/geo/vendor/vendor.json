@@ -63,6 +63,11 @@
 			"revisionTime": "2017-02-12T21:18:50Z"
 		},
 		{
+			"checksumSHA1": "EtGcFjhs2hytXMpG2upmGnE3GII=",
+			"path": "github.com/harlow/grpc-google-cloud-trace/interceptor",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "9jjO5GjLa0XF/nfWihF02RoH4qc=",
 			"origin": "github.com/harlow/go-micro-services/vendor/golang.org/x/net/context",
 			"path": "golang.org/x/net/context",
