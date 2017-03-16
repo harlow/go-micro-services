@@ -9,7 +9,9 @@ pb:
 vet:
 	./bin/lint.sh
 
-run:
+data:
 	go-bindata -o data/bindata.go -pkg data data/*.json
+
+run:
 	docker-compose build
 	docker-compose up
