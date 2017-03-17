@@ -12,6 +12,9 @@ import (
 
 // NewTraceClient returns an initialzed client
 func NewTraceClient(projectID, jsonConfig string) *trace.Client {
+	if projectID == "" || jsonConfig == "" {
+		return nil
+	}
 	ctx := context.Background()
 	tokenSource := getTokenSource(ctx, jsonConfig)
 	return getTraceClient(ctx, projectID, tokenSource)

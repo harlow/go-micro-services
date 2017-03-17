@@ -27,17 +27,16 @@ func newEnv() *env {
 	var cfg config
 	envconfig.MustProcess("", &cfg)
 
-	traceClient := lib.NewTraceClient(
-		cfg.TraceProjectID,
-		cfg.TraceJSONConfig,
+	tc := lib.NewTraceClient(
+		cfg.TraceProjectID, cfg.TraceJSONConfig,
 	)
 
 	return &env{
 		cfg:           cfg,
-		Tracer:        traceClient,
-		GeoClient:     geo.NewGeoClient(mustDial(cfg.GeoAddr, traceClient)),
-		ProfileClient: profile.NewProfileClient(mustDial(cfg.ProfileAddr, traceClient)),
-		RateClient:    rate.NewRateClient(mustDial(cfg.RateAddr, traceClient)),
+		Tracer:        tc,
+		GeoClient:     geo.NewGeoClient(mustDial(cfg.GeoAddr, tc)),
+		ProfileClient: profile.NewProfileClient(mustDial(cfg.ProfileAddr, tc)),
+		RateClient:    rate.NewRateClient(mustDial(cfg.RateAddr, tc)),
 	}
 }
 
