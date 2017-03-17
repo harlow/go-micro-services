@@ -29,6 +29,10 @@ Clone the repository:
 
 ### Run
 
+Make a copy of the example env file (required until [docker-compose allows optional env][2]):
+
+	$ cp .env.sample .env
+
 To make the demo as straigforward as possible; [Docker Compose](https://docs.docker.com/compose/) is used to run all the services at once (In a production environment each of the services would be run (and scaled) independently).
 
     $ make run
@@ -100,6 +104,7 @@ Thanks to all the [contributors][6]. This codebase was heavily inspired by the f
 * [go-kit][5]
 
 [1]: http://www.grpc.io/
+[2]: https://github.com/docker/compose/issues/3560
 [3]: https://speakerdeck.com/mattheath/scaling-microservices-in-go-high-load-strategy-2015
 [4]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
 [5]: https://github.com/go-kit/kit
