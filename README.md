@@ -31,7 +31,7 @@ Clone the repository:
 
 Make a copy of the example env file (required until [docker-compose allows optional env][2]):
 
-	$ cp .env.sample .env
+	$ touch .env
 
 To make the demo as straigforward as possible; [Docker Compose](https://docs.docker.com/compose/) is used to run all the services at once (In a production environment each of the services would be run (and scaled) independently).
 
