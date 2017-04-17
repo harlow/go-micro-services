@@ -16,7 +16,6 @@ import (
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/lib"
 	"github.com/harlow/go-micro-services/pb/geo"
-	"github.com/harlow/grpc-google-cloud-trace/intercept"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -100,18 +99,18 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	traceClient := lib.NewTraceClient(
+	tc := lib.NewTraceClient(
 		os.Getenv("TRACE_PROJECT_ID"),
 		os.Getenv("TRACE_JSON_CONFIG"),
 	)
 
 	// grpc server
 	srv := grpc.NewServer(
-		grpc.UnaryInterceptor(intercept.ServerTrace(traceClient)),
+		grpc.UnaryInterceptor(trace.GRPCServerInterceptor(tc)),
 	)
 	geo.RegisterGeoServer(srv, &geoServer{
 		index:       newGeoIndex("data/locations.json"),
-		traceClient: traceClient,
+		traceClient: tc,
 	})
 	srv.Serve(lis)
 }
