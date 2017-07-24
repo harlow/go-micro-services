@@ -29,7 +29,7 @@ Clone the repository:
 
 ### Run
 
-Make a copy of the example env file (required until [docker-compose allows optional env][2]):
+Create an empty env file (required until [docker-compose allows optional env][2]):
 
 	$ touch .env
 
