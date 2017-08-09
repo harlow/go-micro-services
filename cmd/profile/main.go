@@ -57,7 +57,7 @@ func main() {
 	// grpc server with profiles endpoint
 	srv := grpc.NewServer()
 	profile.RegisterProfileServer(srv, &server{
-		hotels: loadProfiles("data/profiles.json"),
+		hotels: loadProfiles("data/hotels.json"),
 	})
 	srv.Serve(lis)
 }

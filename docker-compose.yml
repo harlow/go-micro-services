@@ -11,15 +11,20 @@ services:
     ports:
       - "8080:8080"
     links:
-      - geo
       - profile
+      - search
+  profile:
+    build: .
+    entrypoint: ./cmd/profile/profile
+  search:
+    build: .
+    entrypoint: ./cmd/search/search
+    links:
+      - geo
       - rate
   geo:
     build: .
     entrypoint: ./cmd/geo/geo
-  profile:
-    build: .
-    entrypoint: ./cmd/profile/profile
   rate:
     build: .
     entrypoint: ./cmd/rate/rate

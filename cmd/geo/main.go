@@ -93,7 +93,7 @@ func main() {
 	// grpc server
 	srv := grpc.NewServer()
 	geo.RegisterGeoServer(srv, &server{
-		index: newGeoIndex("data/locations.json"),
+		index: newGeoIndex("data/geo.json"),
 	})
 	srv.Serve(lis)
 }

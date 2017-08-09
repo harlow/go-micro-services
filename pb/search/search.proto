@@ -5,7 +5,7 @@ package search;
 // Search service returns best hotel chocies for a user.
 service Search {
   rpc Nearby(NearbyRequest) returns (SearchResult);
-  rpc City(CityRequest) returns (SearchResult);
+  // rpc City(CityRequest) returns (SearchResult);
 }
 
 message NearbyRequest {
@@ -15,29 +15,13 @@ message NearbyRequest {
   string outDate = 4;
 }
 
-message CityRequest {
-  string city = 1;
-  string inDate = 2;
-  string outDate = 3;
-}
+// TODO(hw): add city search endpoint
+// message CityRequest {
+//   string city = 1;
+//   string inDate = 2;
+//   string outDate = 3;
+// }
 
 message SearchResult {
-  repeated RatePlan ratePlans = 1;
-}
-
-message RatePlan {
-  string hotelId = 1;
-  string code = 2;
-  string inDate = 3;
-  string outDate = 4;
-  RoomType roomType = 5;
-}
-
-message RoomType {
-  double bookableRate = 1;
-  double totalRate = 2;
-  double totalRateInclusive = 3;
-  string code = 4;
-  string currency = 5;
-  string roomDescription = 6;
+  repeated string hotelIds = 1;
 }

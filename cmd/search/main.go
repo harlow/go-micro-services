@@ -1,82 +1,78 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
+	"net"
 
 	"github.com/harlow/go-micro-services/pb/geo"
+	"github.com/harlow/go-micro-services/pb/rate"
+	"github.com/harlow/go-micro-services/pb/search"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
-// closet hotel w/ lowest price (best discount?) and best reviews
-
-// data needed:
-// 1. user data (lat/lon/pref room type)
-// 2. room data (pricing)
-// 3. hotel profile data (lat/lon, reviews)
-
-// www -> rank -> geoSrv (lat/lon of hotels)
-//             -> rateSrv (we'll have rates)
-//             -> reviewSrv (need agg of reviews, pos/neg etc)
-//        rank calculate []
-// www <- rank (hotelID, ratePlan)
-// www -> profileSrv -> localeSrv
-// www <- profileSrv
-
-type room struct {
+type server struct {
+	geoClient  geo.GeoClient
+	rateClient rate.RateClient
 }
 
-// either needs to return a number, or augment the argument
-// multiplier (sin, cos, etc) (distance)
-// figure out top/bottom and then rate compared to those?
-
-type rule func(a, b int) int
-
-// []hotels, rank each hotel
-// user (geo point, pref to type)
-
-type ranker struct {
-	// hotels []hotel{id, score, lat/lon, rating, etc}
-	// user user{lat/lon, pref type?}
-	// rules []rule
-}
-
-func geoScore(a, b int) int {
-	return 0
-}
-
-func reviewScore(a, b int) int {
-	return 0
-}
-
-func priceScore(a, b int) int {
-	return 0
-}
-
-// rules, features, scores, adjustments
-
-var rules = []rule{
-	geoScore,
-	reviewScore,
-	priceScore,
-}
-
-// compare against the others (1,2,3,4,etc)
-// compare against scale
-
-func main() {
-	ctx := context.Background()
-	geoClient := geo.NewGeoClient(mustDial(""))
-
-	nearby, err := geoClient.Nearby(ctx, &geo.Request{
-		Lat: 37.7749,
-		Lon: -122.4194,
+// Nearby returns ids of nearby hotels ordered by ranking algo
+func (s *server) Nearby(ctx context.Context, req *search.NearbyRequest) (*search.SearchResult, error) {
+	// find nearby hotels
+	nearby, err := s.geoClient.Nearby(ctx, &geo.Request{
+		Lat: req.Lat,
+		Lon: req.Lon,
 	})
 	if err != nil {
 		log.Fatalf("nearby error: %v", err)
 	}
 
-	log.Println(nearby)
+	// find rates for hotels
+	rates, err := s.rateClient.GetRates(ctx, &rate.Request{
+		HotelIds: nearby.HotelIds,
+		InDate:   req.InDate,
+		OutDate:  req.OutDate,
+	})
+	if err != nil {
+		log.Fatalf("rates error: %v", err)
+	}
+
+	// TODO(hw): add simple ranking algo to order hotel ids:
+	// * geo distance
+	// * price (best discount?)
+	// * reviews
+
+	// build the response
+	res := new(search.SearchResult)
+	for _, ratePlan := range rates.RatePlans {
+		res.HotelIds = append(res.HotelIds, ratePlan.HotelId)
+	}
+	return res, nil
+}
+
+func main() {
+	var (
+		port     = flag.Int("port", 8080, "The server port")
+		geoAddr  = flag.String("geoaddr", "geo:8080", "Geo server addr")
+		rateAddr = flag.String("rateaddr", "rate:8080", "Rate server addr")
+	)
+	flag.Parse()
+
+	// tcp listener
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	// grpc server
+	srv := grpc.NewServer()
+	search.RegisterSearchServer(srv, &server{
+		geoClient:  geo.NewGeoClient(mustDial(*geoAddr)),
+		rateClient: rate.NewRateClient(mustDial(*rateAddr)),
+	})
+	srv.Serve(lis)
 }
 
 // mustDial ensures a tcp connection to specified address.

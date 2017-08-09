@@ -41,7 +41,7 @@ func (s *server) GetRates(ctx context.Context, req *rate.Request) (*rate.Result,
 
 // loadRates loads rate codes from JSON file.
 func loadRateTable(path string) map[stay]*rate.RatePlan {
-	file := data.MustAsset("data/rates.json")
+	file := data.MustAsset(path)
 
 	rates := []*rate.RatePlan{}
 	if err := json.Unmarshal(file, &rates); err != nil {
@@ -57,6 +57,7 @@ func loadRateTable(path string) map[stay]*rate.RatePlan {
 		}
 		rateTable[stay] = ratePlan
 	}
+
 	return rateTable
 }
 
@@ -74,7 +75,7 @@ func main() {
 	// grpc server
 	srv := grpc.NewServer()
 	rate.RegisterRateServer(srv, &server{
-		rateTable: loadRateTable("data/rates.json"),
+		rateTable: loadRateTable("data/inventory.json"),
 	})
 	srv.Serve(lis)
 }

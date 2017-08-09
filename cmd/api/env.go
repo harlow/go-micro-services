@@ -4,18 +4,16 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/harlow/go-micro-services/pb/geo"
 	"github.com/harlow/go-micro-services/pb/profile"
-	"github.com/harlow/go-micro-services/pb/rate"
+	"github.com/harlow/go-micro-services/pb/search"
 	"github.com/kelseyhightower/envconfig"
 	"google.golang.org/grpc"
 )
 
 type config struct {
 	Port        string `default:"8080" envconfig:"PORT"`
-	GeoAddr     string `default:"geo:8080" envconfig:"GEO_ADDR"`
+	SearchAddr  string `default:"search:8080" envconfig:"SEARCH_ADDR"`
 	ProfileAddr string `default:"profile:8080" envconfig:"PROFILE_ADDR"`
-	RateAddr    string `default:"rate:8080" envconfig:"RATE_ADDR"`
 }
 
 func newEnv() *env {
@@ -24,18 +22,16 @@ func newEnv() *env {
 
 	return &env{
 		cfg:           cfg,
-		GeoClient:     geo.NewGeoClient(mustDial(cfg.GeoAddr)),
+		SearchClient:  search.NewSearchClient(mustDial(cfg.SearchAddr)),
 		ProfileClient: profile.NewProfileClient(mustDial(cfg.ProfileAddr)),
-		RateClient:    rate.NewRateClient(mustDial(cfg.RateAddr)),
 	}
 }
 
 type env struct {
 	cfg config
 
-	GeoClient     geo.GeoClient
+	SearchClient  search.SearchClient
 	ProfileClient profile.ProfileClient
-	RateClient    rate.RateClient
 }
 
 func (e *env) serviceAddr() string {

@@ -4,20 +4,18 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"sync"
 
-	"github.com/harlow/go-micro-services/pb/geo"
 	"github.com/harlow/go-micro-services/pb/profile"
-	"github.com/harlow/go-micro-services/pb/rate"
+	"github.com/harlow/go-micro-services/pb/search"
 )
 
 func main() {
 	e := newEnv()
-	http.Handle("/", requestHandler(e))
+	http.Handle("/", handler(e))
 	log.Fatal(http.ListenAndServe(e.serviceAddr(), nil))
 }
 
-func requestHandler(e *env) http.Handler {
+func handler(e *env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
@@ -29,50 +27,33 @@ func requestHandler(e *env) http.Handler {
 			return
 		}
 
-		// finds nearby hotels
-		// TODO(hw): use lat/lon from request params
-		nearby, err := e.GeoClient.Nearby(ctx, &geo.Request{
-			Lat: 37.7749,
-			Lon: -122.4194,
+		// nearby hotel ids
+		// TODO(hw): allow lat/lon from input params
+		nearby, err := e.SearchClient.Nearby(ctx, &search.NearbyRequest{
+			Lat:     37.7749,
+			Lon:     -122.4194,
+			InDate:  inDate,
+			OutDate: outDate,
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		var profileRes *profile.Result
-		var rateRes *rate.Result
-
-		wg := &sync.WaitGroup{}
-		wg.Add(2)
-
-		go func() {
-			defer wg.Done()
-			profileRes, err = e.ProfileClient.GetProfiles(ctx, &profile.Request{
-				HotelIds: nearby.HotelIds,
-				Locale:   "en",
-			})
-		}()
-
-		go func() {
-			defer wg.Done()
-			rateRes, err = e.RateClient.GetRates(ctx, &rate.Request{
-				HotelIds: nearby.HotelIds,
-				InDate:   inDate,
-				OutDate:  outDate,
-			})
-		}()
-
-		wg.Wait()
-
+		// hotel profiles
+		// TODO(hw): allow custom locale from input params
+		profile, err := e.ProfileClient.GetProfiles(ctx, &profile.Request{
+			HotelIds: nearby.HotelIds,
+			Locale:   "en",
+		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		json.NewEncoder(w).Encode(
-			geoJSON(profileRes.Hotels),
-		)
+		// geo json response body
+		body := geoJSON(profile.Hotels)
+		json.NewEncoder(w).Encode(body)
 	})
 }
 
