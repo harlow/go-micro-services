@@ -6,12 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
-	"time"
 
-	"cloud.google.com/go/trace"
 	"github.com/harlow/go-micro-services/data"
-	"github.com/harlow/go-micro-services/lib"
 	"github.com/harlow/go-micro-services/pb/rate"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -23,13 +19,12 @@ type stay struct {
 	OutDate string
 }
 
-type rateServer struct {
-	traceClient *trace.Client
-	rateTable   map[stay]*rate.RatePlan
+type server struct {
+	rateTable map[stay]*rate.RatePlan
 }
 
 // GetRates gets rates for hotels for specific date range.
-func (s *rateServer) GetRates(ctx context.Context, req *rate.Request) (*rate.Result, error) {
+func (s *server) GetRates(ctx context.Context, req *rate.Request) (*rate.Result, error) {
 	res := new(rate.Result)
 	for _, hotelID := range req.HotelIds {
 		stay := stay{
@@ -41,10 +36,6 @@ func (s *rateServer) GetRates(ctx context.Context, req *rate.Request) (*rate.Res
 			res.RatePlans = append(res.RatePlans, s.rateTable[stay])
 		}
 	}
-
-	// add some artifical time so traces display nicely
-	time.Sleep(1 * time.Millisecond)
-
 	return res, nil
 }
 
@@ -80,18 +71,10 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	tc := lib.NewTraceClient(
-		os.Getenv("TRACE_PROJECT_ID"),
-		os.Getenv("TRACE_JSON_CONFIG"),
-	)
-
-	// grpc server with rate endpoint
-	srv := grpc.NewServer(
-		grpc.UnaryInterceptor(trace.GRPCServerInterceptor(tc)),
-	)
-	rate.RegisterRateServer(srv, &rateServer{
-		rateTable:   loadRateTable("data/rates.json"),
-		traceClient: tc,
+	// grpc server
+	srv := grpc.NewServer()
+	rate.RegisterRateServer(srv, &server{
+		rateTable: loadRateTable("data/rates.json"),
 	})
 	srv.Serve(lis)
 }

@@ -5,16 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"net"
-	"os"
 
-	"time"
-
-	"cloud.google.com/go/trace"
 	"github.com/hailocab/go-geoindex"
 	"github.com/harlow/go-micro-services/data"
-	"github.com/harlow/go-micro-services/lib"
 	"github.com/harlow/go-micro-services/pb/geo"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -36,38 +30,35 @@ func (p *point) Lat() float64 { return p.Plat }
 func (p *point) Lon() float64 { return p.Plon }
 func (p *point) Id() string   { return p.Pid }
 
-type geoServer struct {
-	traceClient *trace.Client
-	index       *geoindex.ClusteringIndex
+type server struct {
+	index *geoindex.ClusteringIndex
 }
 
 // Nearby returns all hotels within a given distance.
-func (s *geoServer) Nearby(ctx context.Context, req *geo.Request) (*geo.Result, error) {
-	points := s.getNearbyPoints(ctx, float64(req.Lat), float64(req.Lon))
-
-	// add some artifical time so traces display nicely
-	time.Sleep(time.Duration(rand.Int31n(5)) * time.Millisecond)
-
-	res := &geo.Result{}
+func (s *server) Nearby(ctx context.Context, req *geo.Request) (*geo.Result, error) {
+	var (
+		points = s.getNearbyPoints(ctx, float64(req.Lat), float64(req.Lon))
+		res    = &geo.Result{}
+	)
 	for _, p := range points {
 		res.HotelIds = append(res.HotelIds, p.Id())
 	}
-
 	return res, nil
 }
 
-func (s *geoServer) getNearbyPoints(ctx context.Context, lat, lon float64) []geoindex.Point {
-	span := trace.FromContext(ctx).NewChild("getNearbyPoints")
-	defer span.Finish()
-
-	// add some artifical time so traces display nicely
-	time.Sleep(1 * time.Millisecond)
-
-	center := &geoindex.GeoPoint{Pid: "", Plat: lat, Plon: lon}
-	points := s.index.KNearest(center, maxSearchResults, geoindex.Km(maxSearchRadius), func(p geoindex.Point) bool {
-		return true
-	})
-	return points
+func (s *server) getNearbyPoints(ctx context.Context, lat, lon float64) []geoindex.Point {
+	center := &geoindex.GeoPoint{
+		Pid:  "",
+		Plat: lat,
+		Plon: lon,
+	}
+	return s.index.KNearest(
+		center,
+		maxSearchResults,
+		geoindex.Km(maxSearchRadius), func(p geoindex.Point) bool {
+			return true
+		},
+	)
 }
 
 // newGeoIndex returns a geo index with points loaded
@@ -99,18 +90,10 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	tc := lib.NewTraceClient(
-		os.Getenv("TRACE_PROJECT_ID"),
-		os.Getenv("TRACE_JSON_CONFIG"),
-	)
-
 	// grpc server
-	srv := grpc.NewServer(
-		grpc.UnaryInterceptor(trace.GRPCServerInterceptor(tc)),
-	)
-	geo.RegisterGeoServer(srv, &geoServer{
-		index:       newGeoIndex("data/locations.json"),
-		traceClient: tc,
+	srv := grpc.NewServer()
+	geo.RegisterGeoServer(srv, &server{
+		index: newGeoIndex("data/locations.json"),
 	})
 	srv.Serve(lis)
 }

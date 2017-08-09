@@ -29,10 +29,6 @@ Clone the repository:
 
 ### Run
 
-Make a copy of the example env file (required until [docker-compose allows optional env][2]):
-
-	$ touch .env
-
 To make the demo as straigforward as possible; [Docker Compose](https://docs.docker.com/compose/) is used to run all the services at once (In a production environment each of the services would be run (and scaled) independently).
 
     $ make run
@@ -74,19 +70,6 @@ The JSON response:
 		}
 	}]
 }
-```
-
-### Tracing
-
-Tracing data is pushed to Google Stackdriver. See [Tracing gRPC calls in Golang with Google Stackdriver](https://medium.com/@harlow/tracing-grpc-calls-in-golang-with-google-stackdriver-b22495763a06#.6skzmkwqy) for more detailed information on how tracing was implemented.
-
-<img width="1140" alt="screen shot 2017-02-27 at 8 53 17 pm" src="https://cloud.githubusercontent.com/assets/739782/23392216/fa24096e-fd2e-11e6-9dfc-f2380f9f8b1c.png">
-
-To enable tracing add the following to `.env`:
-
-```
-TRACE_PROJECT_ID=
-TRACE_JSON_CONFIG=
 ```
 
 ### Protobufs
