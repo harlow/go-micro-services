@@ -4,32 +4,12 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-
 	"sync"
 
-	"cloud.google.com/go/trace"
 	"github.com/harlow/go-micro-services/pb/geo"
 	"github.com/harlow/go-micro-services/pb/profile"
 	"github.com/harlow/go-micro-services/pb/rate"
 )
-
-type response struct {
-	Type     string    `json:"type"`
-	Features []feature `json:"features"`
-}
-
-type feature struct {
-	ID         string `json:"id"`
-	Type       string `json:"type"`
-	Properties struct {
-		Name        string `json:"name"`
-		PhoneNumber string `json:"phone_number"`
-	} `json:"properties"`
-	Geometry struct {
-		Type        string    `json:"type"`
-		Coordinates []float32 `json:"coordinates"`
-	} `json:"geometry"`
-}
 
 func main() {
 	e := newEnv()
@@ -40,10 +20,7 @@ func main() {
 func requestHandler(e *env) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-
-		span := e.Tracer.SpanFromRequest(r)
-		defer span.Finish()
-		ctx := trace.NewContext(r.Context(), span)
+		ctx := r.Context()
 
 		// in/out dates from query params
 		inDate, outDate := r.URL.Query().Get("inDate"), r.URL.Query().Get("outDate")
@@ -94,12 +71,14 @@ func requestHandler(e *env) http.Handler {
 		}
 
 		json.NewEncoder(w).Encode(
-			geoJSONResponse(profileRes.Hotels),
+			geoJSON(profileRes.Hotels),
 		)
 	})
 }
 
-func geoJSONResponse(hotels []*profile.Hotel) response {
+// build a geoJSON response that allows google map to plot points directly on map
+// https://developers.google.com/maps/documentation/javascript/datalayer#sample_geojson
+func geoJSON(hotels []*profile.Hotel) response {
 	r := response{
 		Type: "FeatureCollection",
 	}
@@ -120,4 +99,22 @@ func geoJSONResponse(hotels []*profile.Hotel) response {
 	}
 
 	return r
+}
+
+type response struct {
+	Type     string    `json:"type"`
+	Features []feature `json:"features"`
+}
+
+type feature struct {
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	Properties struct {
+		Name        string `json:"name"`
+		PhoneNumber string `json:"phone_number"`
+	} `json:"properties"`
+	Geometry struct {
+		Type        string    `json:"type"`
+		Coordinates []float32 `json:"coordinates"`
+	} `json:"geometry"`
 }
