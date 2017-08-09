@@ -29,6 +29,10 @@ Clone the repository:
 
 ### Run
 
+Create an empty env file (required until [docker-compose allows optional env][2]):
+
+	$ touch .env
+
 To make the demo as straigforward as possible; [Docker Compose](https://docs.docker.com/compose/) is used to run all the services at once (In a production environment each of the services would be run (and scaled) independently).
 
     $ make run
