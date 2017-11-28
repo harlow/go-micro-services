@@ -49,7 +49,6 @@ type server struct {
 
 func (s *server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	ctx := r.Context()
 
 	// in/out dates from query params
 	inDate, outDate := r.URL.Query().Get("inDate"), r.URL.Query().Get("outDate")
@@ -58,9 +57,11 @@ func (s *server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// nearby hotel ids
+	ctx := r.Context()
+
+	// search for best hotels
 	// TODO(hw): allow lat/lon from input params
-	nearby, err := s.searchClient.Nearby(ctx, &search.NearbyRequest{
+	searchResp, err := s.searchClient.Nearby(ctx, &search.NearbyRequest{
 		Lat:     37.7749,
 		Lon:     -122.4194,
 		InDate:  inDate,
@@ -71,11 +72,16 @@ func (s *server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// grab locale from query params or default to en
+	locale := r.URL.Query().Get("locale")
+	if locale == "" {
+		locale = "en"
+	}
+
 	// hotel profiles
-	// TODO(hw): allow custom locale from input params
-	profile, err := s.profileClient.GetProfiles(ctx, &profile.Request{
-		HotelIds: nearby.HotelIds,
-		Locale:   "en",
+	profileResp, err := s.profileClient.GetProfiles(ctx, &profile.Request{
+		HotelIds: searchResp.HotelIds,
+		Locale:   locale,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -83,13 +89,13 @@ func (s *server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// geo json response body
-	body := geoJSON(profile.Hotels)
+	body := buildGeoJSON(profileResp.Hotels)
 	json.NewEncoder(w).Encode(body)
 }
 
 // build a geoJSON response that allows google map to plot points directly on map
 // https://developers.google.com/maps/documentation/javascript/datalayer#sample_geojson
-func geoJSON(hotels []*profile.Hotel) response {
+func buildGeoJSON(hotels []*profile.Hotel) response {
 	r := response{Type: "FeatureCollection"}
 
 	for _, hotel := range hotels {
