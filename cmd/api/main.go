@@ -88,57 +88,38 @@ func (s *server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// geo json response body
-	body := buildGeoJSON(profileResp.Hotels)
-	json.NewEncoder(w).Encode(body)
+	// return a geoJSON response that allows google map to plot points directly on map
+	// https://developers.google.com/maps/documentation/javascript/datalayer#sample_geojson
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"type":     "FeatureCollection",
+		"features": buildFeatures(profileResp.Hotels),
+	})
 }
 
-// build a geoJSON response that allows google map to plot points directly on map
-// https://developers.google.com/maps/documentation/javascript/datalayer#sample_geojson
-func buildGeoJSON(hotels []*profile.Hotel) response {
-	r := response{Type: "FeatureCollection"}
-
-	for _, hotel := range hotels {
-		f := feature{
-			Type: "Feature",
-			ID:   hotel.Id,
-			Properties: properties{
-				Name:        hotel.Name,
-				PhoneNumber: hotel.PhoneNumber,
-			},
-			Geometry: geometry{
-				Type: "Point",
-				Coordinates: []float32{
-					hotel.Address.Lon,
-					hotel.Address.Lat,
-				},
-			},
-		}
-
-		r.Features = append(r.Features, f)
+// returns a slice of features from hotel records
+func buildFeatures(hotels []*profile.Hotel) []interface{} {
+	fs := []interface{}{}
+	for _, h := range hotels {
+		fs = append(fs, buildFeature(h))
 	}
-
-	return r
+	return fs
 }
 
-type response struct {
-	Type     string    `json:"type"`
-	Features []feature `json:"features"`
-}
-
-type feature struct {
-	ID         string     `json:"id"`
-	Type       string     `json:"type"`
-	Properties properties `json:"properties"`
-	Geometry   geometry   `json:"geometry"`
-}
-
-type properties struct {
-	Name        string `json:"name"`
-	PhoneNumber string `json:"phone_number"`
-}
-
-type geometry struct {
-	Type        string    `json:"type"`
-	Coordinates []float32 `json:"coordinates"`
+// returns a feature node for plotting on map
+func buildFeature(hotel *profile.Hotel) map[string]interface{} {
+	return map[string]interface{}{
+		"type": "Feature",
+		"id":   hotel.Id,
+		"properties": map[string]string{
+			"name":         hotel.Name,
+			"phone_number": hotel.PhoneNumber,
+		},
+		"geometry": map[string]interface{}{
+			"type": "Point",
+			"coordinates": []float32{
+				hotel.Address.Lon,
+				hotel.Address.Lat,
+			},
+		},
+	}
 }
