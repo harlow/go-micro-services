@@ -7,8 +7,10 @@ import (
 	"log"
 	"net"
 
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/pb/profile"
+	"github.com/harlow/go-micro-services/tracing"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -45,19 +47,28 @@ func loadProfiles(path string) map[string]*profile.Hotel {
 
 func main() {
 	// service port
-	var port = flag.Int("port", 8080, "The server port")
+	var (
+		port       = flag.String("port", "8080", "The server port")
+		jaegerAddr = flag.String("jaegeraddr", "jaeger:6831", "Jaeger server addr")
+	)
 	flag.Parse()
 
-	// tcp listener
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
+	var tracer = tracing.Init("rate", *jaegerAddr)
 
-	// grpc server with profiles endpoint
-	srv := grpc.NewServer()
+	// grpc server w/ tracing middleware
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(
+			otgrpc.OpenTracingServerInterceptor(tracer),
+		),
+	)
+
 	profile.RegisterProfileServer(srv, &server{
 		hotels: loadProfiles("data/hotels.json"),
 	})
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", *port))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
 	srv.Serve(lis)
 }

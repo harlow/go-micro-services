@@ -72,6 +72,15 @@ The JSON response:
 }
 ```
 
+### Tracing
+
+The [Jaeger Tracing](https://github.com/jaegertracing/jaeger) project is used for tracing inter-service requests.
+
+<img width="920" alt="jaeger tracing" src="https://user-images.githubusercontent.com/739782/37187303-cf302300-239d-11e8-8116-eb54e4ccb9e2.png">
+
+
+Once docker-compose has launched all services visit http://localhost:16686/search
+
 ### Protobufs
 
 If changes are made to the Protocol Buffer files use the Makefile to regenerate:

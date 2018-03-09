@@ -6,9 +6,11 @@ import (
 	"log"
 	"net"
 
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/harlow/go-micro-services/pb/geo"
 	"github.com/harlow/go-micro-services/pb/rate"
 	"github.com/harlow/go-micro-services/pb/search"
+	"github.com/harlow/go-micro-services/tracing"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -54,36 +56,36 @@ func (s *server) Nearby(ctx context.Context, req *search.NearbyRequest) (*search
 
 func main() {
 	var (
-		port     = flag.Int("port", 8080, "The server port")
-		geoAddr  = flag.String("geoaddr", "geo:8080", "Geo server addr")
-		rateAddr = flag.String("rateaddr", "rate:8080", "Rate server addr")
+		port       = flag.String("port", "8080", "The server port")
+		geoAddr    = flag.String("geoaddr", "geo:8080", "Geo server addr")
+		rateAddr   = flag.String("rateaddr", "rate:8080", "Rate server addr")
+		jaegerAddr = flag.String("jaegeraddr", "jaeger:6831", "Jaeger server addr")
 	)
 	flag.Parse()
 
-	// tcp listener
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	var (
+		tracer     = tracing.Init("search", *jaegerAddr)
+		geoClient  = geo.NewGeoClient(tracing.MustDial(*geoAddr, tracer))
+		rateClient = rate.NewRateClient(tracing.MustDial(*rateAddr, tracer))
+	)
+
+	// grpc server w/ tracing middleware
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(
+			otgrpc.OpenTracingServerInterceptor(tracer),
+		),
+	)
+
+	// register impl for pb definition
+	search.RegisterSearchServer(srv, &server{
+		geoClient:  geoClient,
+		rateClient: rateClient,
+	})
+
+	// listener
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-
-	// grpc server
-	srv := grpc.NewServer()
-	search.RegisterSearchServer(srv, &server{
-		geoClient:  geo.NewGeoClient(mustDial(*geoAddr)),
-		rateClient: rate.NewRateClient(mustDial(*rateAddr)),
-	})
 	srv.Serve(lis)
-}
-
-// mustDial ensures a tcp connection to specified address.
-func mustDial(addr string) *grpc.ClientConn {
-	conn, err := grpc.Dial(
-		addr,
-		grpc.WithInsecure(),
-	)
-	if err != nil {
-		log.Fatalf("failed to dial: %v", err)
-		panic(err)
-	}
-	return conn
 }

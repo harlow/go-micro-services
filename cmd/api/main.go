@@ -8,7 +8,8 @@ import (
 
 	"github.com/harlow/go-micro-services/pb/profile"
 	"github.com/harlow/go-micro-services/pb/search"
-	"google.golang.org/grpc"
+	"github.com/harlow/go-micro-services/tracing"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 func main() {
@@ -16,38 +17,39 @@ func main() {
 		port        = flag.String("port", "8080", "The server port")
 		searchAddr  = flag.String("searchaddr", "search:8080", "Search service addr")
 		profileAddr = flag.String("profileaddr", "profile:8080", "Profile service addr")
+		jaegerAddr  = flag.String("jaegeraddr", "jaeger:6831", "Jaeger server addr")
 	)
 	flag.Parse()
 
+	var (
+		tracer        = tracing.Init("api", *jaegerAddr)
+		searchClient  = search.NewSearchClient(tracing.MustDial(*searchAddr, tracer))
+		profileClient = profile.NewProfileClient(tracing.MustDial(*profileAddr, tracer))
+	)
+
+	opentracing.SetGlobalTracer(tracer)
+
 	srv := &server{
-		searchClient:  search.NewSearchClient(mustDial(*searchAddr)),
-		profileClient: profile.NewProfileClient(mustDial(*profileAddr)),
+		searchClient:  searchClient,
+		profileClient: profileClient,
+		tracer:        tracer,
 	}
 
 	http.HandleFunc("/", srv.searchHandler)
 	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
 
-// mustDial ensures a tcp connection to specified address.
-func mustDial(addr string) *grpc.ClientConn {
-	conn, err := grpc.Dial(
-		addr,
-		grpc.WithInsecure(),
-	)
-	if err != nil {
-		log.Fatalf("failed to dial: %v", err)
-		panic(err)
-	}
-	return conn
-}
-
 // server holds open the grpc connections and serves the JSON http endpoint
 type server struct {
 	searchClient  search.SearchClient
 	profileClient profile.ProfileClient
+	tracer        opentracing.Tracer
 }
 
 func (s *server) searchHandler(w http.ResponseWriter, r *http.Request) {
+	span, ctx := opentracing.StartSpanFromContext(r.Context(), "SearchHandler")
+	defer span.Finish()
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	// in/out dates from query params
@@ -56,8 +58,6 @@ func (s *server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Please specify inDate/outDate params", http.StatusBadRequest)
 		return
 	}
-
-	ctx := r.Context()
 
 	// search for best hotels
 	// TODO(hw): allow lat/lon from input params
@@ -96,30 +96,26 @@ func (s *server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// returns a slice of features from hotel records
-func buildFeatures(hotels []*profile.Hotel) []interface{} {
+// returns a slice of features from hotel records, the feature nodes
+// can be used for plotting on map
+func buildFeatures(hs []*profile.Hotel) []interface{} {
 	fs := []interface{}{}
-	for _, h := range hotels {
-		fs = append(fs, buildFeature(h))
+	for _, h := range hs {
+		fs = append(fs, map[string]interface{}{
+			"type": "Feature",
+			"id":   h.Id,
+			"properties": map[string]string{
+				"name":         h.Name,
+				"phone_number": h.PhoneNumber,
+			},
+			"geometry": map[string]interface{}{
+				"type": "Point",
+				"coordinates": []float32{
+					h.Address.Lon,
+					h.Address.Lat,
+				},
+			},
+		})
 	}
 	return fs
-}
-
-// returns a feature node for plotting on map
-func buildFeature(hotel *profile.Hotel) map[string]interface{} {
-	return map[string]interface{}{
-		"type": "Feature",
-		"id":   hotel.Id,
-		"properties": map[string]string{
-			"name":         hotel.Name,
-			"phone_number": hotel.PhoneNumber,
-		},
-		"geometry": map[string]interface{}{
-			"type": "Point",
-			"coordinates": []float32{
-				hotel.Address.Lon,
-				hotel.Address.Lat,
-			},
-		},
-	}
 }

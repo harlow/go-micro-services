@@ -7,9 +7,12 @@ import (
 	"log"
 	"net"
 
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/hailocab/go-geoindex"
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/pb/geo"
+	"github.com/harlow/go-micro-services/tracing"
+	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -36,6 +39,9 @@ type server struct {
 
 // Nearby returns all hotels within a given distance.
 func (s *server) Nearby(ctx context.Context, req *geo.Request) (*geo.Result, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Inner.Nearby")
+	defer span.Finish()
+
 	var (
 		points = s.getNearbyPoints(ctx, float64(req.Lat), float64(req.Lon))
 		res    = &geo.Result{}
@@ -80,20 +86,27 @@ func newGeoIndex(path string) *geoindex.ClusteringIndex {
 }
 
 func main() {
-	// port number
-	var port = flag.Int("port", 8080, "The server port")
+	var (
+		port       = flag.String("port", "8080", "The server port")
+		jaegerAddr = flag.String("jaegeraddr", "jaeger:6831", "Jaeger server addr")
+	)
 	flag.Parse()
 
-	// tcp listener
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
+	var tracer = tracing.Init("rate", *jaegerAddr)
 
-	// grpc server
-	srv := grpc.NewServer()
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(
+			otgrpc.OpenTracingServerInterceptor(tracer),
+		),
+	)
+
 	geo.RegisterGeoServer(srv, &server{
 		index: newGeoIndex("data/geo.json"),
 	})
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", *port))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
 	srv.Serve(lis)
 }
