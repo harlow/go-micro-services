@@ -2,12 +2,12 @@ version: "3"
 services:
   www:
     build: .
-    entrypoint: ./cmd/www/www
+    entrypoint: www
     ports:
       - "5000:5000"
   api:
     build: .
-    entrypoint: ./cmd/api/api
+    entrypoint: api
     ports:
       - "8080:8080"
     links:
@@ -16,24 +16,24 @@ services:
       - jaeger
   profile:
     build: .
-    entrypoint: ./cmd/profile/profile
+    entrypoint: profile
     links:
       - jaeger
   search:
     build: .
-    entrypoint: ./cmd/search/search
+    entrypoint: search
     links:
       - geo
       - rate
       - jaeger
   geo:
     build: .
-    entrypoint: ./cmd/geo/geo
+    entrypoint: geo
     links:
       - jaeger
   rate:
     build: .
-    entrypoint: ./cmd/rate/rate
+    entrypoint: rate
     links:
       - jaeger
   jaeger:
