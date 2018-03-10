@@ -12,7 +12,6 @@ import (
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/pb/geo"
 	"github.com/harlow/go-micro-services/tracing"
-	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -39,9 +38,6 @@ type server struct {
 
 // Nearby returns all hotels within a given distance.
 func (s *server) Nearby(ctx context.Context, req *geo.Request) (*geo.Result, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Inner.Nearby")
-	defer span.Finish()
-
 	var (
 		points = s.getNearbyPoints(ctx, float64(req.Lat), float64(req.Lon))
 		res    = &geo.Result{}
