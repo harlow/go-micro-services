@@ -9,7 +9,6 @@ import (
 	"github.com/harlow/go-micro-services/pb/profile"
 	"github.com/harlow/go-micro-services/pb/search"
 	"github.com/harlow/go-micro-services/tracing"
-	opentracing "github.com/opentracing/opentracing-go"
 )
 
 func main() {
@@ -26,30 +25,23 @@ func main() {
 		searchClient  = search.NewSearchClient(tracing.MustDial(*searchAddr, tracer))
 		profileClient = profile.NewProfileClient(tracing.MustDial(*profileAddr, tracer))
 	)
-
-	opentracing.SetGlobalTracer(tracer)
-
 	srv := &server{
 		searchClient:  searchClient,
 		profileClient: profileClient,
-		tracer:        tracer,
 	}
 
-	http.HandleFunc("/", srv.searchHandler)
-	log.Fatal(http.ListenAndServe(":"+*port, nil))
+	mux := tracing.NewServeMux(tracer)
+	mux.Handle("/", http.HandlerFunc(srv.searchHandler))
+	log.Fatal(http.ListenAndServe(":"+*port, mux))
 }
 
 // server holds open the grpc connections and serves the JSON http endpoint
 type server struct {
 	searchClient  search.SearchClient
 	profileClient profile.ProfileClient
-	tracer        opentracing.Tracer
 }
 
 func (s *server) searchHandler(w http.ResponseWriter, r *http.Request) {
-	span, ctx := opentracing.StartSpanFromContext(r.Context(), "SearchHandler")
-	defer span.Finish()
-
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	// in/out dates from query params
@@ -58,6 +50,8 @@ func (s *server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Please specify inDate/outDate params", http.StatusBadRequest)
 		return
 	}
+
+	ctx := r.Context()
 
 	// search for best hotels
 	// TODO(hw): allow lat/lon from input params

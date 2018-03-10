@@ -63,7 +63,7 @@ func main() {
 	)
 	flag.Parse()
 
-	// grpc server w/ tracing middleware
+	// grpc server w/ tracing iterceptor
 	var tracer = tracing.Init("search", *jaegerAddr)
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(

@@ -11,6 +11,7 @@ import (
 	"github.com/harlow/go-micro-services/data"
 	"github.com/harlow/go-micro-services/pb/rate"
 	"github.com/harlow/go-micro-services/tracing"
+	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -23,6 +24,7 @@ type stay struct {
 
 type server struct {
 	rateTable map[stay]*rate.RatePlan
+	tracer    opentracing.Tracer
 }
 
 // GetRates gets rates for hotels for specific date range.
@@ -71,7 +73,6 @@ func main() {
 	flag.Parse()
 
 	var tracer = tracing.Init("rate", *jaegerAddr)
-
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(
 			otgrpc.OpenTracingServerInterceptor(tracer),
@@ -80,6 +81,7 @@ func main() {
 
 	rate.RegisterRateServer(srv, &server{
 		rateTable: loadRateTable("data/inventory.json"),
+		tracer:    tracer,
 	})
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", *port))
