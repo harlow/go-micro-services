@@ -76,8 +76,7 @@ The JSON response:
 
 The [Jaeger Tracing](https://github.com/jaegertracing/jaeger) project is used for tracing inter-service requests.
 
-<img width="920" alt="jaeger tracing" src="https://user-images.githubusercontent.com/739782/37187303-cf302300-239d-11e8-8116-eb54e4ccb9e2.png">
-
+<img width="1068" alt="jaeger trace diagram" src="https://user-images.githubusercontent.com/739782/37238917-b710b734-2484-11e8-8148-50fc7fe5e366.png">
 
 Once docker-compose has launched all services visit http://localhost:16686/search
 
