@@ -63,13 +63,8 @@ func main() {
 	)
 	flag.Parse()
 
-	var (
-		tracer     = tracing.Init("search", *jaegerAddr)
-		geoClient  = geo.NewGeoClient(tracing.MustDial(*geoAddr, tracer))
-		rateClient = rate.NewRateClient(tracing.MustDial(*rateAddr, tracer))
-	)
-
 	// grpc server w/ tracing middleware
+	var tracer = tracing.Init("search", *jaegerAddr)
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(
 			otgrpc.OpenTracingServerInterceptor(tracer),
@@ -77,6 +72,10 @@ func main() {
 	)
 
 	// register impl for pb definition
+	var (
+		geoClient  = geo.NewGeoClient(tracing.MustDial(*geoAddr, tracer))
+		rateClient = rate.NewRateClient(tracing.MustDial(*rateAddr, tracer))
+	)
 	search.RegisterSearchServer(srv, &server{
 		geoClient:  geoClient,
 		rateClient: rateClient,

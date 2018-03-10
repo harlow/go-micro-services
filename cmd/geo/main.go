@@ -92,7 +92,7 @@ func main() {
 	)
 	flag.Parse()
 
-	var tracer = tracing.Init("rate", *jaegerAddr)
+	var tracer = tracing.Init("geo", *jaegerAddr)
 
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(

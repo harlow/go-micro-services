@@ -53,7 +53,7 @@ func main() {
 	)
 	flag.Parse()
 
-	var tracer = tracing.Init("rate", *jaegerAddr)
+	var tracer = tracing.Init("profile", *jaegerAddr)
 
 	// grpc server w/ tracing middleware
 	srv := grpc.NewServer(
