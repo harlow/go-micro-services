@@ -1,11 +1,8 @@
 package main
 
-import (
-	"net/http"
-)
+import "github.com/harlow/go-micro-services/services/frontend"
 
 func main() {
-	fs := http.FileServer(http.Dir("cmd/www/static"))
-	http.Handle("/", fs)
-	http.ListenAndServe(":5000", nil)
+	srv := frontend.Server{}
+	srv.Run()
 }

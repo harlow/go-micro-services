@@ -1,7 +1,7 @@
 .PHONY: pb data lint run
 
-pb:
-	for f in pb/**/*.proto; do \
+proto:
+	for f in services/**/proto/*.proto; do \
 		protoc --go_out=plugins=grpc:. $$f; \
 		echo compiled: $$f; \
 	done

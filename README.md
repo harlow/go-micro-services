@@ -84,7 +84,7 @@ Once docker-compose has launched all services visit http://localhost:16686/searc
 
 If changes are made to the Protocol Buffer files use the Makefile to regenerate:
 
-    $ make pb
+    $ make proto
 
 ### Credits
 
