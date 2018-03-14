@@ -1,7 +1,13 @@
 # Golang Microservices Example
 
-An demonstration of Golang micro-services that accept HTTP/JSON requests at API level and then
-leverage [gRPC][1] for inter-service communication. The example application plots Hotel locations on a Google map:
+An demonstration of Golang micro-services that expose a HTTP/JSON frontend and then
+leverages [gRPC][1] for inter-service communication.
+
+* Services written in Golang
+* gRPC for inter-service communication
+* Jaeger for request tracing
+
+The example application plots Hotel locations on a Google map:
 
 <img width="865" alt="screen shot 2016-11-07 at 9 31 12 pm" src="https://cloud.githubusercontent.com/assets/739782/20087958/de0ef9b4-a531-11e6-953a-4425fe445883.png">
 
