@@ -1,4 +1,4 @@
-package api
+package frontend
 
 import (
 	"encoding/json"
@@ -11,22 +11,26 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
-// Server implements the JSON Api server
+// Server implements frontend service
 type Server struct {
 	SearchClient  search.SearchClient
 	ProfileClient profile.ProfileClient
-	Tracer        opentracing.Tracer
 	Port          string
+	Tracer        opentracing.Tracer
 }
 
-// Run starts the server
+// Run the server
 func (s *Server) Run() error {
 	if s.Port == "" {
 		return fmt.Errorf("server port must be set")
 	}
 
+	fs := http.FileServer(http.Dir("services/frontend/static"))
+
 	mux := tracing.NewServeMux(s.Tracer)
-	mux.Handle("/", http.HandlerFunc(s.searchHandler))
+	mux.Handle("/", fs)
+	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
+
 	return http.ListenAndServe(":"+s.Port, mux)
 }
 

@@ -1,18 +1,13 @@
 version: "3"
 services:
-  www:
+  frontend:
     build: .
-    entrypoint: www
+    entrypoint: frontend
     ports:
       - "5000:5000"
-  api:
-    build: .
-    entrypoint: api
-    ports:
-      - "8080:8080"
     links:
-      - profile
       - search
+      - profile
       - jaeger
   profile:
     build: .

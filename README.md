@@ -39,7 +39,7 @@ Vist the web page in a browser:
 
 cURL the API endpoint and receive GeoJSON response:
 
-    $ curl "http://localhost:8080/inventory?inDate=2015-04-09&outDate=2015-04-10" 
+    $ curl "http://localhost:5000/hotels?inDate=2015-04-09&outDate=2015-04-10" 
 
 The JSON response:
 
