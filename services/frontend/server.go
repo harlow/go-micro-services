@@ -25,10 +25,8 @@ func (s *Server) Run() error {
 		return fmt.Errorf("server port must be set")
 	}
 
-	fs := http.FileServer(http.Dir("services/frontend/static"))
-
 	mux := tracing.NewServeMux(s.Tracer)
-	mux.Handle("/", fs)
+	mux.Handle("/", http.FileServer(http.Dir("services/frontend/static")))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
 
 	return http.ListenAndServe(":"+s.Port, mux)
@@ -36,6 +34,7 @@ func (s *Server) Run() error {
 
 func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	ctx := r.Context()
 
 	// in/out dates from query params
 	inDate, outDate := r.URL.Query().Get("inDate"), r.URL.Query().Get("outDate")
@@ -43,8 +42,6 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Please specify inDate/outDate params", http.StatusBadRequest)
 		return
 	}
-
-	ctx := r.Context()
 
 	// search for best hotels
 	// TODO(hw): allow lat/lon from input params
