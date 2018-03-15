@@ -4,7 +4,8 @@ An demonstration of Golang micro-services that expose a HTTP/JSON frontend and t
 leverages [gRPC][1] for inter-service communication.
 
 * Services written in Golang
-* gRPC for inter-service communication
+* Consul for service discovery
+* gRPC for service communication
 * Jaeger for request tracing
 
 The example application plots Hotel locations on a Google map:
@@ -77,6 +78,12 @@ The JSON response:
 	}]
 }
 ```
+
+### Service Discovery
+
+[Consul](https://www.consul.io/) is used for service discovery. This allows each service to register with the registry and then discovery the IP addresses of the services they need to comunicate with.
+
+<img width="1072" alt="consul service discovery" src="https://user-images.githubusercontent.com/739782/37442561-23444504-285b-11e8-9d10-1c971c44a720.png">
 
 ### Tracing
 

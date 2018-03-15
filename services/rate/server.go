@@ -8,23 +8,27 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/harlow/go-micro-services/data"
+	"github.com/harlow/go-micro-services/registry"
 	pb "github.com/harlow/go-micro-services/services/rate/proto"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
+const serviceName = "srv-rate"
+
 // Server implements the rate service
 type Server struct {
 	rateTable map[stay]*pb.RatePlan
 
-	Tracer opentracing.Tracer
-	Port   string
+	Tracer   opentracing.Tracer
+	Port     int
+	Registry registry.Client
 }
 
 // Run starts the server
 func (s *Server) Run() error {
-	if s.Port == "" {
+	if s.Port == 0 {
 		return fmt.Errorf("server port must be set")
 	}
 
@@ -40,9 +44,15 @@ func (s *Server) Run() error {
 
 	pb.RegisterRateServer(srv, s)
 
-	lis, err := net.Listen("tcp", ":"+s.Port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.Port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
+	}
+
+	// register the service
+	err = s.Registry.Register(serviceName, s.Port)
+	if err != nil {
+		return fmt.Errorf("failed register: %v", err)
 	}
 
 	return srv.Serve(lis)
