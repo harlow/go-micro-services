@@ -5,31 +5,62 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harlow/go-micro-services/registry"
 	profile "github.com/harlow/go-micro-services/services/profile/proto"
 	search "github.com/harlow/go-micro-services/services/search/proto"
 	"github.com/harlow/go-micro-services/tracing"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
+const (
+	searchName  = "srv-search"
+	profileName = "srv-profile"
+)
+
 // Server implements frontend service
 type Server struct {
-	SearchClient  search.SearchClient
-	ProfileClient profile.ProfileClient
-	Port          string
-	Tracer        opentracing.Tracer
+	searchClient  search.SearchClient
+	profileClient profile.ProfileClient
+
+	Port     int
+	Tracer   opentracing.Tracer
+	Registry registry.Client
 }
 
 // Run the server
 func (s *Server) Run() error {
-	if s.Port == "" {
+	if s.Port == 0 {
 		return fmt.Errorf("server port must be set")
 	}
 
+	// search client
+	searchAddrs, err := s.Registry.Service(searchName)
+	if err != nil {
+		return fmt.Errorf("search service address error: %v", err)
+	}
+	conn, err := tracing.Dialer(searchAddrs[0], s.Tracer)
+	if err != nil {
+		return fmt.Errorf("dialer error: %v", err)
+	}
+	s.searchClient = search.NewSearchClient(conn)
+
+	// profile client
+	profileAddrs, err := s.Registry.Service(profileName)
+	if err != nil {
+		return fmt.Errorf("profile service address error: %v", err)
+	}
+	conn1, err := tracing.Dialer(profileAddrs[0], s.Tracer)
+	if err != nil {
+		return fmt.Errorf("dialer error: %v", err)
+	}
+	s.profileClient = profile.NewProfileClient(conn1)
+
+	// serve mux
 	mux := tracing.NewServeMux(s.Tracer)
 	mux.Handle("/", http.FileServer(http.Dir("services/frontend/static")))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
 
-	return http.ListenAndServe(":"+s.Port, mux)
+	return http.ListenAndServe(fmt.Sprintf(":%d", s.Port), mux)
 }
 
 func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +76,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	// search for best hotels
 	// TODO(hw): allow lat/lon from input params
-	searchResp, err := s.SearchClient.Nearby(ctx, &search.NearbyRequest{
+	searchResp, err := s.searchClient.Nearby(ctx, &search.NearbyRequest{
 		Lat:     37.7749,
 		Lon:     -122.4194,
 		InDate:  inDate,
@@ -63,7 +94,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hotel profiles
-	profileResp, err := s.ProfileClient.GetProfiles(ctx, &profile.Request{
+	profileResp, err := s.profileClient.GetProfiles(ctx, &profile.Request{
 		HotelIds: searchResp.HotelIds,
 		Locale:   locale,
 	})

@@ -9,6 +9,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/hailocab/go-geoindex"
 	"github.com/harlow/go-micro-services/data"
+	"github.com/harlow/go-micro-services/registry"
 	pb "github.com/harlow/go-micro-services/services/geo/proto"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
@@ -16,6 +17,7 @@ import (
 )
 
 const (
+	serviceName      = "srv-geo"
 	maxSearchRadius  = 10
 	maxSearchResults = 5
 )
@@ -24,13 +26,14 @@ const (
 type Server struct {
 	index *geoindex.ClusteringIndex
 
-	Tracer opentracing.Tracer
-	Port   string
+	Registry registry.Client
+	Tracer   opentracing.Tracer
+	Port     int
 }
 
 // Run starts the server
 func (s *Server) Run() error {
-	if s.Port == "" {
+	if s.Port == 0 {
 		return fmt.Errorf("server port must be set")
 	}
 
@@ -46,9 +49,16 @@ func (s *Server) Run() error {
 
 	pb.RegisterGeoServer(srv, s)
 
-	lis, err := net.Listen("tcp", ":"+s.Port)
+	// listener
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.Port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return fmt.Errorf("failed to listen: %v", err)
+	}
+
+	// register the service
+	err = s.Registry.Register(serviceName, s.Port)
+	if err != nil {
+		return fmt.Errorf("failed register: %v", err)
 	}
 
 	return srv.Serve(lis)

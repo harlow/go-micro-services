@@ -2,21 +2,35 @@ package main
 
 import (
 	"flag"
+	"log"
 
+	"github.com/harlow/go-micro-services/registry"
 	"github.com/harlow/go-micro-services/services/geo"
 	"github.com/harlow/go-micro-services/tracing"
 )
 
 func main() {
 	var (
-		port       = flag.String("port", "8080", "The server port")
-		jaegerAddr = flag.String("jaegeraddr", "jaeger:6831", "Jaeger server addr")
+		port       = flag.Int("port", 8080, "Server port")
+		jaegeraddr = flag.String("jaegeraddr", "jaeger:6831", "Jaeger address")
+		consuladdr = flag.String("consuladdr", "consul:8500", "Consul address")
 	)
 	flag.Parse()
 
-	srv := &geo.Server{
-		Tracer: tracing.Init("geo", *jaegerAddr),
-		Port:   *port,
+	tracer, err := tracing.Init("geo", *jaegeraddr)
+	if err != nil {
+		panic(err)
 	}
-	srv.Run()
+
+	registry, err := registry.NewClient(*consuladdr)
+	if err != nil {
+		panic(err)
+	}
+
+	srv := &geo.Server{
+		Port:     *port,
+		Tracer:   tracer,
+		Registry: registry,
+	}
+	log.Fatal(srv.Run())
 }

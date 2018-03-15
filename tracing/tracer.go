@@ -1,7 +1,7 @@
 package tracing
 
 import (
-	"log"
+	"fmt"
 	"time"
 
 	opentracing "github.com/opentracing/opentracing-go"
@@ -9,7 +9,7 @@ import (
 )
 
 // Init returns a newly configured tracer
-func Init(serviceName, host string) opentracing.Tracer {
+func Init(serviceName, host string) (opentracing.Tracer, error) {
 	cfg := config.Configuration{
 		Sampler: &config.SamplerConfig{
 			Type:  "const",
@@ -24,7 +24,7 @@ func Init(serviceName, host string) opentracing.Tracer {
 
 	tracer, _, err := cfg.New(serviceName)
 	if err != nil {
-		log.Fatalf("new tracer error: %v", err)
+		return nil, fmt.Errorf("new tracer error: %v", err)
 	}
-	return tracer
+	return tracer, nil
 }
