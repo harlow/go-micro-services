@@ -16,11 +16,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
-	serviceName = "srv-search"
-	geoName     = "srv-geo"
-	rateName    = "srv-rate"
-)
+const name = "srv-search"
 
 // Server implments the search service
 type Server struct {
@@ -29,7 +25,7 @@ type Server struct {
 
 	Tracer   opentracing.Tracer
 	Port     int
-	Registry registry.Client
+	Registry *registry.Client
 }
 
 // Run starts the server
@@ -43,43 +39,51 @@ func (s *Server) Run() error {
 			otgrpc.OpenTracingServerInterceptor(s.Tracer),
 		),
 	)
-
-	// geo client
-	geoAddrs, err := s.Registry.Service(geoName)
-	if err != nil {
-		return fmt.Errorf("geo address error: %v", err)
-	}
-	conn, err := tracing.Dialer(geoAddrs[0], s.Tracer)
-	if err != nil {
-		return fmt.Errorf("dialer error: %v", err)
-	}
-	s.geoClient = geo.NewGeoClient(conn)
-
-	// rate client
-	rateAddrs, err := s.Registry.Service(rateName)
-	if err != nil {
-		return fmt.Errorf("profile service address error: %v", err)
-	}
-	conn1, err := tracing.Dialer(rateAddrs[0], s.Tracer)
-	if err != nil {
-		return fmt.Errorf("dialer error: %v", err)
-	}
-	s.rateClient = rate.NewRateClient(conn1)
-
 	pb.RegisterSearchServer(srv, s)
+
+	// init grpc clients
+	if err := s.initGeoClient("srv-geo"); err != nil {
+		return err
+	}
+	if err := s.initRateClient("srv-rate"); err != nil {
+		return err
+	}
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.Port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	// register the service
-	err = s.Registry.Register(serviceName, s.Port)
+	// register with consul
+	err = s.Registry.Register(name, s.Port)
 	if err != nil {
 		return fmt.Errorf("failed register: %v", err)
 	}
 
 	return srv.Serve(lis)
+}
+
+// Shutdown cleans up any processes
+func (s *Server) Shutdown() {
+	s.Registry.Deregister(name)
+}
+
+func (s *Server) initGeoClient(name string) error {
+	conn, err := tracing.Dialer(name, s.Tracer, s.Registry.Client)
+	if err != nil {
+		return fmt.Errorf("dialer error: %v", err)
+	}
+	s.geoClient = geo.NewGeoClient(conn)
+	return nil
+}
+
+func (s *Server) initRateClient(name string) error {
+	conn, err := tracing.Dialer(name, s.Tracer, s.Registry.Client)
+	if err != nil {
+		return fmt.Errorf("dialer error: %v", err)
+	}
+	s.rateClient = rate.NewRateClient(conn)
+	return nil
 }
 
 // Nearby returns ids of nearby hotels ordered by ranking algo

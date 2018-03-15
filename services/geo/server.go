@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	serviceName      = "srv-geo"
+	name             = "srv-geo"
 	maxSearchRadius  = 10
 	maxSearchResults = 5
 )
@@ -25,8 +25,9 @@ const (
 // Server implements the geo service
 type Server struct {
 	index *geoindex.ClusteringIndex
+	uuid  string
 
-	Registry registry.Client
+	Registry *registry.Client
 	Tracer   opentracing.Tracer
 	Port     int
 }
@@ -56,12 +57,17 @@ func (s *Server) Run() error {
 	}
 
 	// register the service
-	err = s.Registry.Register(serviceName, s.Port)
+	err = s.Registry.Register(name, s.Port)
 	if err != nil {
 		return fmt.Errorf("failed register: %v", err)
 	}
 
 	return srv.Serve(lis)
+}
+
+// Shutdown cleans up any processes
+func (s *Server) Shutdown() {
+	s.Registry.Deregister(name)
 }
 
 // Nearby returns all hotels within a given distance.

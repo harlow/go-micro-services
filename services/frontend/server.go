@@ -12,11 +12,6 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
-const (
-	searchName  = "srv-search"
-	profileName = "srv-profile"
-)
-
 // Server implements frontend service
 type Server struct {
 	searchClient  search.SearchClient
@@ -24,7 +19,7 @@ type Server struct {
 
 	Port     int
 	Tracer   opentracing.Tracer
-	Registry registry.Client
+	Registry *registry.Client
 }
 
 // Run the server
@@ -33,34 +28,37 @@ func (s *Server) Run() error {
 		return fmt.Errorf("server port must be set")
 	}
 
-	// search client
-	searchAddrs, err := s.Registry.Service(searchName)
-	if err != nil {
-		return fmt.Errorf("search service address error: %v", err)
+	if err := s.initSearchClient("srv-search"); err != nil {
+		return err
 	}
-	conn, err := tracing.Dialer(searchAddrs[0], s.Tracer)
-	if err != nil {
-		return fmt.Errorf("dialer error: %v", err)
-	}
-	s.searchClient = search.NewSearchClient(conn)
 
-	// profile client
-	profileAddrs, err := s.Registry.Service(profileName)
-	if err != nil {
-		return fmt.Errorf("profile service address error: %v", err)
+	if err := s.initProfileClient("srv-profile"); err != nil {
+		return err
 	}
-	conn1, err := tracing.Dialer(profileAddrs[0], s.Tracer)
-	if err != nil {
-		return fmt.Errorf("dialer error: %v", err)
-	}
-	s.profileClient = profile.NewProfileClient(conn1)
 
-	// serve mux
 	mux := tracing.NewServeMux(s.Tracer)
 	mux.Handle("/", http.FileServer(http.Dir("services/frontend/static")))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
 
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.Port), mux)
+}
+
+func (s *Server) initSearchClient(name string) error {
+	conn, err := tracing.Dialer(name, s.Tracer, s.Registry.Client)
+	if err != nil {
+		return fmt.Errorf("searh dialer error: %v", err)
+	}
+	s.searchClient = search.NewSearchClient(conn)
+	return nil
+}
+
+func (s *Server) initProfileClient(name string) error {
+	conn, err := tracing.Dialer(name, s.Tracer, s.Registry.Client)
+	if err != nil {
+		return fmt.Errorf("profile dialer error: %v", err)
+	}
+	s.profileClient = profile.NewProfileClient(conn)
+	return nil
 }
 
 func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {

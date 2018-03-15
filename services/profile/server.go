@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const serviceName = "srv-profile"
+const name = "srv-profile"
 
 // Server implements the profile service
 type Server struct {
@@ -23,7 +23,7 @@ type Server struct {
 
 	Tracer   opentracing.Tracer
 	Port     int
-	Registry registry.Client
+	Registry *registry.Client
 }
 
 // Run starts the server
@@ -50,12 +50,17 @@ func (s *Server) Run() error {
 	}
 
 	// register the service
-	err = s.Registry.Register(serviceName, s.Port)
+	err = s.Registry.Register(name, s.Port)
 	if err != nil {
 		return fmt.Errorf("failed register: %v", err)
 	}
 
 	return srv.Serve(lis)
+}
+
+// Shutdown cleans up any processes
+func (s *Server) Shutdown() {
+	s.Registry.Deregister(name)
 }
 
 // GetProfiles returns hotel profiles for requested IDs
