@@ -4,14 +4,14 @@ import (
 	"fmt"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-	"github.com/hashicorp/consul/api"
+	consul "github.com/hashicorp/consul/api"
 	lb "github.com/olivere/grpc/lb/consul"
 	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
 // Dialer returns a load balanced grpc client conn with tracing interceptor
-func Dialer(name string, tracer opentracing.Tracer, registry *api.Client) (*grpc.ClientConn, error) {
+func Dialer(name string, tracer opentracing.Tracer, registry *consul.Client) (*grpc.ClientConn, error) {
 	r, err := lb.NewResolver(registry, name, "")
 	if err != nil {
 		return nil, err
