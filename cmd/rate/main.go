@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 
 	"github.com/harlow/go-micro-services/registry"
 	"github.com/harlow/go-micro-services/services/rate"
@@ -31,5 +32,5 @@ func main() {
 		Port:     *port,
 		Registry: registry,
 	}
-	srv.Run()
+	log.Fatal(srv.Run())
 }

@@ -22,14 +22,14 @@ type Server struct {
 	searchClient  search.SearchClient
 	profileClient profile.ProfileClient
 
-	Port     string
+	Port     int
 	Tracer   opentracing.Tracer
 	Registry registry.Client
 }
 
 // Run the server
 func (s *Server) Run() error {
-	if s.Port == "" {
+	if s.Port == 0 {
 		return fmt.Errorf("server port must be set")
 	}
 
@@ -55,12 +55,12 @@ func (s *Server) Run() error {
 	}
 	s.profileClient = profile.NewProfileClient(conn1)
 
-	// server mux
+	// serve mux
 	mux := tracing.NewServeMux(s.Tracer)
 	mux.Handle("/", http.FileServer(http.Dir("services/frontend/static")))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
 
-	return http.ListenAndServe(":"+s.Port, mux)
+	return http.ListenAndServe(fmt.Sprintf(":%d", s.Port), mux)
 }
 
 func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {

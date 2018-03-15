@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 
 	"github.com/harlow/go-micro-services/registry"
 	"github.com/harlow/go-micro-services/services/geo"
@@ -31,5 +32,5 @@ func main() {
 		Tracer:   tracer,
 		Registry: registry,
 	}
-	srv.Run()
+	log.Fatal(srv.Run())
 }

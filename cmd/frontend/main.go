@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 
 	"github.com/harlow/go-micro-services/registry"
 	"github.com/harlow/go-micro-services/services/frontend"
@@ -10,7 +11,7 @@ import (
 
 func main() {
 	var (
-		port       = flag.String("port", "5000", "The server port")
+		port       = flag.Int("port", 5000, "The server port")
 		jaegeraddr = flag.String("jaegeraddr", "jaeger:6831", "Jaeger address")
 		consuladdr = flag.String("consuladdr", "consul:8500", "Consul address")
 	)
@@ -31,5 +32,5 @@ func main() {
 		Tracer:   tracer,
 		Port:     *port,
 	}
-	srv.Run()
+	log.Fatal(srv.Run())
 }
