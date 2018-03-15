@@ -10,10 +10,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Dialer returns a grpc client connection with tracing interceptor
+// Dialer returns a load balanced grpc client conn with tracing interceptor
 func Dialer(name string, tracer opentracing.Tracer, registry *api.Client) (*grpc.ClientConn, error) {
-	// tracer and registry options
-
 	r, err := lb.NewResolver(registry, name, "")
 	if err != nil {
 		return nil, err

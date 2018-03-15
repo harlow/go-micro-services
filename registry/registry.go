@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/hashicorp/consul/api"
+	consul "github.com/hashicorp/consul/api"
 )
 
 // NewClient returns a new Client with connection to consul
 func NewClient(addr string) (*Client, error) {
-	cfg := api.DefaultConfig()
+	cfg := consul.DefaultConfig()
 	cfg.Address = addr
 
-	c, err := api.NewClient(cfg)
+	c, err := consul.NewClient(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +22,7 @@ func NewClient(addr string) (*Client, error) {
 
 // Client provides an interface for communicating with registry
 type Client struct {
-	*api.Client
+	*consul.Client
 }
 
 // Register a service with registry
@@ -35,7 +35,7 @@ func (c *Client) Register(name string, port int) error {
 
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 
-	reg := &api.AgentServiceRegistration{
+	reg := &consul.AgentServiceRegistration{
 		ID:      name,
 		Name:    name,
 		Port:    port,
