@@ -47,10 +47,10 @@ func runSearch(port int, consul *registry.Client, jaegeraddr string) error {
 	}
 	defer consul.Deregister(id)
 
-	srv := &search.Server{
-		Tracer:     tracer,
-		GeoClient:  geo.NewGeoClient(gc),
-		RateClient: rate.NewRateClient(rc),
-	}
+	srv := search.NewServer(
+		geo.NewGeoClient(gc),
+		rate.NewRateClient(rc),
+		tracer,
+	)
 	return srv.Run(port)
 }

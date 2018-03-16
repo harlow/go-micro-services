@@ -23,6 +23,6 @@ func runProfile(port int, consul *registry.Client, jaegeraddr string) error {
 	}
 	defer consul.Deregister(id)
 
-	srv := profile.Server{Tracer: tracer}
+	srv := profile.NewServer(tracer)
 	return srv.Run(port)
 }

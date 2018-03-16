@@ -14,18 +14,27 @@ import (
 	"google.golang.org/grpc"
 )
 
+// NewServer returns a new server
+func NewServer(gc geo.GeoClient, rc rate.RateClient, tr opentracing.Tracer) *Server {
+	return &Server{
+		geoClient:  gc,
+		rateClient: rc,
+		tracer:     tr,
+	}
+}
+
 // Server implments the search service
 type Server struct {
-	GeoClient  geo.GeoClient
-	RateClient rate.RateClient
-	Tracer     opentracing.Tracer
+	geoClient  geo.GeoClient
+	rateClient rate.RateClient
+	tracer     opentracing.Tracer
 }
 
 // Run starts the server
 func (s *Server) Run(port int) error {
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(
-			otgrpc.OpenTracingServerInterceptor(s.Tracer),
+			otgrpc.OpenTracingServerInterceptor(s.tracer),
 		),
 	)
 	pb.RegisterSearchServer(srv, s)
@@ -40,7 +49,7 @@ func (s *Server) Run(port int) error {
 // Nearby returns ids of nearby hotels ordered by ranking algo
 func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchResult, error) {
 	// find nearby hotels
-	nearby, err := s.GeoClient.Nearby(ctx, &geo.Request{
+	nearby, err := s.geoClient.Nearby(ctx, &geo.Request{
 		Lat: req.Lat,
 		Lon: req.Lon,
 	})
@@ -49,7 +58,7 @@ func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchR
 	}
 
 	// find rates for hotels
-	rates, err := s.RateClient.GetRates(ctx, &rate.Request{
+	rates, err := s.rateClient.GetRates(ctx, &rate.Request{
 		HotelIds: nearby.HotelIds,
 		InDate:   req.InDate,
 		OutDate:  req.OutDate,

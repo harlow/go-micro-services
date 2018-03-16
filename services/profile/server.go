@@ -14,22 +14,25 @@ import (
 	"google.golang.org/grpc"
 )
 
+// NewServer returns a new server
+func NewServer(tr opentracing.Tracer) *Server {
+	return &Server{
+		tracer: tr,
+		hotels: loadProfiles("data/hotels.json"),
+	}
+}
+
 // Server implements the profile service
 type Server struct {
 	hotels map[string]*pb.Hotel
-
-	Tracer opentracing.Tracer
+	tracer opentracing.Tracer
 }
 
 // Run starts the server
 func (s *Server) Run(port int) error {
-	if s.hotels == nil {
-		s.hotels = loadProfiles("data/hotels.json")
-	}
-
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(
-			otgrpc.OpenTracingServerInterceptor(s.Tracer),
+			otgrpc.OpenTracingServerInterceptor(s.tracer),
 		),
 	)
 	pb.RegisterProfileServer(srv, s)

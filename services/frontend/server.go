@@ -11,16 +11,25 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
+// NewServer returns a new server
+func NewServer(sc search.SearchClient, pc profile.ProfileClient, tr opentracing.Tracer) *Server {
+	return &Server{
+		searchClient:  sc,
+		profileClient: pc,
+		tracer:        tr,
+	}
+}
+
 // Server implements frontend service
 type Server struct {
-	SearchClient  search.SearchClient
-	ProfileClient profile.ProfileClient
-	Tracer        opentracing.Tracer
+	searchClient  search.SearchClient
+	profileClient profile.ProfileClient
+	tracer        opentracing.Tracer
 }
 
 // Run the server
 func (s *Server) Run(port int) error {
-	mux := tracing.NewServeMux(s.Tracer)
+	mux := tracing.NewServeMux(s.tracer)
 	mux.Handle("/", http.FileServer(http.Dir("services/frontend/static")))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
 
@@ -40,7 +49,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	// search for best hotels
 	// TODO(hw): allow lat/lon from input params
-	searchResp, err := s.SearchClient.Nearby(ctx, &search.NearbyRequest{
+	searchResp, err := s.searchClient.Nearby(ctx, &search.NearbyRequest{
 		Lat:     37.7749,
 		Lon:     -122.4194,
 		InDate:  inDate,
@@ -58,7 +67,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hotel profiles
-	profileResp, err := s.ProfileClient.GetProfiles(ctx, &profile.Request{
+	profileResp, err := s.profileClient.GetProfiles(ctx, &profile.Request{
 		HotelIds: searchResp.HotelIds,
 		Locale:   locale,
 	})

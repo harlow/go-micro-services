@@ -14,22 +14,25 @@ import (
 	"google.golang.org/grpc"
 )
 
+// NewServer returns a new server
+func NewServer(tr opentracing.Tracer) *Server {
+	return &Server{
+		tracer:    tr,
+		rateTable: loadRateTable("data/inventory.json"),
+	}
+}
+
 // Server implements the rate service
 type Server struct {
 	rateTable map[stay]*pb.RatePlan
-
-	Tracer opentracing.Tracer
+	tracer    opentracing.Tracer
 }
 
 // Run starts the server
 func (s *Server) Run(port int) error {
-	if s.rateTable == nil {
-		s.rateTable = loadRateTable("data/inventory.json")
-	}
-
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(
-			otgrpc.OpenTracingServerInterceptor(s.Tracer),
+			otgrpc.OpenTracingServerInterceptor(s.tracer),
 		),
 	)
 	pb.RegisterRateServer(srv, s)

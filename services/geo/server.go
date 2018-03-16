@@ -20,22 +20,25 @@ const (
 	maxSearchResults = 5
 )
 
+// NewServer returns a new server
+func NewServer(tr opentracing.Tracer) *Server {
+	return &Server{
+		tracer: tr,
+		geoidx: newGeoIndex("data/geo.json"),
+	}
+}
+
 // Server implements the geo service
 type Server struct {
-	index *geoindex.ClusteringIndex
-
-	Tracer opentracing.Tracer
+	geoidx *geoindex.ClusteringIndex
+	tracer opentracing.Tracer
 }
 
 // Run starts the server
 func (s *Server) Run(port int) error {
-	if s.index == nil {
-		s.index = newGeoIndex("data/geo.json")
-	}
-
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(
-			otgrpc.OpenTracingServerInterceptor(s.Tracer),
+			otgrpc.OpenTracingServerInterceptor(s.tracer),
 		),
 	)
 	pb.RegisterGeoServer(srv, s)
@@ -68,7 +71,7 @@ func (s *Server) getNearbyPoints(ctx context.Context, lat, lon float64) []geoind
 		Plon: lon,
 	}
 
-	return s.index.KNearest(
+	return s.geoidx.KNearest(
 		center,
 		maxSearchResults,
 		geoindex.Km(maxSearchRadius), func(p geoindex.Point) bool {

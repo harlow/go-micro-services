@@ -24,6 +24,6 @@ func runRate(port int, consul *registry.Client, jaegeraddr string) error {
 	}
 	defer consul.Deregister(id)
 
-	srv := &rate.Server{Tracer: tracer}
+	srv := rate.NewServer(tracer)
 	return srv.Run(port)
 }

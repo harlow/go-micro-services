@@ -37,10 +37,10 @@ func runFrontend(port int, consul *registry.Client, jaegeraddr string) error {
 		return fmt.Errorf("dialer error: %v", err)
 	}
 
-	srv := &frontend.Server{
-		Tracer:        tracer,
-		SearchClient:  search.NewSearchClient(sc),
-		ProfileClient: profile.NewProfileClient(pc),
-	}
+	srv := frontend.NewServer(
+		search.NewSearchClient(sc),
+		profile.NewProfileClient(pc),
+		tracer,
+	)
 	return srv.Run(port)
 }

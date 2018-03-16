@@ -23,6 +23,6 @@ func runGeo(port int, consul *registry.Client, jaegeraddr string) error {
 	}
 	defer consul.Deregister(id)
 
-	srv := &geo.Server{Tracer: tracer}
+	srv := geo.NewServer(tracer)
 	return srv.Run(port)
 }
