@@ -1,21 +1,29 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/harlow/go-micro-services/registry"
 	"github.com/harlow/go-micro-services/services/rate"
 	"github.com/harlow/go-micro-services/tracing"
 )
 
-func runRate(port int, registry *registry.Client, jaegeraddr string) error {
+const rateSrvName = "srv-rate"
+
+func runRate(port int, consul *registry.Client, jaegeraddr string) error {
+	// new tracer
 	tracer, err := tracing.Init("rate", jaegeraddr)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("tracing init error: %v", err)
 	}
 
-	srv := &rate.Server{
-		Tracer:   tracer,
-		Port:     port,
-		Registry: registry,
+	// service registry
+	id, err := consul.Register(rateSrvName, port)
+	if err != nil {
+		return fmt.Errorf("failed to register service: %v", err)
 	}
-	return srv.Run()
+	defer consul.Deregister(id)
+
+	srv := &rate.Server{Tracer: tracer}
+	return srv.Run(port)
 }

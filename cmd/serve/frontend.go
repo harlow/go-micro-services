@@ -1,21 +1,46 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/harlow/go-micro-services/dialer"
 	"github.com/harlow/go-micro-services/registry"
 	"github.com/harlow/go-micro-services/services/frontend"
+	profile "github.com/harlow/go-micro-services/services/profile/proto"
+	search "github.com/harlow/go-micro-services/services/search/proto"
 	"github.com/harlow/go-micro-services/tracing"
 )
 
-func runFrontend(port int, registry *registry.Client, jaegeraddr string) error {
+func runFrontend(port int, consul *registry.Client, jaegeraddr string) error {
 	tracer, err := tracing.Init("frontend", jaegeraddr)
 	if err != nil {
 		panic(err)
 	}
 
-	srv := &frontend.Server{
-		Registry: registry,
-		Tracer:   tracer,
-		Port:     port,
+	// dial search srv
+	sc, err := dialer.Dial(
+		searchSrvName,
+		dialer.WithTracer(tracer),
+		dialer.WithBalancer(consul.Client),
+	)
+	if err != nil {
+		return fmt.Errorf("dialer error: %v", err)
 	}
-	return srv.Run()
+
+	// dial profile srv
+	pc, err := dialer.Dial(
+		profileSrvName,
+		dialer.WithTracer(tracer),
+		dialer.WithBalancer(consul.Client),
+	)
+	if err != nil {
+		return fmt.Errorf("dialer error: %v", err)
+	}
+
+	srv := &frontend.Server{
+		Tracer:        tracer,
+		SearchClient:  search.NewSearchClient(sc),
+		ProfileClient: profile.NewProfileClient(pc),
+	}
+	return srv.Run(port)
 }

@@ -1,21 +1,28 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/harlow/go-micro-services/registry"
 	"github.com/harlow/go-micro-services/services/geo"
 	"github.com/harlow/go-micro-services/tracing"
 )
 
-func runGeo(port int, registry *registry.Client, jaegeraddr string) error {
+const geoSrvName = "srv-geo"
+
+func runGeo(port int, consul *registry.Client, jaegeraddr string) error {
 	tracer, err := tracing.Init("geo", jaegeraddr)
 	if err != nil {
 		panic(err)
 	}
 
-	srv := &geo.Server{
-		Port:     port,
-		Tracer:   tracer,
-		Registry: registry,
+	// service registry
+	id, err := consul.Register(geoSrvName, port)
+	if err != nil {
+		return fmt.Errorf("failed to register service: %v", err)
 	}
-	return srv.Run()
+	defer consul.Deregister(id)
+
+	srv := &geo.Server{Tracer: tracer}
+	return srv.Run(port)
 }

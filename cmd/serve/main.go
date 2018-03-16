@@ -51,12 +51,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	registry, err := registry.NewClient(*consuladdr)
+	consul, err := registry.NewClient(*consuladdr)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
 	}
 
-	if err := run(*port, registry, *jaegeraddr); err != nil {
+	if err := run(*port, consul, *jaegeraddr); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}

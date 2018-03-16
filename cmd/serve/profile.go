@@ -1,21 +1,28 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/harlow/go-micro-services/registry"
 	"github.com/harlow/go-micro-services/services/profile"
 	"github.com/harlow/go-micro-services/tracing"
 )
 
-func runProfile(port int, registry *registry.Client, jaegeraddr string) error {
+const profileSrvName = "srv-profile"
+
+func runProfile(port int, consul *registry.Client, jaegeraddr string) error {
 	tracer, err := tracing.Init("profile", jaegeraddr)
 	if err != nil {
 		panic(err)
 	}
 
-	srv := profile.Server{
-		Tracer:   tracer,
-		Port:     port,
-		Registry: registry,
+	// service registry
+	id, err := consul.Register(profileSrvName, port)
+	if err != nil {
+		return fmt.Errorf("failed to register service: %v", err)
 	}
-	return srv.Run()
+	defer consul.Deregister(id)
+
+	srv := profile.Server{Tracer: tracer}
+	return srv.Run(port)
 }

@@ -27,23 +27,26 @@ type Client struct {
 }
 
 // Register a service with registry
-func (c *Client) Register(name string, port int) error {
+func (c *Client) Register(name string, port int) (string, error) {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		return fmt.Errorf("unable to determine local addr: %v", err)
+		return "", fmt.Errorf("unable to determine local addr: %v", err)
 	}
 	defer conn.Close()
 
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	var (
+		uuid      = fmt.Sprintf("%s-%s", name, ksuid.New().String())
+		localAddr = conn.LocalAddr().(*net.UDPAddr)
+	)
 
 	reg := &consul.AgentServiceRegistration{
-		ID:      fmt.Sprintf("%s-%s", name, ksuid.New().String()),
+		ID:      uuid,
 		Name:    name,
 		Port:    port,
 		Address: localAddr.IP.String(),
 	}
 
-	return c.Agent().ServiceRegister(reg)
+	return uuid, c.Agent().ServiceRegister(reg)
 }
 
 // Deregister removes the service address from registry
