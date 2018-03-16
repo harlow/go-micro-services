@@ -13,8 +13,6 @@ services:
     ports:
       - "5000:5000"
     links:
-      - search
-      - profile
       - jaeger
       - consul
     depends_on:
@@ -31,8 +29,6 @@ services:
     build: .
     entrypoint: search
     links:
-      - geo
-      - rate
       - jaeger
       - consul
     depends_on:
