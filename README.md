@@ -4,8 +4,8 @@ An demonstration of Golang micro-services that expose a HTTP/JSON frontend and t
 leverages [gRPC][1] for inter-service communication.
 
 * Services written in Golang
+* gRPC for inter-service communication
 * Consul for service discovery
-* gRPC for service communication
 * Jaeger for request tracing
 
 The example application plots Hotel locations on a Google map:
@@ -14,23 +14,25 @@ The example application plots Hotel locations on a Google map:
 
 The web page makes an HTTP request to the API Endpoint which in turn spawns a number of RPC requests to the backend services.
  
-![reqseq](https://user-images.githubusercontent.com/739782/29102656-8328b66e-7c6f-11e7-8fe5-c9d5f90e213f.png)
+Data for each of the services is stored in JSON flat files under the `data/` directory. In reality each of the services could choose their own specialty datastore. The Geo service for example could use PostGis or any other database specializing in geospacial queries.
 
-_Note:_ Data for each of the services is stored in JSON flat files under the `/data/` directory. In reality each of the services could choose their own specialty datastore. The Geo service for example could use PostGis or any other database specializing in geospacial queries.
-
-### Service Discovery
-
-[Consul](https://www.consul.io/) is used for service discovery. This allows each service to register with the registry and then discovery the IP addresses of the services they need to comunicate with.
-
-<img width="1072" alt="consul service discovery" src="https://user-images.githubusercontent.com/739782/37442561-23444504-285b-11e8-9d10-1c971c44a720.png">
-
-### Tracing
+## Request Tracing
 
 The [Jaeger Tracing](https://github.com/jaegertracing/jaeger) project is used for tracing inter-service requests.
 
 <img width="1068" alt="jaeger trace diagram" src="https://user-images.githubusercontent.com/739782/37238917-b710b734-2484-11e8-8148-50fc7fe5e366.png">
 
-Once docker-compose has launched all services visit http://localhost:16686/search
+View dashboard: http://localhost:16686/search
+
+## Service Discovery
+
+[Consul](https://www.consul.io/) is used for service discovery. This allows each service to register with the registry and then discovery the IP addresses of the services they need to comunicate with.
+
+<img width="1072" alt="consul service discovery" src="https://user-images.githubusercontent.com/739782/37442561-23444504-285b-11e8-9d10-1c971c44a720.png">
+
+View dashboard: http://localhost:8500/ui
+
+## Installation
 
 ### Setup
 
@@ -99,7 +101,7 @@ If changes are made to the Protocol Buffer files use the Makefile to regenerate:
 
     $ make proto
 
-### Credits
+## Credits
 
 Thanks to all the [contributors][6]. This codebase was heavily inspired by the following talks and repositories:
 
