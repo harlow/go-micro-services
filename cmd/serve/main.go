@@ -26,8 +26,8 @@ func usage() {
 func main() {
 	var (
 		port       = flag.Int("port", 5000, "The server port")
-		jaegeraddr = flag.String("jaegeraddr", "jaeger:6831", "Jaeger address")
-		consuladdr = flag.String("consuladdr", "consul:8500", "Consul address")
+		jaegeraddr = flag.String("jaeger_addr", "jaeger:6831", "Jaeger address")
+		consuladdr = flag.String("consul_addr", "consul:8500", "Consul address")
 	)
 	flag.Parse()
 
