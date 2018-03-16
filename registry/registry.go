@@ -5,6 +5,7 @@ import (
 	"net"
 
 	consul "github.com/hashicorp/consul/api"
+	"github.com/segmentio/ksuid"
 )
 
 // NewClient returns a new Client with connection to consul
@@ -36,7 +37,7 @@ func (c *Client) Register(name string, port int) error {
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 
 	reg := &consul.AgentServiceRegistration{
-		ID:      name,
+		ID:      fmt.Sprintf("%s-%s", name, ksuid.New().String()),
 		Name:    name,
 		Port:    port,
 		Address: localAddr.IP.String(),

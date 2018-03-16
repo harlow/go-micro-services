@@ -90,6 +90,12 @@
   version = "v1.0.2"
 
 [[projects]]
+  name = "github.com/segmentio/ksuid"
+  packages = ["."]
+  revision = "112f929a3020abfcd06b77c963ec919130796a35"
+  version = "1.0.1"
+
+[[projects]]
   name = "github.com/uber/jaeger-client-go"
   packages = [
     ".",
@@ -189,6 +195,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d6e37e604116f8edd7366fc8611caf6f8bf54e30de7c5c3efe3a87c232ffa3b3"
+  inputs-digest = "c5ef4b97803eec82231c2c359e3cef5584382f1954fe3bbbfd26ef23eb8ea5b7"
   solver-name = "gps-cdcl"
   solver-version = 1

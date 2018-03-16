@@ -25,7 +25,6 @@ const (
 // Server implements the geo service
 type Server struct {
 	index *geoindex.ClusteringIndex
-	uuid  string
 
 	Registry *registry.Client
 	Tracer   opentracing.Tracer
