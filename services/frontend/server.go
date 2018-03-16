@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harlow/go-micro-services/dialer"
 	"github.com/harlow/go-micro-services/registry"
 	profile "github.com/harlow/go-micro-services/services/profile/proto"
 	search "github.com/harlow/go-micro-services/services/search/proto"
@@ -44,18 +45,26 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) initSearchClient(name string) error {
-	conn, err := tracing.Dialer(name, s.Tracer, s.Registry.Client)
+	conn, err := dialer.Dial(
+		name,
+		dialer.WithTracer(s.Tracer),
+		dialer.WithBalancer(s.Registry.Client),
+	)
 	if err != nil {
-		return fmt.Errorf("searh dialer error: %v", err)
+		return fmt.Errorf("dialer error: %v", err)
 	}
 	s.searchClient = search.NewSearchClient(conn)
 	return nil
 }
 
 func (s *Server) initProfileClient(name string) error {
-	conn, err := tracing.Dialer(name, s.Tracer, s.Registry.Client)
+	conn, err := dialer.Dial(
+		name,
+		dialer.WithTracer(s.Tracer),
+		dialer.WithBalancer(s.Registry.Client),
+	)
 	if err != nil {
-		return fmt.Errorf("profile dialer error: %v", err)
+		return fmt.Errorf("dialer error: %v", err)
 	}
 	s.profileClient = profile.NewProfileClient(conn)
 	return nil

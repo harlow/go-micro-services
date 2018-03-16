@@ -6,11 +6,11 @@ import (
 	"net"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
+	"github.com/harlow/go-micro-services/dialer"
 	"github.com/harlow/go-micro-services/registry"
 	geo "github.com/harlow/go-micro-services/services/geo/proto"
 	rate "github.com/harlow/go-micro-services/services/rate/proto"
 	pb "github.com/harlow/go-micro-services/services/search/proto"
-	"github.com/harlow/go-micro-services/tracing"
 	opentracing "github.com/opentracing/opentracing-go"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -69,7 +69,11 @@ func (s *Server) Shutdown() {
 }
 
 func (s *Server) initGeoClient(name string) error {
-	conn, err := tracing.Dialer(name, s.Tracer, s.Registry.Client)
+	conn, err := dialer.Dial(
+		name,
+		dialer.WithTracer(s.Tracer),
+		dialer.WithBalancer(s.Registry.Client),
+	)
 	if err != nil {
 		return fmt.Errorf("dialer error: %v", err)
 	}
@@ -78,7 +82,11 @@ func (s *Server) initGeoClient(name string) error {
 }
 
 func (s *Server) initRateClient(name string) error {
-	conn, err := tracing.Dialer(name, s.Tracer, s.Registry.Client)
+	conn, err := dialer.Dial(
+		name,
+		dialer.WithTracer(s.Tracer),
+		dialer.WithBalancer(s.Registry.Client),
+	)
 	if err != nil {
 		return fmt.Errorf("dialer error: %v", err)
 	}
