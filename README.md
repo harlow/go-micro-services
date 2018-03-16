@@ -20,13 +20,40 @@ Data for each of the services is stored in JSON flat files under the `data/` dir
 
 The [Jaeger Tracing](https://github.com/jaegertracing/jaeger) project is used for tracing inter-service requests.
 
-<img width="1068" alt="jaeger trace diagram" src="https://user-images.githubusercontent.com/739782/37238917-b710b734-2484-11e8-8148-50fc7fe5e366.png">
+The `tracing` package is used initialize a new service tracer:
+
+```go
+tracer, err := tracing.Init("serviceName", jaegeraddr)
+if err != nil {
+    fmt.Fprintf(os.Stderr, "%v\n", err)
+    os.Exit(1)
+}
+```
+
+<img width="1129" alt="jaeger tracing example" src="https://user-images.githubusercontent.com/739782/37546077-554cb6a2-29bf-11e8-9bc8-3de2a01d0d69.png">
 
 View dashboard: http://localhost:16686/search
 
 ## Service Discovery
 
 [Consul](https://www.consul.io/) is used for service discovery. This allows each service to register with the registry and then discovery the IP addresses of the services they need to comunicate with.
+
+The `registry` package is used for registering services:
+
+```go
+rc, err := registry.NewClient(consuladdr)
+if err != nil {
+    fmt.Fprintf(os.Stderr, "%v\n", err)
+    os.Exit(1)
+}
+
+id, err := rc.Register("serviceName", port)
+if err != nil {
+    fmt.Fprintf(os.Stderr, "%v\n", err)
+    os.Exit(1)
+}
+defer rc.Deregister(id)
+```
 
 <img width="1072" alt="consul service discovery" src="https://user-images.githubusercontent.com/739782/37442561-23444504-285b-11e8-9d10-1c971c44a720.png">
 
