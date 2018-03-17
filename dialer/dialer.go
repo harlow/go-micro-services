@@ -14,16 +14,16 @@ import (
 type DialOption func(name string) (grpc.DialOption, error)
 
 // WithTracer traces rpc calls
-func WithTracer(tracer opentracing.Tracer) DialOption {
+func WithTracer(t opentracing.Tracer) DialOption {
 	return func(name string) (grpc.DialOption, error) {
-		return grpc.WithUnaryInterceptor(otgrpc.OpenTracingClientInterceptor(tracer)), nil
+		return grpc.WithUnaryInterceptor(otgrpc.OpenTracingClientInterceptor(t)), nil
 	}
 }
 
 // WithBalancer enables client side load balancing
-func WithBalancer(registry *consul.Client) DialOption {
+func WithBalancer(cc *consul.Client) DialOption {
 	return func(name string) (grpc.DialOption, error) {
-		r, err := lb.NewResolver(registry, name, "")
+		r, err := lb.NewResolver(cc, name, "")
 		if err != nil {
 			return nil, err
 		}
