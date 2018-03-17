@@ -14,7 +14,7 @@ import (
 func runFrontend(port int, consul *registry.Client, jaegeraddr string) error {
 	tracer, err := tracing.Init("frontend", jaegeraddr)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("tracing init error: %v", err)
 	}
 
 	// dial search srv

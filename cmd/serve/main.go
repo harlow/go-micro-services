@@ -31,7 +31,12 @@ func main() {
 	)
 	flag.Parse()
 
-	var run func(int, *registry.Client, string) error
+	if len(os.Args) < 2 {
+		usage()
+		os.Exit(1)
+	}
+
+	var run func(port int, consul *registry.Client, jaegeraddr string) error
 
 	switch strings.ToLower(os.Args[1]) {
 	case "all":

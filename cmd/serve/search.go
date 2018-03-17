@@ -14,10 +14,9 @@ import (
 const searchSrvName = "srv-search"
 
 func runSearch(port int, consul *registry.Client, jaegeraddr string) error {
-	// tracer
 	tracer, err := tracing.Init("search", jaegeraddr)
 	if err != nil {
-		return fmt.Errorf("init tracer error: %v", err)
+		return fmt.Errorf("tracing init error: %v", err)
 	}
 
 	// dial geo srv

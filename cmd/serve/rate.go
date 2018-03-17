@@ -11,7 +11,6 @@ import (
 const rateSrvName = "srv-rate"
 
 func runRate(port int, consul *registry.Client, jaegeraddr string) error {
-	// new tracer
 	tracer, err := tracing.Init("rate", jaegeraddr)
 	if err != nil {
 		return fmt.Errorf("tracing init error: %v", err)

@@ -13,7 +13,7 @@ const profileSrvName = "srv-profile"
 func runProfile(port int, consul *registry.Client, jaegeraddr string) error {
 	tracer, err := tracing.Init("profile", jaegeraddr)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("tracing init error: %v", err)
 	}
 
 	// service registry

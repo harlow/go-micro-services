@@ -18,9 +18,7 @@ Data for each of the services is stored in JSON flat files under the `data/` dir
 
 ## Request Tracing
 
-The [Jaeger Tracing](https://github.com/jaegertracing/jaeger) project is used for tracing inter-service requests.
-
-The `tracing` package is used initialize a new service tracer:
+The [Jaeger Tracing](https://github.com/jaegertracing/jaeger) project is used for tracing inter-service requests. The `tracing` package is used initialize a new service tracer:
 
 ```go
 tracer, err := tracing.Init("serviceName", jaegeraddr)
@@ -36,9 +34,7 @@ View dashboard: http://localhost:16686/search
 
 ## Service Discovery
 
-[Consul](https://www.consul.io/) is used for service discovery. This allows each service to register with the registry and then discovery the IP addresses of the services they need to comunicate with.
-
-The `registry` package is used for registering services:
+[Consul](https://www.consul.io/) is used for service discovery. This allows each service to register with the registry and then discovery the IP addresses of the services they need to comunicate with. The `registry` package is used for registering services:
 
 ```go
 rc, err := registry.NewClient(consuladdr)
