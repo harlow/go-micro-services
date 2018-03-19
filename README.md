@@ -55,6 +55,15 @@ defer rc.Deregister(id)
 
 View dashboard: http://localhost:8500/ui
 
+## Load balancing
+
+Client side load balancing is handled with [olivere/grpc](https://github.com/olivere/grpc/tree/master/lb) pacakge. It uses Consul for service discovery and then the gRPC Dialer leverages a RoundRobin balancing strategy.
+
+Additional Reading:
+
+* https://grpc.io/blog/loadbalancing
+* https://github.com/grpc/grpc/blob/master/doc/load-balancing.md
+
 ## Installation
 
 ### Setup
