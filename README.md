@@ -147,3 +147,9 @@ Thanks to all the [contributors][6]. This codebase was heavily inspired by the f
 [4]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
 [5]: https://github.com/go-kit/kit
 [6]: https://github.com/harlow/go-micro-services/graphs/contributors
+
+<img width="50" height="50" src="https://s3.amazonaws.com/tracking.events/hw-logo.png">
+
+> [www.hward.com](http://www.hward.com) &nbsp;&middot;&nbsp;
+> GitHub [@harlow](https://github.com/harlow) &nbsp;&middot;&nbsp;
+> Twitter [@harlow_ward](https://twitter.com/harlow_ward)
