@@ -1,6 +1,6 @@
 # Golang Microservices Example
 
-An demonstration of Golang micro-services that expose a HTTP/JSON frontend and then
+A demonstration of Golang micro-services that expose a HTTP/JSON frontend and then
 leverages [gRPC][1] for inter-service communication.
 
 * Services written in Golang
