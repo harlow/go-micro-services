@@ -12,7 +12,7 @@ require (
 	github.com/hailocab/go-geoindex v0.0.0-20160127134810-64631bfe9711
 	github.com/opentracing-contrib/go-stdlib v0.0.0-20180308002341-f6b9967a3c69
 	github.com/opentracing/opentracing-go v1.0.2
-	github.com/prometheus/client_golang v0.9.2
+	github.com/prometheus/client_golang v0.9.2 // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/uber-go/atomic v1.4.0 // indirect
 	github.com/uber/jaeger-client-go v2.11.2+incompatible
