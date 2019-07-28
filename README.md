@@ -13,7 +13,7 @@ The example application plots Hotel locations on a Google map:
 <img width="865" alt="screen shot 2016-11-07 at 9 31 12 pm" src="https://cloud.githubusercontent.com/assets/739782/20087958/de0ef9b4-a531-11e6-953a-4425fe445883.png">
 
 The web page makes an HTTP request to the API Endpoint which in turn spawns a number of RPC requests to the backend services.
- 
+
 Data for each of the services is stored in JSON flat files under the `data/` directory. In reality each of the services could choose their own specialty datastore. The Geo service for example could use PostGis or any other database specializing in geospacial queries.
 
 ## Request Tracing
@@ -31,38 +31,6 @@ if err != nil {
 <img width="1129" alt="jaeger tracing example" src="https://user-images.githubusercontent.com/739782/37546077-554cb6a2-29bf-11e8-9bc8-3de2a01d0d69.png">
 
 View dashboard: http://localhost:16686/search
-
-## Service Discovery
-
-[Consul](https://www.consul.io/) is used for service discovery. This allows each service to register with the registry and then discovery the IP addresses of the services they need to comunicate with. The `registry` package is used for registering services:
-
-```go
-rc, err := registry.NewClient(consuladdr)
-if err != nil {
-    fmt.Fprintf(os.Stderr, "%v\n", err)
-    os.Exit(1)
-}
-
-id, err := rc.Register("serviceName", port)
-if err != nil {
-    fmt.Fprintf(os.Stderr, "%v\n", err)
-    os.Exit(1)
-}
-defer rc.Deregister(id)
-```
-
-<img width="1072" alt="consul service discovery" src="https://user-images.githubusercontent.com/739782/37442561-23444504-285b-11e8-9d10-1c971c44a720.png">
-
-View dashboard: http://localhost:8500/ui
-
-## Load balancing
-
-Client side load balancing is handled with [olivere/grpc](https://github.com/olivere/grpc/tree/master/lb) pacakge. It uses Consul for service discovery and then the gRPC Dialer leverages a RoundRobin balancing strategy.
-
-Additional Reading:
-
-* https://grpc.io/blog/loadbalancing
-* https://github.com/grpc/grpc/blob/master/doc/load-balancing.md
 
 ## Installation
 
@@ -94,7 +62,7 @@ Vist the web page in a browser:
 
 cURL the API endpoint and receive GeoJSON response:
 
-    $ curl "http://localhost:5000/hotels?inDate=2015-04-09&outDate=2015-04-10" 
+    $ curl "http://localhost:5000/hotels?inDate=2015-04-09&outDate=2015-04-10"
 
 The JSON response:
 
@@ -152,4 +120,4 @@ Thanks to all the [contributors][6]. This codebase was heavily inspired by the f
 
 > [www.hward.com](http://www.hward.com) &nbsp;&middot;&nbsp;
 > GitHub [@harlow](https://github.com/harlow) &nbsp;&middot;&nbsp;
-> Twitter [@harlow_ward](https://twitter.com/harlow_ward)
+> Twitter [@comma_ok](https://twitter.com/comma_ok)
