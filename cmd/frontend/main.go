@@ -8,7 +8,7 @@ import (
 	"github.com/harlow/go-micro-services/services/frontend"
 	profile "github.com/harlow/go-micro-services/services/profile/proto"
 	search "github.com/harlow/go-micro-services/services/search/proto"
-	"github.com/harlow/go-micro-services/tracing"
+	"github.com/harlow/go-micro-services/trace"
 )
 
 func main() {
@@ -20,18 +20,18 @@ func main() {
 	)
 	flag.Parse()
 
-	tracer, err := tracing.Init("frontend", *jaegeraddr)
+	tracer, err := trace.New("frontend", *jaegeraddr)
 	if err != nil {
-		log.Fatalf("tracing init error: %v", err)
+		log.Fatalf("trace new error: %v", err)
 	}
 
-	// dial search srv
+	// dial search service
 	sc, err := dialer.Dial(*searchAddr, dialer.WithTracer(tracer))
 	if err != nil {
 		log.Fatalf("dialer error: %v", err)
 	}
 
-	// dial profile srv
+	// dial profile service
 	pc, err := dialer.Dial(*profileAddr, dialer.WithTracer(tracer))
 	if err != nil {
 		log.Fatalf("dialer error: %v", err)

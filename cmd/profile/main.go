@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/harlow/go-micro-services/services/profile"
-	"github.com/harlow/go-micro-services/tracing"
+	"github.com/harlow/go-micro-services/trace"
 )
 
 func main() {
@@ -15,9 +15,9 @@ func main() {
 	)
 	flag.Parse()
 
-	tracer, err := tracing.Init("profile", *jaegeraddr)
+	tracer, err := trace.New("profile", *jaegeraddr)
 	if err != nil {
-		log.Fatalf("tracing init error: %v", err)
+		log.Fatalf("trace new error: %v", err)
 	}
 
 	srv := profile.NewServer(tracer)

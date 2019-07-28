@@ -7,7 +7,7 @@ import (
 
 	profile "github.com/harlow/go-micro-services/services/profile/proto"
 	search "github.com/harlow/go-micro-services/services/search/proto"
-	"github.com/harlow/go-micro-services/tracing"
+	"github.com/harlow/go-micro-services/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
@@ -29,7 +29,7 @@ type Server struct {
 
 // Run the server
 func (s *Server) Run(port int) error {
-	mux := tracing.NewServeMux(s.tracer)
+	mux := trace.NewServeMux(s.tracer)
 	mux.Handle("/", http.FileServer(http.Dir("services/frontend/static")))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
 

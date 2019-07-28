@@ -1,4 +1,4 @@
-package tracing
+package trace
 
 import (
 	"fmt"
@@ -8,8 +8,8 @@ import (
 	"github.com/uber/jaeger-client-go/config"
 )
 
-// Init returns a newly configured tracer
-func Init(serviceName, host string) (opentracing.Tracer, error) {
+// New creates a new Jaeger tracer
+func New(serviceName, host string) (opentracing.Tracer, error) {
 	cfg := config.Configuration{
 		Sampler: &config.SamplerConfig{
 			Type:  "const",
