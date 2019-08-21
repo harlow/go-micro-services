@@ -6,20 +6,33 @@ import (
 	"net"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-	geo "github.com/harlow/go-micro-services/services/geo/proto"
-	rate "github.com/harlow/go-micro-services/services/rate/proto"
-	pb "github.com/harlow/go-micro-services/services/search/proto"
+	"github.com/harlow/go-micro-services/dialer"
+	geo "github.com/harlow/go-micro-services/geo/proto"
+	rate "github.com/harlow/go-micro-services/rate/proto"
+	pb "github.com/harlow/go-micro-services/search/proto"
 	opentracing "github.com/opentracing/opentracing-go"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
 // NewServer returns a new server
-func NewServer(gc geo.GeoClient, rc rate.RateClient, tr opentracing.Tracer) *Server {
+func NewServer(t opentracing.Tracer, geoaddr, rateaddr string) *Server {
+	// dial geo srv
+	gc, err := dialer.Dial(geoaddr, dialer.WithTracer(t))
+	if err != nil {
+		log.Fatalf("dialer error: %v", err)
+	}
+
+	// dial rate srv
+	rc, err := dialer.Dial(rateaddr, dialer.WithTracer(t))
+	if err != nil {
+		log.Fatalf("dialer error: %v", err)
+	}
+
 	return &Server{
-		geoClient:  gc,
-		rateClient: rc,
-		tracer:     tr,
+		geoClient:  geo.NewGeoClient(gc),
+		rateClient: rate.NewRateClient(rc),
+		tracer:     t,
 	}
 }
 
@@ -67,15 +80,11 @@ func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchR
 		log.Fatalf("rates error: %v", err)
 	}
 
-	// TODO(hw): add simple ranking algo to order hotel ids:
-	// * geo distance
-	// * price (best discount?)
-	// * reviews
-
 	// build the response
 	res := new(pb.SearchResult)
 	for _, ratePlan := range rates.RatePlans {
 		res.HotelIds = append(res.HotelIds, ratePlan.HotelId)
 	}
+
 	return res, nil
 }

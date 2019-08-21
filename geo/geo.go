@@ -9,7 +9,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/hailocab/go-geoindex"
 	"github.com/harlow/go-micro-services/data"
-	pb "github.com/harlow/go-micro-services/services/geo/proto"
+	pb "github.com/harlow/go-micro-services/geo/proto"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -19,6 +19,18 @@ const (
 	maxSearchRadius  = 10
 	maxSearchResults = 5
 )
+
+// point represents a hotels's geo location on map
+type point struct {
+	Pid  string  `json:"hotelId"`
+	Plat float64 `json:"lat"`
+	Plon float64 `json:"lon"`
+}
+
+// Implement Point interface
+func (p *point) Lat() float64 { return p.Plat }
+func (p *point) Lon() float64 { return p.Plon }
+func (p *point) Id() string   { return p.Pid }
 
 // NewServer returns a new server
 func NewServer(tr opentracing.Tracer) *Server {
@@ -47,6 +59,7 @@ func (s *Server) Run(port int) error {
 	if err != nil {
 		return fmt.Errorf("failed to listen: %v", err)
 	}
+
 	return srv.Serve(lis)
 }
 
@@ -82,10 +95,12 @@ func (s *Server) getNearbyPoints(ctx context.Context, lat, lon float64) []geoind
 
 // newGeoIndex returns a geo index with points loaded
 func newGeoIndex(path string) *geoindex.ClusteringIndex {
-	file := data.MustAsset(path)
+	var (
+		file   = data.MustAsset(path)
+		points []*point
+	)
 
-	// unmarshal json points
-	var points []*point
+	// load geo points from json file
 	if err := json.Unmarshal(file, &points); err != nil {
 		log.Fatalf("Failed to load hotels: %v", err)
 	}
@@ -98,14 +113,3 @@ func newGeoIndex(path string) *geoindex.ClusteringIndex {
 
 	return index
 }
-
-type point struct {
-	Pid  string  `json:"hotelId"`
-	Plat float64 `json:"lat"`
-	Plon float64 `json:"lon"`
-}
-
-// Implement Point interface
-func (p *point) Lat() float64 { return p.Plat }
-func (p *point) Lon() float64 { return p.Plon }
-func (p *point) Id() string   { return p.Pid }

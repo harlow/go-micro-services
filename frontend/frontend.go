@@ -3,20 +3,34 @@ package frontend
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
-	profile "github.com/harlow/go-micro-services/services/profile/proto"
-	search "github.com/harlow/go-micro-services/services/search/proto"
+	"github.com/harlow/go-micro-services/dialer"
+	profile "github.com/harlow/go-micro-services/profile/proto"
+	search "github.com/harlow/go-micro-services/search/proto"
 	"github.com/harlow/go-micro-services/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // NewServer returns a new server
-func NewServer(sc search.SearchClient, pc profile.ProfileClient, tr opentracing.Tracer) *Server {
+func NewServer(t opentracing.Tracer, searchaddr, profileaddr string) *Server {
+	// dial search service
+	sc, err := dialer.Dial(searchaddr, dialer.WithTracer(t))
+	if err != nil {
+		log.Fatalf("dialer error: %v", err)
+	}
+
+	// dial profile service
+	pc, err := dialer.Dial(profileaddr, dialer.WithTracer(t))
+	if err != nil {
+		log.Fatalf("dialer error: %v", err)
+	}
+
 	return &Server{
-		searchClient:  sc,
-		profileClient: pc,
-		tracer:        tr,
+		searchClient:  search.NewSearchClient(sc),
+		profileClient: profile.NewProfileClient(pc),
+		tracer:        t,
 	}
 }
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/harlow/go-micro-services/data"
-	pb "github.com/harlow/go-micro-services/services/rate/proto"
+	pb "github.com/harlow/go-micro-services/rate/proto"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -41,6 +41,7 @@ func (s *Server) Run(port int) error {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	return srv.Serve(lis)
 }
 

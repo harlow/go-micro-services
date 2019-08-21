@@ -2,9 +2,9 @@ version: "3"
 services:
   frontend:
     build: .
-    entrypoint: frontend
+    entrypoint: demo --service=frontend
     ports:
-      - "5000:5000"
+      - "5000:8080"
     links:
       - jaeger
       - search
@@ -14,26 +14,26 @@ services:
       - profile
   search:
     build: .
-    entrypoint: search
+    entrypoint: demo --service=search
     links:
       - geo
       - rate
       - jaeger
   profile:
     build: .
-    entrypoint: profile
+    entrypoint: demo --service=profile
     links:
       - geo
       - rate
       - jaeger
   geo:
     build: .
-    entrypoint: geo
+    entrypoint: demo --service=geo
     links:
       - jaeger
   rate:
     build: .
-    entrypoint: rate
+    entrypoint: demo --service=rate
     links:
       - jaeger
   jaeger:
