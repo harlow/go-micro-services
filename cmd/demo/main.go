@@ -9,7 +9,8 @@ import (
 	"github.com/harlow/go-micro-services/profile"
 	"github.com/harlow/go-micro-services/rate"
 	"github.com/harlow/go-micro-services/search"
-	"github.com/harlow/go-micro-services/trace"
+	"github.com/harlow/go-micro-services/internal/trace"
+	"github.com/harlow/go-micro-services/internal/dialer"
 )
 
 type server interface {
@@ -38,14 +39,30 @@ func main() {
 	switch *service {
 	case "geo":
 		srv = geo.NewServer(tracer)
-	case "search":
-		srv = search.NewServer(tracer, *geoaddr, *rateaddr)
 	case "rate":
 		srv = rate.NewServer(tracer)
 	case "profile":
 		srv = profile.NewServer(tracer)
+	case "search":
+		geoconn, err := dialer.Dial(*geoaddr, dialer.WithTracer(tracer))
+		if err != nil {
+			log.Fatalf("dial error: %v", err)
+		}
+		rateconn, err := dialer.Dial(*rateaddr, dialer.WithTracer(tracer))
+		if err != nil {
+			log.Fatalf("dial error: %v", err)
+		}
+		srv = search.NewServer(tracer, geoconn, rateconn)
 	case "frontend":
-		srv = frontend.NewServer(tracer, *searchaddr, *profileaddr)
+		searchconn, err := dialer.Dial(*searchaddr, dialer.WithTracer(tracer))
+		if err != nil {
+			log.Fatalf("dial error: %v", err)
+		}
+		profileconn, err := dialer.Dial(*profileaddr, dialer.WithTracer(tracer))
+		if err != nil {
+			log.Fatalf("dial error: %v", err)
+		}
+		srv = frontend.NewServer(tracer, searchconn, profileconn)
 	default:
 		log.Fatalf("unknown command %s", *service)
 	}

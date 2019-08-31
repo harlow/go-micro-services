@@ -6,7 +6,6 @@ import (
 	"net"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-	"github.com/harlow/go-micro-services/dialer"
 	geo "github.com/harlow/go-micro-services/geo/proto"
 	rate "github.com/harlow/go-micro-services/rate/proto"
 	pb "github.com/harlow/go-micro-services/search/proto"
@@ -16,22 +15,10 @@ import (
 )
 
 // NewServer returns a new server
-func NewServer(t opentracing.Tracer, geoaddr, rateaddr string) *Server {
-	// dial geo srv
-	gc, err := dialer.Dial(geoaddr, dialer.WithTracer(t))
-	if err != nil {
-		log.Fatalf("dialer error: %v", err)
-	}
-
-	// dial rate srv
-	rc, err := dialer.Dial(rateaddr, dialer.WithTracer(t))
-	if err != nil {
-		log.Fatalf("dialer error: %v", err)
-	}
-
+func NewServer(t opentracing.Tracer, geoconn, rateconn *grpc.ClientConn) *Server {
 	return &Server{
-		geoClient:  geo.NewGeoClient(gc),
-		rateClient: rate.NewRateClient(rc),
+		geoClient:  geo.NewGeoClient(geoconn),
+		rateClient: rate.NewRateClient(rateconn),
 		tracer:     t,
 	}
 }
