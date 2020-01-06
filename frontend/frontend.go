@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harlow/go-micro-services/internal/trace"
 	profile "github.com/harlow/go-micro-services/profile/proto"
 	search "github.com/harlow/go-micro-services/search/proto"
-	"github.com/harlow/go-micro-services/internal/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
@@ -31,7 +31,7 @@ type Server struct {
 // Run the server
 func (s *Server) Run(port int) error {
 	mux := trace.NewServeMux(s.tracer)
-	mux.Handle("/", http.FileServer(http.Dir("services/frontend/static")))
+	mux.Handle("/", http.FileServer(http.Dir("frontend/static")))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
 
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
