@@ -1,4 +1,4 @@
-package frontend
+package services
 
 import (
 	"encoding/json"
@@ -6,38 +6,38 @@ import (
 	"net/http"
 
 	"github.com/harlow/go-micro-services/internal/trace"
-	profile "github.com/harlow/go-micro-services/profile/proto"
-	search "github.com/harlow/go-micro-services/search/proto"
+	"github.com/harlow/go-micro-services/internal/proto/profile"
+	"github.com/harlow/go-micro-services/internal/proto/search"
 	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
-// NewServer returns a new server
-func NewServer(t opentracing.Tracer, searchconn, profileconn *grpc.ClientConn) *Server {
-	return &Server{
+// NewFrontend returns a new server
+func NewFrontend(t opentracing.Tracer, searchconn, profileconn *grpc.ClientConn) *Frontend {
+	return &Frontend{
 		searchClient:  search.NewSearchClient(searchconn),
 		profileClient: profile.NewProfileClient(profileconn),
 		tracer:        t,
 	}
 }
 
-// Server implements frontend service
-type Server struct {
+// Frontend implements frontend service
+type Frontend struct {
 	searchClient  search.SearchClient
 	profileClient profile.ProfileClient
 	tracer        opentracing.Tracer
 }
 
 // Run the server
-func (s *Server) Run(port int) error {
+func (s *Frontend) Run(port int) error {
 	mux := trace.NewServeMux(s.tracer)
-	mux.Handle("/", http.FileServer(http.Dir("frontend/static")))
+	mux.Handle("/", http.FileServer(http.Dir("public")))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
 
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
 }
 
-func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Frontend) searchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	ctx := r.Context()
 

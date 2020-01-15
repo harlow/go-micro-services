@@ -1,4 +1,4 @@
-package geo
+package services
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/hailocab/go-geoindex"
 	"github.com/harlow/go-micro-services/data"
-	pb "github.com/harlow/go-micro-services/geo/proto"
+	"github.com/harlow/go-micro-services/internal/proto/geo"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -32,28 +32,28 @@ func (p *point) Lat() float64 { return p.Plat }
 func (p *point) Lon() float64 { return p.Plon }
 func (p *point) Id() string   { return p.Pid }
 
-// NewServer returns a new server
-func NewServer(tr opentracing.Tracer) *Server {
-	return &Server{
+// NewGeo returns a new server
+func NewGeo(tr opentracing.Tracer) *Geo {
+	return &Geo{
 		tracer: tr,
 		geoidx: newGeoIndex("data/geo.json"),
 	}
 }
 
 // Server implements the geo service
-type Server struct {
+type Geo struct {
 	geoidx *geoindex.ClusteringIndex
 	tracer opentracing.Tracer
 }
 
 // Run starts the server
-func (s *Server) Run(port int) error {
+func (s *Geo) Run(port int) error {
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(
 			otgrpc.OpenTracingServerInterceptor(s.tracer),
 		),
 	)
-	pb.RegisterGeoServer(srv, s)
+	geo.RegisterGeoServer(srv, s)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
@@ -64,10 +64,10 @@ func (s *Server) Run(port int) error {
 }
 
 // Nearby returns all hotels within a given distance.
-func (s *Server) Nearby(ctx context.Context, req *pb.Request) (*pb.Result, error) {
+func (s *Geo) Nearby(ctx context.Context, req *geo.Request) (*geo.Result, error) {
 	var (
 		points = s.getNearbyPoints(ctx, float64(req.Lat), float64(req.Lon))
-		res    = &pb.Result{}
+		res    = &geo.Result{}
 	)
 
 	for _, p := range points {
@@ -77,7 +77,7 @@ func (s *Server) Nearby(ctx context.Context, req *pb.Request) (*pb.Result, error
 	return res, nil
 }
 
-func (s *Server) getNearbyPoints(ctx context.Context, lat, lon float64) []geoindex.Point {
+func (s *Geo) getNearbyPoints(ctx context.Context, lat, lon float64) []geoindex.Point {
 	center := &geoindex.GeoPoint{
 		Pid:  "",
 		Plat: lat,

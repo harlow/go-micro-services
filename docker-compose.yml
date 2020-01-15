@@ -2,7 +2,7 @@ version: "3"
 services:
   frontend:
     build: .
-    entrypoint: demo --service=frontend
+    entrypoint: go-micro-services frontend
     ports:
       - "5000:8080"
     links:
@@ -14,26 +14,26 @@ services:
       - profile
   search:
     build: .
-    entrypoint: demo --service=search
+    entrypoint: go-micro-services search
     links:
       - geo
       - rate
       - jaeger
   profile:
     build: .
-    entrypoint: demo --service=profile
+    entrypoint: go-micro-services profile
     links:
       - geo
       - rate
       - jaeger
   geo:
     build: .
-    entrypoint: demo --service=geo
+    entrypoint: go-micro-services geo
     links:
       - jaeger
   rate:
     build: .
-    entrypoint: demo --service=rate
+    entrypoint: go-micro-services rate
     links:
       - jaeger
   jaeger:

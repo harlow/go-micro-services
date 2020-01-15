@@ -1,4 +1,4 @@
-package search
+package services
 
 import (
 	"fmt"
@@ -6,38 +6,38 @@ import (
 	"net"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-	geo "github.com/harlow/go-micro-services/geo/proto"
-	rate "github.com/harlow/go-micro-services/rate/proto"
-	pb "github.com/harlow/go-micro-services/search/proto"
+	"github.com/harlow/go-micro-services/internal/proto/geo"
+	"github.com/harlow/go-micro-services/internal/proto/rate"
+	"github.com/harlow/go-micro-services/internal/proto/search"
 	opentracing "github.com/opentracing/opentracing-go"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
-// NewServer returns a new server
-func NewServer(t opentracing.Tracer, geoconn, rateconn *grpc.ClientConn) *Server {
-	return &Server{
+// NewSearch returns a new server
+func NewSearch(t opentracing.Tracer, geoconn, rateconn *grpc.ClientConn) *Search {
+	return &Search{
 		geoClient:  geo.NewGeoClient(geoconn),
 		rateClient: rate.NewRateClient(rateconn),
 		tracer:     t,
 	}
 }
 
-// Server implments the search service
-type Server struct {
+// Search implments the search service
+type Search struct {
 	geoClient  geo.GeoClient
 	rateClient rate.RateClient
 	tracer     opentracing.Tracer
 }
 
 // Run starts the server
-func (s *Server) Run(port int) error {
+func (s *Search) Run(port int) error {
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(
 			otgrpc.OpenTracingServerInterceptor(s.tracer),
 		),
 	)
-	pb.RegisterSearchServer(srv, s)
+	search.RegisterSearchServer(srv, s)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
@@ -47,7 +47,7 @@ func (s *Server) Run(port int) error {
 }
 
 // Nearby returns ids of nearby hotels ordered by ranking algo
-func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchResult, error) {
+func (s *Search) Nearby(ctx context.Context, req *search.NearbyRequest) (*search.SearchResult, error) {
 	// find nearby hotels
 	nearby, err := s.geoClient.Nearby(ctx, &geo.Request{
 		Lat: req.Lat,
@@ -68,7 +68,7 @@ func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchR
 	}
 
 	// build the response
-	res := new(pb.SearchResult)
+	res := new(search.SearchResult)
 	for _, ratePlan := range rates.RatePlans {
 		res.HotelIds = append(res.HotelIds, ratePlan.HotelId)
 	}

@@ -1,15 +1,15 @@
-package profile
+package services
 
 import (
 	"testing"
 
-	pb "github.com/harlow/go-micro-services/profile/proto"
+	"github.com/harlow/go-micro-services/internal/proto/profile"
 )
 
 func TestGetProfile(t *testing.T) {
-	s := &Server{
-		profiles: map[string]*pb.Hotel{
-			"1": &pb.Hotel{Id: "1", Name: "Cliff Hotel"},
+	s := &Profile{
+		profiles: map[string]*profile.Hotel{
+			"1": &profile.Hotel{Id: "1", Name: "Cliff Hotel"},
 		},
 	}
 

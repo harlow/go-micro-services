@@ -1,4 +1,4 @@
-package rate
+package services
 
 import (
 	"encoding/json"
@@ -8,34 +8,34 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/harlow/go-micro-services/data"
-	pb "github.com/harlow/go-micro-services/rate/proto"
+	"github.com/harlow/go-micro-services/internal/proto/rate"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
-// NewServer returns a new server
-func NewServer(tr opentracing.Tracer) *Server {
-	return &Server{
+// NewRate returns a new server
+func NewRate(tr opentracing.Tracer) *Rate {
+	return &Rate{
 		tracer:    tr,
 		rateTable: loadRateTable("data/inventory.json"),
 	}
 }
 
-// Server implements the rate service
-type Server struct {
-	rateTable map[stay]*pb.RatePlan
+// Rate implements the rate service
+type Rate struct {
+	rateTable map[stay]*rate.RatePlan
 	tracer    opentracing.Tracer
 }
 
 // Run starts the server
-func (s *Server) Run(port int) error {
+func (s *Rate) Run(port int) error {
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(
 			otgrpc.OpenTracingServerInterceptor(s.tracer),
 		),
 	)
-	pb.RegisterRateServer(srv, s)
+	rate.RegisterRateServer(srv, s)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
@@ -46,8 +46,8 @@ func (s *Server) Run(port int) error {
 }
 
 // GetRates gets rates for hotels for specific date range.
-func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	res := new(pb.Result)
+func (s *Rate) GetRates(ctx context.Context, req *rate.Request) (*rate.Result, error) {
+	res := new(rate.Result)
 
 	for _, hotelID := range req.HotelIds {
 		stay := stay{
@@ -64,15 +64,15 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 }
 
 // loadRates loads rate codes from JSON file.
-func loadRateTable(path string) map[stay]*pb.RatePlan {
+func loadRateTable(path string) map[stay]*rate.RatePlan {
 	file := data.MustAsset(path)
 
-	rates := []*pb.RatePlan{}
+	rates := []*rate.RatePlan{}
 	if err := json.Unmarshal(file, &rates); err != nil {
 		log.Fatalf("Failed to load json: %v", err)
 	}
 
-	rateTable := make(map[stay]*pb.RatePlan)
+	rateTable := make(map[stay]*rate.RatePlan)
 	for _, ratePlan := range rates {
 		stay := stay{
 			HotelID: ratePlan.HotelId,

@@ -1,4 +1,4 @@
-package profile
+package services
 
 import (
 	"encoding/json"
@@ -8,34 +8,34 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/harlow/go-micro-services/data"
-	pb "github.com/harlow/go-micro-services/profile/proto"
+	"github.com/harlow/go-micro-services/internal/proto/profile"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
-// NewServer returns a new server
-func NewServer(tr opentracing.Tracer) *Server {
-	return &Server{
+// NewProfile returns a new server
+func NewProfile(tr opentracing.Tracer) *Profile {
+	return &Profile{
 		tracer:   tr,
 		profiles: loadProfiles("data/hotels.json"),
 	}
 }
 
-// Server implements the profile service
-type Server struct {
-	profiles map[string]*pb.Hotel
+// Profile implements the profile service
+type Profile struct {
+	profiles map[string]*profile.Hotel
 	tracer   opentracing.Tracer
 }
 
 // Run starts the server
-func (s *Server) Run(port int) error {
+func (s *Profile) Run(port int) error {
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(
 			otgrpc.OpenTracingServerInterceptor(s.tracer),
 		),
 	)
-	pb.RegisterProfileServer(srv, s)
+	profile.RegisterProfileServer(srv, s)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
@@ -46,30 +46,30 @@ func (s *Server) Run(port int) error {
 }
 
 // GetProfiles returns hotel profiles for requested IDs
-func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	res := new(pb.Result)
+func (s *Profile) GetProfiles(ctx context.Context, req *profile.Request) (*profile.Result, error) {
+	res := new(profile.Result)
 	for _, id := range req.HotelIds {
 		res.Hotels = append(res.Hotels, s.getProfile(id))
 	}
 	return res, nil
 }
 
-func (s *Server) getProfile(id string) *pb.Hotel {
+func (s *Profile) getProfile(id string) *profile.Hotel {
 	return s.profiles[id]
 }
 
 // loadProfiles loads hotel profiles from a JSON file.
-func loadProfiles(path string) map[string]*pb.Hotel {
+func loadProfiles(path string) map[string]*profile.Hotel {
 	var (
 		file   = data.MustAsset(path)
-		hotels []*pb.Hotel
+		hotels []*profile.Hotel
 	)
 
 	if err := json.Unmarshal(file, &hotels); err != nil {
 		log.Fatalf("Failed to load json: %v", err)
 	}
 
-	profiles := make(map[string]*pb.Hotel)
+	profiles := make(map[string]*profile.Hotel)
 	for _, hotel := range hotels {
 		profiles[hotel.Id] = hotel
 	}
