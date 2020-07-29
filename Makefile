@@ -1,7 +1,7 @@
 .PHONY: proto data run
 
 proto:
-	for f in internal/proto/*.proto; do \
+	for f in internal/proto/*/*.proto; do \
 		protoc --go_out=plugins=grpc:. $$f; \
 		echo compiled: $$f; \
 	done
