@@ -6,10 +6,10 @@ import (
 	"log"
 	"os"
 
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	services "github.com/harlow/go-micro-services"
-	"github.com/harlow/go-micro-services/internal/dialer"
 	"github.com/harlow/go-micro-services/internal/trace"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
@@ -28,43 +28,52 @@ func main() {
 	)
 	flag.Parse()
 
-	tracer, err := trace.New("search", *jaegeraddr)
+	t, err := trace.New("search", *jaegeraddr)
 	if err != nil {
 		log.Fatalf("trace new error: %v", err)
 	}
 
 	var srv server
+	var cmd = os.Args[1]
 
-	switch os.Args[1] {
+	switch cmd {
 	case "geo":
-		srv = services.NewGeo(tracer)
+		srv = services.NewGeo(t)
 	case "rate":
-		srv = services.NewRate(tracer)
+		srv = services.NewRate(t)
 	case "profile":
-		srv = services.NewProfile(tracer)
+		srv = services.NewProfile(t)
 	case "search":
 		srv = services.NewSearch(
-			tracer,
-			initGRPCConn(*geoaddr, tracer),
-			initGRPCConn(*rateaddr, tracer),
+			t,
+			dial(*geoaddr, t),
+			dial(*rateaddr, t),
 		)
 	case "frontend":
 		srv = services.NewFrontend(
-			tracer,
-			initGRPCConn(*searchaddr, tracer),
-			initGRPCConn(*profileaddr, tracer),
+			t,
+			dial(*searchaddr, t),
+			dial(*profileaddr, t),
 		)
 	default:
-		log.Fatalf("unknown command %s", os.Args[1])
+		log.Fatalf("unknown cmd: %s", cmd)
 	}
 
-	srv.Run(*port)
+	if err := srv.Run(*port); err != nil {
+		log.Fatalf("run %s error: %v", cmd, err)
+	}
 }
 
-func initGRPCConn(addr string, tracer opentracing.Tracer) *grpc.ClientConn {
-	conn, err := dialer.Dial(addr, dialer.WithTracer(tracer))
+func dial(addr string, t opentracing.Tracer) *grpc.ClientConn {
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(otgrpc.OpenTracingClientInterceptor(t)),
+	}
+
+	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {
 		panic(fmt.Sprintf("ERROR: dial error: %v", err))
 	}
+
 	return conn
 }
