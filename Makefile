@@ -10,5 +10,5 @@ data:
 	go-bindata -o data/bindata.go -pkg data data/*.json
 
 run:
-	docker-compose build
-	docker-compose up --remove-orphans
+	sudo docker-compose build
+	sudo docker-compose up --remove-orphans
