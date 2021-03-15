@@ -103,11 +103,14 @@ If changes are made to the Protocol Buffer files use the Makefile to regenerate:
 
 ### Bindata
 
+The example app data is stored in flat files in the `/data` directory. When any of
+the data files are manually editied the bindata must be regenerated.
+
 Install the go-bindata libraries:
 
     $ go get -u github.com/go-bindata/go-bindata/...
 
-If changes are made to any of the raw JSOn data files use the Makefile to regenerate:
+If changes are made to any of the raw JSON data files use the Makefile to regenerate:
 
     $ make data
 
