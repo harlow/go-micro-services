@@ -3,11 +3,9 @@
 A demonstration of Golang micro-services that expose a HTTP/JSON frontend and then
 leverages [gRPC][1] for inter-service communication.
 
-
-<img width="840" alt="websequence-diagram" src="https://user-images.githubusercontent.com/739782/64067566-815cd100-cbdf-11e9-90f2-316462caae69.png">
-
 * Services written in Golang
 * gRPC for inter-service communication
+* Consul for service discovery
 * Jaeger for request tracing
 
 The example application plots Hotel locations on a Google map:
@@ -103,6 +101,16 @@ If changes are made to the Protocol Buffer files use the Makefile to regenerate:
 
     $ make proto
 
+### Bindata
+
+Install the go-bindata libraries:
+
+    $ go get -u github.com/go-bindata/go-bindata/...
+
+If changes are made to any of the raw JSOn data files use the Makefile to regenerate:
+
+    $ make data
+
 ## Credits
 
 Thanks to all the [contributors][6]. This codebase was heavily inspired by the following talks and repositories:
@@ -117,6 +125,8 @@ Thanks to all the [contributors][6]. This codebase was heavily inspired by the f
 [4]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
 [5]: https://github.com/go-kit/kit
 [6]: https://github.com/harlow/go-micro-services/graphs/contributors
+
+<img width="50" height="50" src="https://s3.amazonaws.com/tracking.events/hw-logo.png">
 
 > [www.hward.com](http://www.hward.com) &nbsp;&middot;&nbsp;
 > GitHub [@harlow](https://github.com/harlow) &nbsp;&middot;&nbsp;
