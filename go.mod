@@ -7,7 +7,7 @@ require (
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
-	github.com/golang/protobuf v1.2.0
+	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20171214222146-0e7658f8ee99
 	github.com/hailocab/go-geoindex v0.0.0-20160127134810-64631bfe9711
 	github.com/opentracing-contrib/go-stdlib v0.0.0-20180308002341-f6b9967a3c69
