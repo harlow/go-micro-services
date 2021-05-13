@@ -1,4 +1,5 @@
 syntax = "proto3";
+option go_package = "./internal/proto/geo";
 
 package geo;
 
