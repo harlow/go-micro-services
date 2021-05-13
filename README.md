@@ -5,7 +5,6 @@ leverages [gRPC][1] for inter-service communication.
 
 * Services written in Golang
 * gRPC for inter-service communication
-* Consul for service discovery
 * Jaeger for request tracing
 
 The example application plots Hotel locations on a Google map:
