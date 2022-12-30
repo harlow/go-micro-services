@@ -3,7 +3,7 @@ package profile
 import (
 	"testing"
 
-	"github.com/harlow/go-micro-services/internal/proto/profile"
+	profile "github.com/harlow/go-micro-services/internal/services/profile/proto"
 )
 
 func TestGetProfile(t *testing.T) {

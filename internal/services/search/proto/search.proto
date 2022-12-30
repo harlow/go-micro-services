@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "./internal/proto/search";
+option go_package = "./internal/services/search/proto";
 
 package search;
 

@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "./internal/proto/geo";
+option go_package = "./internal/services/geo/proto";
 
 package geo;
 

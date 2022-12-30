@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harlow/go-micro-services/internal/proto/profile"
-	"github.com/harlow/go-micro-services/internal/proto/search"
+	profile "github.com/harlow/go-micro-services/internal/services/profile/proto"
+	search "github.com/harlow/go-micro-services/internal/services/search/proto"
 	"github.com/harlow/go-micro-services/internal/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
