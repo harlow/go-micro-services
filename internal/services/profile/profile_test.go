@@ -1,4 +1,4 @@
-package services
+package profile
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 func TestGetProfile(t *testing.T) {
 	s := &Profile{
 		profiles: map[string]*profile.Hotel{
-			"1": &profile.Hotel{Id: "1", Name: "Cliff Hotel"},
+			"1": {Id: "1", Name: "Cliff Hotel"},
 		},
 	}
 

@@ -1,4 +1,4 @@
-package services
+package profile
 
 import (
 	"encoding/json"
@@ -14,8 +14,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-// NewProfile returns a new server
-func NewProfile(tr opentracing.Tracer) *Profile {
+// New returns a new server
+func New(tr opentracing.Tracer) *Profile {
 	return &Profile{
 		tracer:   tr,
 		profiles: loadProfiles("data/hotels.json"),

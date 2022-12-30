@@ -1,4 +1,4 @@
-package services
+package rate
 
 import (
 	"encoding/json"
@@ -14,8 +14,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-// NewRate returns a new server
-func NewRate(tr opentracing.Tracer) *Rate {
+// New returns a new server
+func New(tr opentracing.Tracer) *Rate {
 	return &Rate{
 		tracer:    tr,
 		rateTable: loadRateTable("data/inventory.json"),
