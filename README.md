@@ -15,22 +15,6 @@ The web page makes an HTTP request to the API Endpoint which in turn spawns a nu
 
 Data for each of the services is stored in JSON flat files under the `data/` directory. In reality each of the services could choose their own specialty datastore. The Geo service for example could use PostGis or any other database specializing in geospacial queries.
 
-## Request Tracing
-
-The [Jaeger Tracing](https://github.com/jaegertracing/jaeger) project is used for tracing inter-service requests. The `tracing` package is used initialize a new service tracer:
-
-```go
-tracer, err := tracing.Init("serviceName", jaegeraddr)
-if err != nil {
-    fmt.Fprintf(os.Stderr, "%v\n", err)
-    os.Exit(1)
-}
-```
-
-<img width="1129" alt="jaeger tracing example" src="https://user-images.githubusercontent.com/739782/37546077-554cb6a2-29bf-11e8-9bc8-3de2a01d0d69.png">
-
-View dashboard: http://localhost:16686/search
-
 ## Installation
 
 ### Setup
@@ -94,6 +78,23 @@ The JSON response:
 }
 ```
 
+## Request Tracing
+
+The [Jaeger Tracing](https://github.com/jaegertracing/jaeger) project is used for tracing inter-service requests. The `tracing` package is used initialize a new service tracer:
+
+```go
+tracer, err := tracing.Init("serviceName", jaegeraddr)
+if err != nil {
+    fmt.Fprintf(os.Stderr, "%v\n", err)
+    os.Exit(1)
+}
+```
+
+<img width="1129" alt="jaeger tracing example" src="https://user-images.githubusercontent.com/739782/37546077-554cb6a2-29bf-11e8-9bc8-3de2a01d0d69.png">
+
+View dashboard: http://localhost:16686/search
+
+
 ### Protobufs
 
 If changes are made to the Protocol Buffer files use the Makefile to regenerate:
@@ -127,9 +128,3 @@ Thanks to all the [contributors][6]. This codebase was heavily inspired by the f
 [4]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
 [5]: https://github.com/go-kit/kit
 [6]: https://github.com/harlow/go-micro-services/graphs/contributors
-
-<img width="50" height="50" src="https://s3.amazonaws.com/tracking.events/hw-logo.png">
-
-> [www.hward.com](http://www.hward.com) &nbsp;&middot;&nbsp;
-> GitHub [@harlow](https://github.com/harlow) &nbsp;&middot;&nbsp;
-> Twitter [@comma_ok](https://twitter.com/comma_ok)
