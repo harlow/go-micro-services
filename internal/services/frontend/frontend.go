@@ -1,4 +1,4 @@
-package geo
+package frontend
 
 import (
 	"encoding/json"
