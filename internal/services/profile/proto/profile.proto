@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "./internal/proto/profile";
+option go_package = "./internal/services/profile/proto";
 
 package profile;
 

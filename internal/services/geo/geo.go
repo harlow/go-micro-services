@@ -1,4 +1,4 @@
-package services
+package geo
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/hailocab/go-geoindex"
 	"github.com/harlow/go-micro-services/data"
-	"github.com/harlow/go-micro-services/internal/proto/geo"
+	geo "github.com/harlow/go-micro-services/internal/services/geo/proto"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"

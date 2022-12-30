@@ -8,7 +8,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/harlow/go-micro-services/data"
-	"github.com/harlow/go-micro-services/internal/proto/rate"
+	rate "github.com/harlow/go-micro-services/internal/services/rate/proto"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
