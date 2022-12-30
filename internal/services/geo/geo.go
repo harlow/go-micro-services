@@ -32,8 +32,8 @@ func (p *point) Lat() float64 { return p.Plat }
 func (p *point) Lon() float64 { return p.Plon }
 func (p *point) Id() string   { return p.Pid }
 
-// NewGeo returns a new server
-func NewGeo(tr opentracing.Tracer) *Geo {
+// New returns a new server
+func New(tr opentracing.Tracer) *Geo {
 	return &Geo{
 		tracer: tr,
 		geoidx: newGeoIndex("data/geo.json"),

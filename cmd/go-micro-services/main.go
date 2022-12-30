@@ -7,7 +7,11 @@ import (
 	"os"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-	services "github.com/harlow/go-micro-services"
+	frontendsrv "github.com/harlow/go-micro-services/internal/services/frontend"
+	geosrv "github.com/harlow/go-micro-services/internal/services/geo"
+	profilesrv "github.com/harlow/go-micro-services/internal/services/profile"
+	ratesrv "github.com/harlow/go-micro-services/internal/services/rate"
+	searchsrv "github.com/harlow/go-micro-services/internal/services/search"
 	"github.com/harlow/go-micro-services/internal/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
@@ -38,19 +42,19 @@ func main() {
 
 	switch cmd {
 	case "geo":
-		srv = services.NewGeo(t)
+		srv = geosrv.New(t)
 	case "rate":
-		srv = services.NewRate(t)
+		srv = ratesrv.New(t)
 	case "profile":
-		srv = services.NewProfile(t)
+		srv = profilesrv.New(t)
 	case "search":
-		srv = services.NewSearch(
+		srv = searchsrv.New(
 			t,
 			dial(*geoaddr, t),
 			dial(*rateaddr, t),
 		)
 	case "frontend":
-		srv = services.NewFrontend(
+		srv = frontendsrv.New(
 			t,
 			dial(*searchaddr, t),
 			dial(*profileaddr, t),

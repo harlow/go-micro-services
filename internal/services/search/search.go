@@ -1,4 +1,4 @@
-package services
+package search
 
 import (
 	"fmt"
@@ -14,8 +14,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-// NewSearch returns a new server
-func NewSearch(t opentracing.Tracer, geoconn, rateconn *grpc.ClientConn) *Search {
+// New returns a new server
+func New(t opentracing.Tracer, geoconn, rateconn *grpc.ClientConn) *Search {
 	return &Search{
 		geoClient:  geo.NewGeoClient(geoconn),
 		rateClient: rate.NewRateClient(rateconn),

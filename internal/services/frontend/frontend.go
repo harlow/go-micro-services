@@ -1,19 +1,19 @@
-package services
+package geo
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/harlow/go-micro-services/internal/trace"
 	"github.com/harlow/go-micro-services/internal/proto/profile"
 	"github.com/harlow/go-micro-services/internal/proto/search"
+	"github.com/harlow/go-micro-services/internal/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
-// NewFrontend returns a new server
-func NewFrontend(t opentracing.Tracer, searchconn, profileconn *grpc.ClientConn) *Frontend {
+// New returns a new server
+func New(t opentracing.Tracer, searchconn, profileconn *grpc.ClientConn) *Frontend {
 	return &Frontend{
 		searchClient:  search.NewSearchClient(searchconn),
 		profileClient: profile.NewProfileClient(profileconn),
