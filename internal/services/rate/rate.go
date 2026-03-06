@@ -8,6 +8,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/harlow/go-micro-services/data"
+	runtime "github.com/harlow/go-micro-services/internal/runtime"
 	rate "github.com/harlow/go-micro-services/internal/services/rate/proto"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
@@ -39,10 +40,10 @@ func (s *Rate) Run(port int) error {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return fmt.Errorf("failed to listen: %w", err)
 	}
 
-	return srv.Serve(lis)
+	return runtime.ServeGRPCGracefully(lis, srv)
 }
 
 // GetRates gets rates for hotels for specific date range.

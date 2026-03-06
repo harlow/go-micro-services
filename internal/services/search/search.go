@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
+	runtime "github.com/harlow/go-micro-services/internal/runtime"
 	geo "github.com/harlow/go-micro-services/internal/services/geo/proto"
 	rate "github.com/harlow/go-micro-services/internal/services/rate/proto"
 	search "github.com/harlow/go-micro-services/internal/services/search/proto"
@@ -42,7 +43,7 @@ func (s *Search) Run(port int) error {
 	if err != nil {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
-	return srv.Serve(lis)
+	return runtime.ServeGRPCGracefully(lis, srv)
 }
 
 // Nearby returns ids of nearby hotels ordered by ranking algo

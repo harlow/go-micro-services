@@ -10,6 +10,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/harlow/go-micro-services/data"
+	runtime "github.com/harlow/go-micro-services/internal/runtime"
 	geo "github.com/harlow/go-micro-services/internal/services/geo/proto"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
@@ -57,7 +58,7 @@ func (s *Geo) Run(port int) error {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
 
-	return srv.Serve(lis)
+	return runtime.ServeGRPCGracefully(lis, srv)
 }
 
 // Nearby returns all hotels within a given distance.

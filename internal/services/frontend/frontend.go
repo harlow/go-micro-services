@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/harlow/go-micro-services/data"
+	runtime "github.com/harlow/go-micro-services/internal/runtime"
 	profile "github.com/harlow/go-micro-services/internal/services/profile/proto"
 	search "github.com/harlow/go-micro-services/internal/services/search/proto"
 	"github.com/harlow/go-micro-services/internal/trace"
@@ -39,7 +40,7 @@ func (s *Frontend) Run(port int) error {
 	mux.Handle("/", http.FileServer(http.Dir("public")))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
 
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
+	return runtime.ServeHTTPGracefully(fmt.Sprintf(":%d", port), mux)
 }
 
 func (s *Frontend) searchHandler(w http.ResponseWriter, r *http.Request) {
