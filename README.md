@@ -49,6 +49,17 @@ Open the app:
 
 - [http://localhost:5001/](http://localhost:5001/)
 
+Run without Docker (all services on localhost):
+
+```bash
+make run-local
+```
+
+Frontend health/readiness:
+
+- [http://localhost:5001/healthz](http://localhost:5001/healthz)
+- [http://localhost:5001/readyz](http://localhost:5001/readyz)
+
 Sample API call:
 
 ```bash

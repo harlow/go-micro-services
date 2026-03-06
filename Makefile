@@ -1,4 +1,4 @@
-.PHONY: proto data run down
+.PHONY: proto data run run-local down
 
 COMPOSE ?= docker-compose
 
@@ -19,6 +19,9 @@ data:
 run:
 	$(COMPOSE) build
 	$(COMPOSE) up --remove-orphans
+
+run-local:
+	./scripts/run-local.sh
 
 down:
 	$(COMPOSE) down --remove-orphans
