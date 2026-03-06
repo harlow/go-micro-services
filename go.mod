@@ -4,7 +4,6 @@ go 1.19
 
 require (
 	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645
-	github.com/hailocab/go-geoindex v0.0.0-20160127134810-64631bfe9711
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
