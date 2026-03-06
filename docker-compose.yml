@@ -5,20 +5,57 @@ services:
     ports:
       - "5001:8080"
     depends_on:
-      - search
-      - profile
+      search:
+        condition: service_healthy
+      profile:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -ec 'exec 3<>/dev/tcp/127.0.0.1/8080; printf \"GET /healthz HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; head -n 1 <&3 | grep -q \"200\"'"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
   search:
     build: .
     entrypoint: go-micro-services search
+    depends_on:
+      geo:
+        condition: service_healthy
+      rate:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -ec ': >/dev/tcp/127.0.0.1/8080'"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
   profile:
     build: .
     entrypoint: go-micro-services profile
+    healthcheck:
+      test: ["CMD-SHELL", "bash -ec ': >/dev/tcp/127.0.0.1/8080'"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
   geo:
     build: .
     entrypoint: go-micro-services geo
+    healthcheck:
+      test: ["CMD-SHELL", "bash -ec ': >/dev/tcp/127.0.0.1/8080'"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
   rate:
     build: .
     entrypoint: go-micro-services rate
+    healthcheck:
+      test: ["CMD-SHELL", "bash -ec ': >/dev/tcp/127.0.0.1/8080'"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
   jaeger:
     image: jaegertracing/all-in-one:1.76.0
     ports:
