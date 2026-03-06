@@ -26,11 +26,11 @@ start_service() {
   PIDS+=("$!")
 }
 
-start_service geo -port=8081 -jaeger=localhost:4317 geo
-start_service rate -port=8082 -jaeger=localhost:4317 rate
-start_service profile -port=8083 -jaeger=localhost:4317 profile
-start_service search -port=8084 -geoaddr=localhost:8081 -rateaddr=localhost:8082 -jaeger=localhost:4317 search
-start_service frontend -port=5001 -searchaddr=localhost:8084 -profileaddr=localhost:8083 -jaeger=localhost:4317 frontend
+start_service geo -port=8081 -otel-endpoint=localhost:4317 geo
+start_service rate -port=8082 -otel-endpoint=localhost:4317 rate
+start_service profile -port=8083 -otel-endpoint=localhost:4317 profile
+start_service search -port=8084 -geoaddr=localhost:8081 -rateaddr=localhost:8082 -otel-endpoint=localhost:4317 search
+start_service frontend -port=5001 -searchaddr=localhost:8084 -profileaddr=localhost:8083 -otel-endpoint=localhost:4317 frontend
 
 echo
 echo "local stack is starting:"

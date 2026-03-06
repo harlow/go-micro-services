@@ -24,7 +24,8 @@ type server interface {
 func main() {
 	var (
 		port        = flag.Int("port", 8080, "The service port")
-		jaegeraddr  = flag.String("jaeger", "jaeger:4317", "OTLP endpoint")
+		oteladdr    = flag.String("otel-endpoint", "", "OTLP endpoint (default: jaeger:4317)")
+		jaegeraddr  = flag.String("jaeger", "", "Deprecated alias for -otel-endpoint")
 		profileaddr = flag.String("profileaddr", "profile:8080", "Profile service addr")
 		geoaddr     = flag.String("geoaddr", "geo:8080", "Geo server addr")
 		rateaddr    = flag.String("rateaddr", "rate:8080", "Rate server addr")
@@ -35,8 +36,14 @@ func main() {
 		log.Fatalf("usage: go-micro-services <frontend|search|profile|geo|rate> [flags]")
 	}
 	cmd := flag.Arg(0)
+	traceEndpoint := "jaeger:4317"
+	if *oteladdr != "" {
+		traceEndpoint = *oteladdr
+	} else if *jaegeraddr != "" {
+		traceEndpoint = *jaegeraddr
+	}
 
-	shutdownTrace, err := trace.New(cmd, *jaegeraddr)
+	shutdownTrace, err := trace.New(cmd, traceEndpoint)
 	if err != nil {
 		log.Fatalf("trace init error: %v", err)
 	}
