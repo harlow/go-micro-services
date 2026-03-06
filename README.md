@@ -41,11 +41,11 @@ To make the demo as straigforward as possible; [Docker Compose](https://docs.doc
 
 Vist the web page in a browser:
 
-[http://localhost:5000/](http://localhost:5000/)
+[http://localhost:5001/](http://localhost:5001/)
 
 cURL the API endpoint and receive GeoJSON response:
 
-    $ curl "http://localhost:5000/hotels?inDate=2015-04-09&outDate=2015-04-10"
+    $ curl "http://localhost:5001/hotels?inDate=2015-04-09&outDate=2015-04-10"
 
 The JSON response:
 

@@ -4,7 +4,7 @@ services:
     build: .
     entrypoint: go-micro-services frontend
     ports:
-      - "5000:8080"
+      - "5001:8080"
     links:
       - jaeger
       - search
