@@ -33,14 +33,14 @@ func main() {
 	if flag.NArg() < 1 {
 		log.Fatalf("usage: go-micro-services <frontend|search|profile|geo|rate> [flags]")
 	}
+	cmd := flag.Arg(0)
 
-	t, err := trace.New("search", *jaegeraddr)
+	t, err := trace.New(cmd, *jaegeraddr)
 	if err != nil {
 		log.Fatalf("trace new error: %v", err)
 	}
 
 	var srv server
-	var cmd = flag.Arg(0)
 
 	switch cmd {
 	case "geo":
