@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
@@ -14,6 +13,7 @@ import (
 	"github.com/harlow/go-micro-services/internal/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type server interface {
@@ -50,16 +50,32 @@ func main() {
 	case "profile":
 		srv = profilesrv.New(t)
 	case "search":
+		geoConn, err := dial(*geoaddr, t)
+		if err != nil {
+			log.Fatalf("dial geo error: %v", err)
+		}
+		rateConn, err := dial(*rateaddr, t)
+		if err != nil {
+			log.Fatalf("dial rate error: %v", err)
+		}
 		srv = searchsrv.New(
 			t,
-			dial(*geoaddr, t),
-			dial(*rateaddr, t),
+			geoConn,
+			rateConn,
 		)
 	case "frontend":
+		searchConn, err := dial(*searchaddr, t)
+		if err != nil {
+			log.Fatalf("dial search error: %v", err)
+		}
+		profileConn, err := dial(*profileaddr, t)
+		if err != nil {
+			log.Fatalf("dial profile error: %v", err)
+		}
 		srv = frontendsrv.New(
 			t,
-			dial(*searchaddr, t),
-			dial(*profileaddr, t),
+			searchConn,
+			profileConn,
 		)
 	default:
 		log.Fatalf("unknown cmd: %s", cmd)
@@ -70,16 +86,16 @@ func main() {
 	}
 }
 
-func dial(addr string, t opentracing.Tracer) *grpc.ClientConn {
+func dial(addr string, t opentracing.Tracer) (*grpc.ClientConn, error) {
 	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(otgrpc.OpenTracingClientInterceptor(t)),
 	}
 
 	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {
-		panic(fmt.Sprintf("ERROR: dial error: %v", err))
+		return nil, err
 	}
 
-	return conn
+	return conn, nil
 }
