@@ -1,4 +1,4 @@
-.PHONY: proto data run run-local down
+.PHONY: proto data run run-local down check check-generated
 
 COMPOSE ?= docker-compose
 
@@ -14,7 +14,7 @@ proto:
 
 data:
 	@command -v go-bindata >/dev/null 2>&1 || { echo "error: go-bindata not found"; exit 1; }
-	go-bindata -o data/bindata.go -pkg data data/*.json
+	go-bindata -nometadata -o data/bindata.go -pkg data data/*.json
 
 run:
 	$(COMPOSE) build
@@ -25,3 +25,13 @@ run-local:
 
 down:
 	$(COMPOSE) down --remove-orphans
+
+check:
+	go test ./...
+	go test -race ./...
+	go vet ./...
+
+check-generated:
+	$(MAKE) proto
+	$(MAKE) data
+	git diff --exit-code -- internal/services data/bindata.go

@@ -95,7 +95,7 @@ func dataGeoJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/geo.json", size: 1190, mode: os.FileMode(420), modTime: time.Unix(1772823092, 0)}
+	info := bindataFileInfo{name: "data/geo.json", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -115,7 +115,7 @@ func dataHotel_ratingsJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/hotel_ratings.json", size: 682, mode: os.FileMode(420), modTime: time.Unix(1772823119, 0)}
+	info := bindataFileInfo{name: "data/hotel_ratings.json", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -135,7 +135,7 @@ func dataHotelsJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/hotels.json", size: 9769, mode: os.FileMode(420), modTime: time.Unix(1772823084, 0)}
+	info := bindataFileInfo{name: "data/hotels.json", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -155,7 +155,7 @@ func dataInventoryJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/inventory.json", size: 3676, mode: os.FileMode(420), modTime: time.Unix(1772823114, 0)}
+	info := bindataFileInfo{name: "data/inventory.json", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

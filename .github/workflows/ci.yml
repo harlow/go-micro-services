@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "3.21.12"
+
+      - name: Install codegen tools
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          go install github.com/go-bindata/go-bindata/...@latest
+
+      - name: Run Go checks
+        run: make check
+
+      - name: Verify generated artifacts are up to date
+        run: make check-generated
