@@ -1,4 +1,6 @@
-.PHONY: proto data run
+.PHONY: proto data run down
+
+COMPOSE ?= docker-compose
 
 proto:
 	@command -v protoc >/dev/null 2>&1 || { echo "error: protoc not found"; exit 1; }
@@ -12,5 +14,8 @@ data:
 	go-bindata -o data/bindata.go -pkg data data/*.json
 
 run:
-	docker-compose build
-	docker-compose up --remove-orphans
+	$(COMPOSE) build
+	$(COMPOSE) up --remove-orphans
+
+down:
+	$(COMPOSE) down --remove-orphans

@@ -1,43 +1,26 @@
-version: "3"
 services:
   frontend:
     build: .
     entrypoint: go-micro-services frontend
     ports:
       - "5001:8080"
-    links:
-      - jaeger
-      - search
-      - profile
     depends_on:
       - search
       - profile
   search:
     build: .
     entrypoint: go-micro-services search
-    links:
-      - geo
-      - rate
-      - jaeger
   profile:
     build: .
     entrypoint: go-micro-services profile
-    links:
-      - geo
-      - rate
-      - jaeger
   geo:
     build: .
     entrypoint: go-micro-services geo
-    links:
-      - jaeger
   rate:
     build: .
     entrypoint: go-micro-services rate
-    links:
-      - jaeger
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one:1.76.0
     ports:
       - "14269"
       - "5778:5778"
