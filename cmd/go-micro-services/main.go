@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	frontendsrv "github.com/harlow/go-micro-services/internal/services/frontend"
@@ -31,6 +30,9 @@ func main() {
 		searchaddr  = flag.String("searchaddr", "search:8080", "Search service addr")
 	)
 	flag.Parse()
+	if flag.NArg() < 1 {
+		log.Fatalf("usage: go-micro-services <frontend|search|profile|geo|rate> [flags]")
+	}
 
 	t, err := trace.New("search", *jaegeraddr)
 	if err != nil {
@@ -38,7 +40,7 @@ func main() {
 	}
 
 	var srv server
-	var cmd = os.Args[1]
+	var cmd = flag.Arg(0)
 
 	switch cmd {
 	case "geo":
