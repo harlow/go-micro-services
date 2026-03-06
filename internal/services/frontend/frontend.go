@@ -1,11 +1,13 @@
 package frontend
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/harlow/go-micro-services/data"
 	runtime "github.com/harlow/go-micro-services/internal/runtime"
@@ -36,6 +38,8 @@ func (s *Frontend) Run(port int) error {
 	mux := trace.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir("public")))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
+	mux.Handle("/healthz", http.HandlerFunc(s.healthHandler))
+	mux.Handle("/readyz", http.HandlerFunc(s.readyHandler))
 
 	return runtime.ServeHTTPGracefully(fmt.Sprintf(":%d", port), mux)
 }
@@ -44,10 +48,9 @@ func (s *Frontend) searchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	ctx := r.Context()
 
-	// in/out dates from query params
-	inDate, outDate := r.URL.Query().Get("inDate"), r.URL.Query().Get("outDate")
-	if inDate == "" || outDate == "" {
-		http.Error(w, "Please specify inDate/outDate params", http.StatusBadRequest)
+	inDate, outDate, err := parseDateRange(r)
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, "INVALID_ARGUMENT", err.Error())
 		return
 	}
 
@@ -60,7 +63,7 @@ func (s *Frontend) searchHandler(w http.ResponseWriter, r *http.Request) {
 		OutDate: outDate,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeJSONError(w, http.StatusBadGateway, "UPSTREAM_ERROR", "search service unavailable")
 		return
 	}
 
@@ -76,11 +79,85 @@ func (s *Frontend) searchHandler(w http.ResponseWriter, r *http.Request) {
 		Locale:   locale,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeJSONError(w, http.StatusBadGateway, "UPSTREAM_ERROR", "profile service unavailable")
 		return
 	}
 
-	json.NewEncoder(w).Encode(geoJSONResponse(profileResp.Hotels, s.ratings))
+	writeJSON(w, http.StatusOK, geoJSONResponse(profileResp.Hotels, s.ratings))
+}
+
+func (s *Frontend) healthHandler(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (s *Frontend) readyHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	_, err := s.searchClient.Nearby(ctx, &search.NearbyRequest{
+		Lat:     37.7749,
+		Lon:     -122.4194,
+		InDate:  "2015-04-09",
+		OutDate: "2015-04-10",
+	})
+	if err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, "NOT_READY", "search dependency is not ready")
+		return
+	}
+
+	_, err = s.profileClient.GetProfiles(ctx, &profile.Request{
+		HotelIds: []string{},
+		Locale:   "en",
+	})
+	if err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, "NOT_READY", "profile dependency is not ready")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ready"})
+}
+
+func parseDateRange(r *http.Request) (string, string, error) {
+	inDate := r.URL.Query().Get("inDate")
+	outDate := r.URL.Query().Get("outDate")
+	if inDate == "" || outDate == "" {
+		return "", "", fmt.Errorf("missing required query params: inDate and outDate")
+	}
+
+	const dateFmt = "2006-01-02"
+	inParsed, err := time.Parse(dateFmt, inDate)
+	if err != nil {
+		return "", "", fmt.Errorf("invalid inDate format, expected YYYY-MM-DD")
+	}
+	outParsed, err := time.Parse(dateFmt, outDate)
+	if err != nil {
+		return "", "", fmt.Errorf("invalid outDate format, expected YYYY-MM-DD")
+	}
+	if !outParsed.After(inParsed) {
+		return "", "", fmt.Errorf("outDate must be after inDate")
+	}
+	if outParsed.Sub(inParsed) > 30*24*time.Hour {
+		return "", "", fmt.Errorf("date range cannot exceed 30 days")
+	}
+
+	return inDate, outDate, nil
+}
+
+func writeJSON(w http.ResponseWriter, status int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		log.Printf("json encode error: %v", err)
+	}
+}
+
+func writeJSONError(w http.ResponseWriter, status int, code, message string) {
+	writeJSON(w, status, map[string]interface{}{
+		"error": map[string]string{
+			"code":    code,
+			"message": message,
+		},
+	})
 }
 
 func loadRatings(path string) map[string]float64 {
