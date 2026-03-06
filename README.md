@@ -32,7 +32,8 @@ Service data is stored in JSON files under `data/` and embedded via `go-bindata`
 Install optional tooling:
 
 ```bash
-go install github.com/golang/protobuf/protoc-gen-go@latest
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 go install github.com/go-bindata/go-bindata/...@latest
 ```
 

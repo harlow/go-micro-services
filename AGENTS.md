@@ -24,7 +24,8 @@ Use this file as the default operating guide for coding agents working in this r
 - `go-bindata` (for regenerating `data/bindata.go`).
 
 Install helper binaries when needed:
-- `go install github.com/golang/protobuf/protoc-gen-go@latest`
+- `go install google.golang.org/protobuf/cmd/protoc-gen-go@latest`
+- `go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest`
 - `go install github.com/go-bindata/go-bindata/...@latest`
 
 ## Validated commands (run before opening a PR)
