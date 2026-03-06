@@ -1,129 +1,96 @@
-# Golang Microservices Example
+# Go Microservices Example
 
-A demonstration of Golang micro-services that expose a HTTP/JSON frontend and then
-leverages [gRPC][1] for inter-service communication.
+A small Go microservices demo with:
 
-* Services written in Golang
-* gRPC for inter-service communication
-* Jaeger for request tracing
+- HTTP frontend
+- gRPC service-to-service communication
+- Jaeger distributed tracing
 
-The example application shows an interactive map with a hotel list overlay:
+The app renders an interactive map with a hotel list overlay.
 
 ![Stay Atlas UI](docs/images/stay-atlas-ui.png)
 
-The web page makes an HTTP request to the API Endpoint which in turn spawns a number of RPC requests to the backend services.
+## Architecture
 
-Data for each of the services is stored in JSON flat files under the `data/` directory. In reality each of the services could choose their own specialty datastore. The Geo service for example could use PostGis or any other database specializing in geospacial queries.
+Request flow:
 
-## Installation
+1. Browser calls the frontend (`/hotels`).
+2. Frontend calls `search` (gRPC).
+3. `search` calls `geo` and `rate` (gRPC).
+4. Frontend calls `profile` (gRPC) for hotel details.
+5. Frontend returns GeoJSON to the browser.
 
-### Setup
+Service data is stored in JSON files under `data/` and embedded via `go-bindata`.
 
-Docker is required for running the services https://docs.docker.com/engine/installation.
+## Prerequisites
 
-Protobuf v3 are required:
+- Docker + Docker Compose
+- Go 1.19+
+- `protoc` (only if regenerating protobuf code)
+- `go-bindata` (only if regenerating embedded data)
 
-    $ brew install protobuf
+Install optional tooling:
 
-Install the protoc-gen libraries:
-
-    $ go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
-
-Clone the repository:
-
-    $ git clone git@github.com:harlow/go-micro-services.git
-
-### Run
-
-To make the demo as straigforward as possible; [Docker Compose](https://docs.docker.com/compose/) is used to run all the services at once (In a production environment each of the services would be run (and scaled) independently).
-
-    $ make run
-
-Vist the web page in a browser:
-
-[http://localhost:5001/](http://localhost:5001/)
-
-cURL the API endpoint and receive GeoJSON response:
-
-    $ curl "http://localhost:5001/hotels?inDate=2015-04-09&outDate=2015-04-10"
-
-The JSON response:
-
-```json
-{
-	"type": "FeatureCollection",
-	"features": [{
-		"id": "5",
-		"type": "Feature",
-		"properties": {
-			"name": "Phoenix Hotel",
-			"phone_number": "(415) 776-1380"
-		},
-		"geometry": {
-			"type": "Point",
-			"coordinates": [-122.4181, 37.7831]
-		}
-	}, {
-		"id": "3",
-		"type": "Feature",
-		"properties": {
-			"name": "Hotel Zetta",
-			"phone_number": "(415) 543-8555"
-		},
-		"geometry": {
-			"type": "Point",
-			"coordinates": [-122.4071, 37.7834]
-		}
-	}]
-}
+```bash
+go install github.com/golang/protobuf/protoc-gen-go@latest
+go install github.com/go-bindata/go-bindata/...@latest
 ```
 
-## Request Tracing
+## Run
 
-The [Jaeger Tracing](https://github.com/jaegertracing/jaeger) project is used for tracing inter-service requests. The `tracing` package is used initialize a new service tracer:
+Start all services:
 
-```go
-tracer, err := tracing.Init("serviceName", jaegeraddr)
-if err != nil {
-    fmt.Fprintf(os.Stderr, "%v\n", err)
-    os.Exit(1)
-}
+```bash
+make run
 ```
 
-<img width="1129" alt="jaeger tracing example" src="https://user-images.githubusercontent.com/739782/37546077-554cb6a2-29bf-11e8-9bc8-3de2a01d0d69.png">
+Open the app:
 
-View dashboard: http://localhost:16686/search
+- [http://localhost:5001/](http://localhost:5001/)
 
+Sample API call:
 
-### Protobufs
+```bash
+curl "http://localhost:5001/hotels?inDate=2015-04-09&outDate=2015-04-10"
+```
 
-If changes are made to the Protocol Buffer files use the Makefile to regenerate:
+## Tracing
 
-    $ make proto
+Jaeger UI:
 
-### Bindata
+- [http://localhost:16686/search](http://localhost:16686/search)
 
-The example app data is stored in flat files in the `/data` directory. When any of
-the data files are manually editied the bindata must be regenerated.
+## Regenerate Artifacts
 
-Install the go-bindata libraries:
+Regenerate protobuf stubs after editing `internal/services/*/proto/*.proto`:
 
-    $ go get -u github.com/go-bindata/go-bindata/...
+```bash
+make proto
+```
 
-If changes are made to any of the raw JSON data files use the Makefile to regenerate:
+Regenerate embedded data after editing `data/*.json`:
 
-    $ make data
+```bash
+make data
+```
+
+## Development Checks
+
+```bash
+go test ./...
+go build ./...
+```
 
 ## Credits
 
-Thanks to all the [contributors][6]. This codebase was heavily inspired by the following talks and repositories:
+Thanks to all [contributors][6].
 
-* [Scaling microservices in Go][3]
-* [gRPC Example Service][4]
-* [go-kit][5]
+This codebase was inspired by:
 
-[1]: http://www.grpc.io/
-[2]: https://github.com/docker/compose/issues/3560
+- [Scaling microservices in Go][3]
+- [gRPC Example Service][4]
+- [go-kit][5]
+
 [3]: https://speakerdeck.com/mattheath/scaling-microservices-in-go-high-load-strategy-2015
 [4]: https://github.com/grpc/grpc-go/tree/master/examples/route_guide
 [5]: https://github.com/go-kit/kit
