@@ -49,7 +49,11 @@ func (s *Profile) Run(port int) error {
 func (s *Profile) GetProfiles(ctx context.Context, req *profile.Request) (*profile.Result, error) {
 	res := new(profile.Result)
 	for _, id := range req.HotelIds {
-		res.Hotels = append(res.Hotels, s.getProfile(id))
+		h := s.getProfile(id)
+		if h == nil {
+			continue
+		}
+		res.Hotels = append(res.Hotels, h)
 	}
 	return res, nil
 }

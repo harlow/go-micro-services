@@ -146,6 +146,10 @@ func geoJSONResponse(hs []*profile.Hotel, ratings map[string]float64) map[string
 	fs := []interface{}{}
 
 	for _, h := range hs {
+		if h == nil || h.Address == nil {
+			continue
+		}
+
 		fs = append(fs, map[string]interface{}{
 			"type": "Feature",
 			"id":   h.Id,
