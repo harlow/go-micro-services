@@ -1,30 +1,48 @@
 package trace
 
 import (
+	"context"
 	"fmt"
-	"time"
 
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go/config"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
-// New creates a new Jaeger tracer
-func New(serviceName, host string) (opentracing.Tracer, error) {
-	cfg := config.Configuration{
-		Sampler: &config.SamplerConfig{
-			Type:  "const",
-			Param: 1,
-		},
-		Reporter: &config.ReporterConfig{
-			LogSpans:            false,
-			BufferFlushInterval: 1 * time.Second,
-			LocalAgentHostPort:  host,
-		},
+// New configures OpenTelemetry tracing and returns a shutdown function.
+func New(serviceName, endpoint string) (func(context.Context) error, error) {
+	ctx := context.Background()
+
+	exporter, err := otlptracegrpc.New(ctx,
+		otlptracegrpc.WithEndpoint(endpoint),
+		otlptracegrpc.WithInsecure(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("create otlp exporter: %w", err)
 	}
 
-	tracer, _, err := cfg.New(serviceName)
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			semconv.ServiceName(serviceName),
+		),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("new tracer error: %v", err)
+		return nil, fmt.Errorf("create resource: %w", err)
 	}
-	return tracer, nil
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
+
+	return tp.Shutdown, nil
 }

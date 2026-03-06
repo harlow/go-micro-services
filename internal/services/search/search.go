@@ -4,22 +4,20 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	runtime "github.com/harlow/go-micro-services/internal/runtime"
 	geo "github.com/harlow/go-micro-services/internal/services/geo/proto"
 	rate "github.com/harlow/go-micro-services/internal/services/rate/proto"
 	search "github.com/harlow/go-micro-services/internal/services/search/proto"
-	opentracing "github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
 // New returns a new server
-func New(t opentracing.Tracer, geoconn, rateconn *grpc.ClientConn) *Search {
+func New(geoconn, rateconn *grpc.ClientConn) *Search {
 	return &Search{
 		geoClient:  geo.NewGeoClient(geoconn),
 		rateClient: rate.NewRateClient(rateconn),
-		tracer:     t,
 	}
 }
 
@@ -27,15 +25,12 @@ func New(t opentracing.Tracer, geoconn, rateconn *grpc.ClientConn) *Search {
 type Search struct {
 	geoClient  geo.GeoClient
 	rateClient rate.RateClient
-	tracer     opentracing.Tracer
 }
 
 // Run starts the server
 func (s *Search) Run(port int) error {
 	srv := grpc.NewServer(
-		grpc.UnaryInterceptor(
-			otgrpc.OpenTracingServerInterceptor(s.tracer),
-		),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 	search.RegisterSearchServer(srv, s)
 

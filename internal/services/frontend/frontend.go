@@ -12,17 +12,15 @@ import (
 	profile "github.com/harlow/go-micro-services/internal/services/profile/proto"
 	search "github.com/harlow/go-micro-services/internal/services/search/proto"
 	"github.com/harlow/go-micro-services/internal/trace"
-	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
 // New returns a new server
-func New(t opentracing.Tracer, searchconn, profileconn *grpc.ClientConn) *Frontend {
+func New(searchconn, profileconn *grpc.ClientConn) *Frontend {
 	return &Frontend{
 		searchClient:  search.NewSearchClient(searchconn),
 		profileClient: profile.NewProfileClient(profileconn),
 		ratings:       loadRatings("data/hotel_ratings.json"),
-		tracer:        t,
 	}
 }
 
@@ -31,12 +29,11 @@ type Frontend struct {
 	searchClient  search.SearchClient
 	profileClient profile.ProfileClient
 	ratings       map[string]float64
-	tracer        opentracing.Tracer
 }
 
 // Run the server
 func (s *Frontend) Run(port int) error {
-	mux := trace.NewServeMux(s.tracer)
+	mux := trace.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir("public")))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
 

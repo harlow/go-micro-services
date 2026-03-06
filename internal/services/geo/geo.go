@@ -8,11 +8,10 @@ import (
 	"net"
 	"sort"
 
-	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/harlow/go-micro-services/data"
 	runtime "github.com/harlow/go-micro-services/internal/runtime"
 	geo "github.com/harlow/go-micro-services/internal/services/geo/proto"
-	opentracing "github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -31,9 +30,8 @@ type point struct {
 }
 
 // New returns a new server.
-func New(tr opentracing.Tracer) *Geo {
+func New() *Geo {
 	return &Geo{
-		tracer: tr,
 		points: loadPoints("data/geo.json"),
 	}
 }
@@ -41,15 +39,12 @@ func New(tr opentracing.Tracer) *Geo {
 // Geo implements the geo service.
 type Geo struct {
 	points []*point
-	tracer opentracing.Tracer
 }
 
 // Run starts the server.
 func (s *Geo) Run(port int) error {
 	srv := grpc.NewServer(
-		grpc.UnaryInterceptor(
-			otgrpc.OpenTracingServerInterceptor(s.tracer),
-		),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 	geo.RegisterGeoServer(srv, s)
 

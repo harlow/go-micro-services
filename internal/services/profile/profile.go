@@ -6,19 +6,17 @@ import (
 	"log"
 	"net"
 
-	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/harlow/go-micro-services/data"
 	runtime "github.com/harlow/go-micro-services/internal/runtime"
 	profile "github.com/harlow/go-micro-services/internal/services/profile/proto"
-	opentracing "github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
 // New returns a new server
-func New(tr opentracing.Tracer) *Profile {
+func New() *Profile {
 	return &Profile{
-		tracer:   tr,
 		profiles: loadProfiles("data/hotels.json"),
 	}
 }
@@ -26,15 +24,12 @@ func New(tr opentracing.Tracer) *Profile {
 // Profile implements the profile service
 type Profile struct {
 	profiles map[string]*profile.Hotel
-	tracer   opentracing.Tracer
 }
 
 // Run starts the server
 func (s *Profile) Run(port int) error {
 	srv := grpc.NewServer(
-		grpc.UnaryInterceptor(
-			otgrpc.OpenTracingServerInterceptor(s.tracer),
-		),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 	profile.RegisterProfileServer(srv, s)
 
