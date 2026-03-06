@@ -1,10 +1,235 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+:root {
+  --ink: #0c1f2e;
+  --ink-soft: #4e6472;
+  --accent: #ef6c2f;
+  --accent-deep: #ca4f17;
+  --paper: #f3efe7;
+  --panel: rgba(252, 250, 246, 0.93);
+  --ring: rgba(239, 108, 47, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 html,
 body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  height: 100%;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  color: var(--ink);
+}
+
+body {
+  background: radial-gradient(circle at 15% 10%, #ffe5cf 0%, #f3efe7 50%, #e6ecef 100%);
+}
+
+.app-shell {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
 }
 
 #map {
-    height: 100%;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.panel {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: min(390px, calc(100% - 28px));
+  max-height: calc(100% - 28px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(16, 37, 50, 0.12);
+  border-radius: 22px;
+  background: var(--panel);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 16px 40px rgba(12, 31, 46, 0.22);
+  overflow: hidden;
+  z-index: 1200;
+}
+
+.panel-head {
+  padding: 16px 16px 12px;
+  background: linear-gradient(135deg, rgba(239, 108, 47, 0.18), rgba(239, 108, 47, 0));
+  border-bottom: 1px solid rgba(16, 37, 50, 0.09);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+h1 {
+  margin: 4px 0 10px;
+  font-size: 25px;
+  line-height: 1.1;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 96px;
+  gap: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.field label {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.field input,
+select,
+button {
+  border: 1px solid rgba(12, 31, 46, 0.18);
+  border-radius: 10px;
+  height: 36px;
+  font: inherit;
+}
+
+.field input,
+select {
+  padding: 0 10px;
+  background: #fffcf9;
+  min-width: 0;
+}
+
+button {
+  align-self: end;
+  padding: 0 13px;
+  width: 100%;
+  background: linear-gradient(160deg, var(--accent), var(--accent-deep));
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.03);
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+}
+
+.card {
+  border: 1px solid rgba(12, 31, 46, 0.12);
+  border-radius: 16px;
+  padding: 10px;
+  background: #fffefb;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(12, 31, 46, 0.1);
+}
+
+.card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.card-head {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #ece9e3;
+}
+
+.name {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.15;
+}
+
+.address {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.badge {
+  border-radius: 999px;
+  border: 1px solid rgba(12, 31, 46, 0.2);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fff;
+}
+
+.desc {
+  margin: 8px 0 0;
+  color: #284051;
+  font-size: 13px;
+  line-height: 1.35;
+  display: none;
+}
+
+.card.active .desc {
+  display: block;
+}
+
+.empty {
+  margin: 10px;
+  border-radius: 12px;
+  padding: 18px;
+  background: rgba(239, 108, 47, 0.08);
+  color: #7e3d1b;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .panel {
+    top: auto;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-height: 58%;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .toolbar button {
+    grid-column: 1 / -1;
+  }
 }

@@ -7,9 +7,9 @@ leverages [gRPC][1] for inter-service communication.
 * gRPC for inter-service communication
 * Jaeger for request tracing
 
-The example application plots Hotel locations on a Google map:
+The example application shows an interactive map with a hotel list overlay:
 
-<img width="865" alt="screen shot 2016-11-07 at 9 31 12 pm" src="https://cloud.githubusercontent.com/assets/739782/20087958/de0ef9b4-a531-11e6-953a-4425fe445883.png">
+![Stay Atlas UI](docs/images/stay-atlas-ui.png)
 
 The web page makes an HTTP request to the API Endpoint which in turn spawns a number of RPC requests to the backend services.
 

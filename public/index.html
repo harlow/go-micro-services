@@ -1,42 +1,225 @@
 <!DOCTYPE html>
 <html dir="ltr">
 <head>
-    <meta charset="utf-8">
-    <title>Go Microservices Example</title>
-    <link rel="stylesheet" href="/stylesheets/main.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stay Atlas</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="/stylesheets/main.css">
 </head>
 <body>
-    <div id="map"></div>
-    <script>
-        var points = {};
-        points['San Francisco'] = [37.7879, -122.4075]
-        points['Los Angeles'] = [37.7879, -122.4075]
+  <main class="app-shell">
+    <div id="map" aria-label="Hotel map"></div>
 
-        function initMap() {
-            var infowindow = new google.maps.InfoWindow();
+    <aside class="panel" aria-label="Hotel list panel">
+      <header class="panel-head">
+        <p class="eyebrow">San Francisco</p>
+        <h1>Stay Atlas</h1>
+        <form id="searchForm" class="toolbar">
+          <div class="field">
+            <label for="inDate">Check-in</label>
+            <input id="inDate" type="date" value="2015-04-09" required>
+          </div>
+          <div class="field">
+            <label for="outDate">Check-out</label>
+            <input id="outDate" type="date" value="2015-04-10" required>
+          </div>
+          <button type="submit">Refresh</button>
+        </form>
+        <div class="meta-row">
+          <span id="resultCount">Loading hotels...</span>
+          <select id="sortBy" aria-label="Sort hotels">
+            <option value="rating">Top Rated</option>
+            <option value="name">Name (A-Z)</option>
+          </select>
+        </div>
+      </header>
+      <ul id="hotelList" class="list"></ul>
+      <div id="emptyState" class="empty" hidden>No hotels found for this date range.</div>
+    </aside>
+  </main>
 
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 13,
-                center: new google.maps.LatLng(
-                    points['San Francisco'][0], 
-                    points['San Francisco'][1]
-                )
-            });
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+    let map;
+    let markerLayer;
+    let selectedHotelId = "";
+    let hotels = [];
+    let markersById = {};
 
-            google.maps.event.addListener(map, 'click', function () {
-                infowindow.close();
-            });
+    function initMap() {
+      map = L.map("map", {
+        zoomControl: true,
+        preferCanvas: true
+      }).setView([37.7879, -122.4075], 13);
 
-            map.data.addListener('click', function (event) {
-                infowindow.setContent(event.feature.getProperty('name') + "<br>" + event.feature.getProperty('phone_number'));
-                infowindow.setPosition(event.latLng);
-                infowindow.setOptions({ pixelOffset: new google.maps.Size(0, -34) });
-                infowindow.open(map);
-            });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
 
-            map.data.loadGeoJson('/hotels?inDate=2015-04-09&outDate=2015-04-10');
+      markerLayer = L.layerGroup().addTo(map);
+
+      map.on("click", () => {
+        Object.values(markersById).forEach((marker) => marker.closePopup());
+      });
+
+      document.getElementById("searchForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        fetchHotels();
+      });
+
+      document.getElementById("sortBy").addEventListener("change", () => {
+        sortHotels();
+        renderHotelList();
+        renderMarkers();
+      });
+
+      fetchHotels();
+    }
+
+    function markerStyle(isSelected) {
+      return {
+        radius: isSelected ? 10 : 7,
+        fillColor: isSelected ? "#ef6c2f" : "#0c1f2e",
+        color: "#ffffff",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 1
+      };
+    }
+
+    function fetchHotels() {
+      const inDate = document.getElementById("inDate").value;
+      const outDate = document.getElementById("outDate").value;
+      const params = new URLSearchParams({ inDate, outDate });
+
+      fetch(`/hotels?${params.toString()}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to fetch hotels");
+          }
+          return response.json();
+        })
+        .then((geojson) => {
+          hotels = (geojson.features || []).map((feature) => {
+            const props = feature.properties || {};
+            const coords = feature.geometry?.coordinates || [0, 0];
+            return {
+              id: String(feature.id),
+              name: props.name || "Unknown Hotel",
+              description: props.description || "No description available.",
+              addressLine: props.address_line || "Address unavailable",
+              phoneNumber: props.phone_number || "",
+              rating: Number(props.rating || 0),
+              logoURL: props.logo_url || "",
+              lat: Number(coords[1]),
+              lng: Number(coords[0])
+            };
+          });
+
+          sortHotels();
+          renderHotelList();
+          renderMarkers();
+
+          if (hotels.length > 0) {
+            selectHotel(hotels[0].id, true);
+          } else {
+            selectedHotelId = "";
+            document.getElementById("emptyState").hidden = false;
+            document.getElementById("resultCount").textContent = "0 stays";
+          }
+        })
+        .catch((error) => {
+          document.getElementById("resultCount").textContent = "Error loading hotels";
+          document.getElementById("hotelList").innerHTML = "";
+          document.getElementById("emptyState").hidden = false;
+          document.getElementById("emptyState").textContent = error.message;
+        });
+    }
+
+    function sortHotels() {
+      const sortBy = document.getElementById("sortBy").value;
+
+      if (sortBy === "name") {
+        hotels.sort((a, b) => a.name.localeCompare(b.name));
+        return;
+      }
+
+      hotels.sort((a, b) => b.rating - a.rating);
+    }
+
+    function renderMarkers() {
+      markerLayer.clearLayers();
+      markersById = {};
+
+      hotels.forEach((hotel) => {
+        const marker = L.circleMarker([hotel.lat, hotel.lng], markerStyle(hotel.id === selectedHotelId));
+        marker.bindPopup(`<strong>${hotel.name}</strong><br>${hotel.addressLine}<br>Rating: ${hotel.rating.toFixed(1)} / 5`);
+        marker.on("click", () => selectHotel(hotel.id, false));
+        marker.addTo(markerLayer);
+        markersById[hotel.id] = marker;
+      });
+    }
+
+    function selectHotel(hotelId, shouldPan) {
+      selectedHotelId = hotelId;
+      const hotel = hotels.find((item) => item.id === hotelId);
+
+      if (!hotel) {
+        return;
+      }
+
+      renderHotelList();
+      Object.entries(markersById).forEach(([id, marker]) => {
+        marker.setStyle(markerStyle(id === selectedHotelId));
+      });
+
+      const marker = markersById[hotel.id];
+      if (marker) {
+        if (shouldPan) {
+          map.setView([hotel.lat, hotel.lng], 14, { animate: true });
         }
-    </script>
-    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false&callback=initMap" async defer></script>
+        marker.openPopup();
+      }
+
+      const activeEl = document.querySelector(`[data-hotel-id="${hotelId}"]`);
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+
+    function renderHotelList() {
+      const list = document.getElementById("hotelList");
+      const emptyState = document.getElementById("emptyState");
+
+      list.innerHTML = "";
+      emptyState.hidden = hotels.length > 0;
+      document.getElementById("resultCount").textContent = `${hotels.length} stays`;
+
+      hotels.forEach((hotel) => {
+        const item = document.createElement("li");
+        item.className = `card${hotel.id === selectedHotelId ? " active" : ""}`;
+        item.dataset.hotelId = hotel.id;
+
+        item.innerHTML = `
+          <div class="card-head">
+            <img class="logo" src="${hotel.logoURL}" alt="${hotel.name} logo" loading="lazy">
+            <div>
+              <h2 class="name">${hotel.name}</h2>
+              <p class="address">${hotel.addressLine}</p>
+            </div>
+            <span class="badge">${hotel.rating.toFixed(1)} / 5</span>
+          </div>
+          <p class="desc">${hotel.description}</p>
+        `;
+
+        item.addEventListener("click", () => selectHotel(hotel.id, true));
+        list.appendChild(item);
+      });
+    }
+
+    initMap();
+  </script>
 </body>
 </html>

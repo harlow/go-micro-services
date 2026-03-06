@@ -2,7 +2,6 @@ package search
 
 import (
 	"fmt"
-	"log"
 	"net"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
@@ -41,7 +40,7 @@ func (s *Search) Run(port int) error {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return fmt.Errorf("failed to listen: %w", err)
 	}
 	return srv.Serve(lis)
 }
@@ -54,7 +53,7 @@ func (s *Search) Nearby(ctx context.Context, req *search.NearbyRequest) (*search
 		Lon: req.Lon,
 	})
 	if err != nil {
-		log.Fatalf("nearby error: %v", err)
+		return nil, fmt.Errorf("nearby error: %w", err)
 	}
 
 	// find rates for hotels
@@ -64,7 +63,7 @@ func (s *Search) Nearby(ctx context.Context, req *search.NearbyRequest) (*search
 		OutDate:  req.OutDate,
 	})
 	if err != nil {
-		log.Fatalf("rates error: %v", err)
+		return nil, fmt.Errorf("rates error: %w", err)
 	}
 
 	// build the response

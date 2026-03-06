@@ -1,41 +1,171 @@
 [
-    {
-        "hotelId": "1",
-        "code": "RACK",
-        "inDate": "2015-04-09",
-        "outDate": "2015-04-10",
-        "roomType": {
-          "bookableRate": 109.00,
-          "code": "KNG",
-          "description": "King sized bed",
-          "totalRate": 109.00,
-          "totalRateInclusive": 123.17
-        }
-    },
-    {
-        "hotelId": "2",
-        "code": "RACK",
-        "inDate": "2015-04-09",
-        "outDate": "2015-04-10",
-        "roomType": {
-          "bookableRate": 139.00,
-          "code": "QN",
-          "description": "Queen sized bed",
-          "totalRate": 139.00,
-          "totalRateInclusive": 153.09
-        }
-    },
-    {
-        "hotelId": "3",
-        "code": "RACK",
-        "inDate": "2015-04-09",
-        "outDate": "2015-04-10",
-        "roomType": {
-          "bookableRate": 109.00,
-          "code": "KNG",
-          "description": "King sized bed",
-          "totalRate": 109.00,
-          "totalRateInclusive": 123.17
-        }
+  {
+    "hotelId": "1",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 109.00,
+      "code": "KNG",
+      "description": "King sized bed",
+      "totalRate": 109.00,
+      "totalRateInclusive": 123.17
     }
+  },
+  {
+    "hotelId": "2",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 139.00,
+      "code": "QN",
+      "description": "Queen sized bed",
+      "totalRate": 139.00,
+      "totalRateInclusive": 153.09
+    }
+  },
+  {
+    "hotelId": "3",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 109.00,
+      "code": "KNG",
+      "description": "King sized bed",
+      "totalRate": 109.00,
+      "totalRateInclusive": 123.17
+    }
+  },
+  {
+    "hotelId": "7",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 289.00,
+      "code": "KNG",
+      "description": "King sized bed",
+      "totalRate": 289.00,
+      "totalRateInclusive": 322.48
+    }
+  },
+  {
+    "hotelId": "8",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 259.00,
+      "code": "KNG",
+      "description": "King sized bed",
+      "totalRate": 259.00,
+      "totalRateInclusive": 289.14
+    }
+  },
+  {
+    "hotelId": "9",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 269.00,
+      "code": "QN",
+      "description": "Queen sized bed",
+      "totalRate": 269.00,
+      "totalRateInclusive": 300.22
+    }
+  },
+  {
+    "hotelId": "10",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 279.00,
+      "code": "KNG",
+      "description": "King sized bed",
+      "totalRate": 279.00,
+      "totalRateInclusive": 311.35
+    }
+  },
+  {
+    "hotelId": "11",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 239.00,
+      "code": "KNG",
+      "description": "King sized bed",
+      "totalRate": 239.00,
+      "totalRateInclusive": 267.03
+    }
+  },
+  {
+    "hotelId": "12",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 249.00,
+      "code": "KNG",
+      "description": "King sized bed",
+      "totalRate": 249.00,
+      "totalRateInclusive": 278.16
+    }
+  },
+  {
+    "hotelId": "13",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 229.00,
+      "code": "QN",
+      "description": "Queen sized bed",
+      "totalRate": 229.00,
+      "totalRateInclusive": 255.86
+    }
+  },
+  {
+    "hotelId": "14",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 219.00,
+      "code": "KNG",
+      "description": "King sized bed",
+      "totalRate": 219.00,
+      "totalRateInclusive": 244.69
+    }
+  },
+  {
+    "hotelId": "15",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 209.00,
+      "code": "QN",
+      "description": "Queen sized bed",
+      "totalRate": 209.00,
+      "totalRateInclusive": 233.52
+    }
+  },
+  {
+    "hotelId": "16",
+    "code": "RACK",
+    "inDate": "2015-04-09",
+    "outDate": "2015-04-10",
+    "roomType": {
+      "bookableRate": 299.00,
+      "code": "KNG",
+      "description": "King sized bed",
+      "totalRate": 299.00,
+      "totalRateInclusive": 333.64
+    }
+  }
 ]

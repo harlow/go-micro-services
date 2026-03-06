@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/hailocab/go-geoindex"
@@ -17,7 +18,7 @@ import (
 
 const (
 	maxSearchRadius  = 10
-	maxSearchResults = 5
+	maxSearchResults = 20
 )
 
 // point represents a hotels's geo location on map
@@ -44,6 +45,7 @@ func New(tr opentracing.Tracer) *Geo {
 type Geo struct {
 	geoidx *geoindex.ClusteringIndex
 	tracer opentracing.Tracer
+	mu     sync.Mutex
 }
 
 // Run starts the server
@@ -83,6 +85,11 @@ func (s *Geo) getNearbyPoints(ctx context.Context, lat, lon float64) []geoindex.
 		Plat: lat,
 		Plon: lon,
 	}
+
+	// go-geoindex has internal mutable maps that are not concurrency-safe.
+	// Serialize nearest-neighbor lookups to avoid runtime "concurrent map writes".
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	return s.geoidx.KNearest(
 		center,
